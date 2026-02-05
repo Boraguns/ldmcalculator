@@ -107,7 +107,10 @@ const InputWizard = ({ onCalculate, onFullReset, mode = 'truck', customSpecs = n
     };
 
     const handleCalculate = () => {
-        const validProducts = products.filter(p => p.length && p.width && p.height && p.quantity);
+        // If "sameSize" is true, we only care about the first product in the list
+        const sourceProducts = sameSize ? [products[0]] : products;
+
+        const validProducts = sourceProducts.filter(p => p.length && p.width && p.height && p.quantity);
         if (validProducts.length === 0) {
             alert('Lütfen geçerli ürün bilgileri girin.');
             return;
@@ -416,10 +419,10 @@ const InputWizard = ({ onCalculate, onFullReset, mode = 'truck', customSpecs = n
 
             <div className="results-actions" style={{ marginTop: '1.2rem', display: 'flex', gap: '10px' }}>
                 <button className="ai-btn" onClick={() => {
-                    setStep(1);
+                    setStep(2);
                     setResultData(null);
                 }} style={{ flex: 1 }}>
-                    <div className="ai-btn-inner">Yeni Hesaplama Yap</div>
+                    <div className="ai-btn-inner">Düzenle ve Yeniden Hesapla</div>
                 </button>
                 <button className="ai-btn ai-btn-primary" onClick={handleResetAll} style={{ flex: 1 }}>
                     <div className="ai-btn-inner">Sıfırdan Hesapla</div>

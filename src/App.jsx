@@ -83,31 +83,54 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
         if (!canvas) return;
         const actualCanvas = canvas.querySelector('canvas') || canvas;
 
-        // Create a temporary canvas to add background color
-        // This ensures transparency doesn't ruin the image on different viewers
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = actualCanvas.width;
-        tempCanvas.height = actualCanvas.height;
-        const ctx = tempCanvas.getContext('2d');
+        const logo = new Image();
+        logo.crossOrigin = "anonymous";
+        logo.src = "/src/ldm-calculator-beyaz-logo.png";
 
-        // Fill background with App's dark theme color to ensure white wireframes are visible
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+        const finalizeDownload = (withLogo = false) => {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = actualCanvas.width;
+            tempCanvas.height = actualCanvas.height;
+            const ctx = tempCanvas.getContext('2d');
 
-        // Draw the 3D scene on top
-        ctx.drawImage(actualCanvas, 0, 0);
+            // Fill background
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
 
-        const link = document.createElement('a');
-        const timestamp = new Date().getTime();
-        const safeName = companyName ? companyName.replace(/[^a-z0-9]/gi, '_').toLowerCase() : 'adsiz';
-        link.download = `${safeName}-${mode}-loading-${timestamp}.png`;
-        link.href = tempCanvas.toDataURL('image/png');
-        link.click();
+            // Draw the 3D scene
+            ctx.drawImage(actualCanvas, 0, 0);
 
-        // Modal logic
-        setShowScreenshotModal(false);
-        alert(`Ekran görüntüsü indirildi ve ${companyName || 'Belirtilmemiş'} firması için sisteme (Gmail) gönderim sırasına alındı.`);
-        // Note: Real email sending would happen here via API or SMTP service
+            if (withLogo) {
+                const padding = 30;
+                const logoWidth = 180;
+                const logoHeight = (logo.height / logo.width) * logoWidth;
+
+                // Draw "downloaded" text
+                ctx.font = '500 14px Inter, system-ui, sans-serif';
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.textAlign = 'right';
+
+                const logoX = tempCanvas.width - padding - logoWidth;
+                const logoY = tempCanvas.height - padding - logoHeight;
+                const textY = logoY - 10;
+
+                ctx.fillText('downloaded', tempCanvas.width - padding, textY);
+                ctx.drawImage(logo, logoX, logoY, logoWidth, logoHeight);
+            }
+
+            const link = document.createElement('a');
+            const timestamp = new Date().getTime();
+            const safeName = companyName ? companyName.replace(/[^a-z0-9]/gi, '_').toLowerCase() : 'adsiz';
+            link.download = `${safeName}-${mode}-loading-${timestamp}.png`;
+            link.href = tempCanvas.toDataURL('image/png');
+            link.click();
+
+            setShowScreenshotModal(false);
+            setCompanyName(''); // Reset for next time
+        };
+
+        logo.onload = () => finalizeDownload(true);
+        logo.onerror = () => finalizeDownload(false);
     };
 
     const handleFullReset = () => {
