@@ -346,7 +346,7 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck' }) => {
                 const h = item.dimensions.height * scaleFactor;
 
                 const x = (item.position.x * scaleFactor) - (tLen / 2) + (w / 2);
-                const y = (item.position.z * scaleFactor) - (tHei / 2) + (h / 2);
+                const y = (item.position.z * scaleFactor) - (tHei / 2) + (h / 2) + 0.3;
                 const z = (item.position.y * scaleFactor) - (tWid / 2) + (d / 2);
 
                 const colors = ['#3b82f6', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
