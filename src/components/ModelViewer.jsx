@@ -160,8 +160,8 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck' }) => {
 
             {/* 3D GLB Truck Model (Cabin) - Only for Truck mode */}
             {!isTrain && !isPlane && !isShip && (
-                // Position Adjusted: Moved forward (-2.8) and slightly UP (-0.45) to align with trailer
-                <TruckCabinModel position={[-tLen / 2 - 2.8, -tHei / 2 - 0.45, 0]} />
+                // Position Adjusted: Moved forward (-2.8) and slightly UP (-0.1) to align with trailer
+                <TruckCabinModel position={[-tLen / 2 - 2.8, -tHei / 2 - 0.1, 0]} />
             )}
 
             {/* Professional Wheel Assemblies */}
