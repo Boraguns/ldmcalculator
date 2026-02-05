@@ -51,7 +51,10 @@ const InputWizard = ({ onCalculate, onFullReset, mode = 'truck', customSpecs = n
             : { label: isTrain ? 'Standart Konteyner' : 'Standart Dorse', dims: isTrain ? '14.00m x 2.80m x 2.80m' : '13.60m x 2.45m x 2.75m', height: isTrain ? 280 : 275, width: isTrain ? 280 : 245, length: isTrain ? 1400 : 1360, maxWeight: 22000 },
         mega: isPlane
             ? { label: 'Yüksek Hacimli ULD', dims: '3.18m x 2.44m x 3.00m', height: 300, width: 244, length: 318, maxWeight: 6800 }
-            : { label: isTrain ? 'Mega Konteyner' : 'Mega Dorse', dims: isTrain ? '14.00m x 3.00m x 3.20m' : '13.60m x 2.45m x 3.00m', height: isTrain ? 320 : 300, width: isTrain ? 300 : 245, length: isTrain ? 1400 : 1360, maxWeight: 22000 }
+            : { label: isTrain ? 'Mega Konteyner' : 'Mega Dorse', dims: isTrain ? '14.00m x 3.00m x 3.20m' : '13.60m x 2.45m x 2.95m', height: isTrain ? 320 : 295, width: isTrain ? 300 : 245, length: isTrain ? 1400 : 1360, maxWeight: 22000 },
+        ...((!isTrain && !isPlane && !isShip) ? {
+            closedBox: { label: 'Kapalı Kasa Dorse', dims: '13.60m x 2.45m x 2.75m', height: 275, width: 245, length: 1360, maxWeight: 22000 }
+        } : {})
     });
 
 
@@ -155,6 +158,17 @@ const InputWizard = ({ onCalculate, onFullReset, mode = 'truck', customSpecs = n
                 <div style={{ marginBottom: '20px', padding: '10px', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '10px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
                     <div style={{ fontSize: '0.85rem', color: '#60a5fa', fontWeight: '600' }}>Seçili ULD: {TRUCK_SPECS[truckType]?.label}</div>
                     <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Ölçüler: {TRUCK_SPECS[truckType]?.dims}</div>
+                </div>
+            )}
+
+            {truckType === 'closedBox' && (
+                <div style={{ marginBottom: '20px', padding: '12px', background: 'rgba(234, 88, 12, 0.15)', borderRadius: '10px', border: '1px solid #ea580c' }}>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                        <span style={{ fontSize: '1.2rem' }}>⚠️</span>
+                        <div style={{ fontSize: '0.85rem', color: '#fb923c', lineHeight: '1.4' }}>
+                            <strong>Kapalı Kasa Dorse</strong> tipinde yük sadece dorsenin arka kapağından yüklenebilmektedir. Bu hususu lütfen dikkate alınız.
+                        </div>
+                    </div>
                 </div>
             )}
 
@@ -314,6 +328,36 @@ const InputWizard = ({ onCalculate, onFullReset, mode = 'truck', customSpecs = n
                                     Talep edilen ürünlerden <strong>{resultData.missingCount} adet</strong> {isPlane ? 'kapasiteyi aştı' : 'tıra sığmadı'}.
                                 </p>
                             </div>
+                        </div>
+                    )}
+
+                    {/* TRUCK LENGTH USAGE VISUALIZATION */}
+                    {!isPlane && !isShip && resultData && (
+                        <div style={{ marginBottom: '15px', background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '10px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.9rem', color: '#cbd5e1' }}>
+                                <span>13.60m Dorse Kullanımı</span>
+                                <span>%{((resultData.placedItems.reduce((max, i) => Math.max(max, i.position.x + i.dimensions.length), 0) / 1360) * 100).toFixed(1)} Dolu</span>
+                            </div>
+
+                            {(() => {
+                                // Calculate used length in cm
+                                const usedLengthCm = resultData.placedItems.reduce((max, i) => Math.max(max, i.position.x + i.dimensions.length), 0);
+                                const totalLengthCm = 1360; // Standard reference
+                                const usedMeters = (usedLengthCm / 100).toFixed(2);
+                                const emptyMeters = ((totalLengthCm - usedLengthCm) / 100).toFixed(2);
+
+                                return (
+                                    <>
+                                        <div style={{ width: '100%', height: '12px', background: '#334155', borderRadius: '6px', overflow: 'hidden', display: 'flex' }}>
+                                            <div style={{ width: `${(usedLengthCm / totalLengthCm) * 100}%`, background: '#10b981', height: '100%' }} />
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px', fontSize: '0.8rem', fontWeight: '500' }}>
+                                            <span style={{ color: '#10b981' }}>{usedMeters}m Dolu</span>
+                                            <span style={{ color: '#94a3b8' }}>{emptyMeters}m Boş</span>
+                                        </div>
+                                    </>
+                                );
+                            })()}
                         </div>
                     )}
 

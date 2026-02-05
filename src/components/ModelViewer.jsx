@@ -91,7 +91,7 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck' }) => {
     return (
         <group>
             {/* Main Chassis Frame / ULD Platform */}
-            <mesh position={[0, -tHei / 2 - 0.15, 0]}>
+            <mesh position={[(!isPlane && !isShip) ? -1.6 : 0, -tHei / 2 - 0.15, 0]}>
                 <boxGeometry args={[tLen + (isPlane ? 0.1 : 3.2), isPlane ? 0.1 : 0.3, isPlane ? tWid + 0.1 : tWid * 0.7]} />
                 <meshStandardMaterial color={(isPlane || isShip) ? "#cbd5e1" : "#0f172a"} metalness={(isPlane || isShip) ? 1 : 0.8} roughness={0.2} />
             </mesh>

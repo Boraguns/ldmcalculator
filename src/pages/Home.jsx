@@ -143,32 +143,60 @@ const Home = () => {
                     maxWidth: isDesktop ? 'none' : '400px',
                     minHeight: isDesktop ? '220px' : 'auto'
                 }}>
-                    {sections.map(section => (
-                        <button
-                            key={section.id}
-                            className="ai-btn"
-                            onClick={() => navigate(section.path)}
-                            onMouseEnter={() => isDesktop && setHoveredSection(section.id)}
-                            onMouseLeave={() => isDesktop && setHoveredSection(null)}
-                            style={{ height: 'auto', padding: '2px' }}
-                        >
-                            <div className="ai-btn-inner" style={{
-                                flexDirection: isDesktop ? 'column' : 'row',
-                                padding: isDesktop ? '30px 20px' : '15px 12px',
-                                height: '100%',
-                                gap: '12px',
-                                textAlign: isDesktop ? 'center' : 'left',
-                                alignItems: 'center',
-                                justifyContent: isDesktop ? 'center' : 'flex-start'
-                            }}>
-                                <img src={section.img} alt={section.label} style={{ height: isDesktop ? '48px' : '32px', width: 'auto', objectFit: 'contain' }} />
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                    <h3 style={{ margin: '0', color: 'white', fontSize: isDesktop ? '1.1rem' : '0.9rem' }}>{section.label}</h3>
-                                    {isDesktop && <p style={{ margin: '0', color: '#ffffff', fontSize: '0.8rem', lineHeight: '1.4' }}>{section.desc}</p>}
+                    {sections.map(section => {
+                        const isDisabled = section.id !== 'truck';
+                        return (
+                            <button
+                                key={section.id}
+                                className="ai-btn"
+                                onClick={() => !isDisabled && navigate(section.path)}
+                                onMouseEnter={() => isDesktop && !isDisabled && setHoveredSection(section.id)}
+                                onMouseLeave={() => isDesktop && setHoveredSection(null)}
+                                disabled={isDisabled}
+                                style={{
+                                    height: 'auto',
+                                    padding: '2px',
+                                    opacity: isDisabled ? 0.6 : 1,
+                                    cursor: isDisabled ? 'not-allowed' : 'pointer',
+                                    position: 'relative',
+                                    filter: isDisabled ? 'grayscale(0.8)' : 'none'
+                                }}
+                            >
+                                {isDisabled && (
+                                    <div style={{
+                                        position: 'absolute',
+                                        top: '10px',
+                                        right: '10px',
+                                        background: '#ef4444',
+                                        color: 'white',
+                                        fontSize: '0.65rem',
+                                        fontWeight: 'bold',
+                                        padding: '4px 8px',
+                                        borderRadius: '4px',
+                                        zIndex: 10,
+                                        boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                                    }}>
+                                        Çok Yakında
+                                    </div>
+                                )}
+                                <div className="ai-btn-inner" style={{
+                                    flexDirection: isDesktop ? 'column' : 'row',
+                                    padding: isDesktop ? '30px 20px' : '15px 12px',
+                                    height: '100%',
+                                    gap: '12px',
+                                    textAlign: isDesktop ? 'center' : 'left',
+                                    alignItems: 'center',
+                                    justifyContent: isDesktop ? 'center' : 'flex-start'
+                                }}>
+                                    <img src={section.img} alt={section.label} style={{ height: isDesktop ? '48px' : '32px', width: 'auto', objectFit: 'contain' }} />
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                        <h3 style={{ margin: '0', color: 'white', fontSize: isDesktop ? '1.1rem' : '0.9rem' }}>{section.label}</h3>
+                                        {isDesktop && <p style={{ margin: '0', color: '#ffffff', fontSize: '0.8rem', lineHeight: '1.4' }}>{section.desc}</p>}
+                                    </div>
                                 </div>
-                            </div>
-                        </button>
-                    ))}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
 
