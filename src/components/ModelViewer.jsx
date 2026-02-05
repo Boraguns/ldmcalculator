@@ -80,9 +80,10 @@ const CameraController = ({ viewMode, onUserInteraction }) => {
 
 import { useGLTF } from '@react-three/drei';
 
-const TruckCabinModel = ({ position, trailerWidth }) => {
+const TruckCabinModel = ({ position }) => {
     const { scene } = useGLTF('/src/truck.glb');
     const clone = useMemo(() => scene.clone(), [scene]);
+    const groupRef = useRef();
 
     useEffect(() => {
         if (clone) {
@@ -93,32 +94,29 @@ const TruckCabinModel = ({ position, trailerWidth }) => {
             const center = new THREE.Vector3();
             box.getCenter(center);
 
+            // Determine current dimensions
+
             // ROBUST SCALING STRATEGIES:
+            // Instead of using max dimension (which could be length), we target the HEIGHT (Y-axis).
+            // A typical truck cabin is about 2.8m - 3.2m tall.
+            // We want the visual height to match the trailer height (~2.75m).
+
             const targetHeight = 3.0; // Slightly taller than trailer for visual dominance
             const currentHeight = size.y || 1; // Avoid divide by zero
-            const hScale = targetHeight / currentHeight;
 
-            let wScale = hScale; // Default to uniform scaling
+            const scale = targetHeight / currentHeight;
 
-            // If trailerWidth is provided, we try to match the truck cabin width to it.
-            // Assuming Local X is the width axis for the cabin model (due to rotation later).
-            if (trailerWidth) {
-                const currentWidth = size.x || 1;
-                // Calculate scale needed to match trailer width
-                wScale = trailerWidth / currentWidth;
-            }
+            // Apply normalization
+            clone.scale.set(scale, scale, scale);
 
-            // Apply scaling (X=Width, Y=Height, Z=Length in Local Space)
-            clone.scale.set(wScale, hScale, hScale);
+            // Re-center: Subtract the center offset so the model's pivot is (0,0,0)
+            clone.position.copy(center).multiplyScalar(-scale);
 
-            // Re-center based on new scales
-            clone.position.set(
-                -center.x * wScale,
-                -center.y * hScale,
-                -center.z * hScale
-            );
+            // If the model is facing Z instead of X, we might need rotation.
+            // Usually car models face +Z or -Z. Our scene is X-aligned.
+            // We'll leave the parent rotation control to the prop or below.
         }
-    }, [clone, trailerWidth]);
+    }, [clone]);
 
     return (
         <group position={position} rotation={[0, Math.PI / 2, 0]}>
@@ -163,10 +161,7 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck' }) => {
             {/* 3D GLB Truck Model (Cabin) - Only for Truck mode */}
             {!isTrain && !isPlane && !isShip && (
                 // Position Adjusted: Moved forward (-2.8) and slightly UP (0.2) to align with trailer
-                <TruckCabinModel
-                    position={[-tLen / 2 - 2.8, -tHei / 2 + 0.2, 0]}
-                    trailerWidth={tWid}
-                />
+                <TruckCabinModel position={[-tLen / 2 - 2.8, -tHei / 2 + 0.2, 0]} />
             )}
 
             {/* Professional Wheel Assemblies */}
