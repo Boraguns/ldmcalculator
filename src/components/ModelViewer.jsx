@@ -78,7 +78,31 @@ const CameraController = ({ viewMode, onUserInteraction }) => {
     );
 };
 
-import { useGLTF } from '@react-three/drei';
+import { useGLTF, useTexture } from '@react-three/drei';
+
+const CountryFlag = ({ code, position, onClick }) => {
+    // Load texture with loose cors policy
+    const texture = useTexture(`https://flagcdn.com/w640/${code}.png`);
+    return (
+        <mesh
+            position={position}
+            onClick={(e) => {
+                e.stopPropagation();
+                onClick(code);
+            }}
+            onPointerOver={() => document.body.style.cursor = 'pointer'}
+            onPointerOut={() => document.body.style.cursor = 'auto'}
+        >
+            <planeGeometry args={[2.4, 1.6]} /> {/* 3:2 Aspect Ratio */}
+            <meshStandardMaterial map={texture} roughness={0.2} metalness={0.1} />
+            {/* Frame */}
+            <mesh position={[0, 0, -0.02]}>
+                <boxGeometry args={[2.5, 1.7, 0.04]} />
+                <meshStandardMaterial color="#111" />
+            </mesh>
+        </mesh>
+    );
+};
 
 const TruckCabinModel = ({ position }) => {
     const { scene } = useGLTF('/src/truck.glb');
@@ -168,19 +192,52 @@ const WarehouseEnvironment = ({ floorY }) => {
 
             {/* --- WALLS (Enclosed Box) --- */}
 
-            {/* Back Wall (Loading Dock Side) */}
-            <mesh position={[0, 20, 15]} receiveShadow>
-                <boxGeometry args={[200, 40, 1]} />
-                <meshStandardMaterial color="#0f172a" roughness={0.5} />
-            </mesh>
+            {/* Back Wall (Behind the Truck - Flag Wall) */}
+            {/* Moved from Z=15 to Z=-15 to be in background of Side View (Z=25) */}
+            <group position={[0, 15, -15]}>
+                <mesh receiveShadow>
+                    <boxGeometry args={[200, 30, 1]} />
+                    <meshStandardMaterial color="#0f172a" roughness={0.5} />
+                </mesh>
 
-            {/* Side Walls to feel enclosed */}
-            <mesh position={[25, 20, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow>
+                {/* Flags Display */}
+                <group position={[0, 0, 0.6]}>
+                    {['tr', 'de', 'fr', 'gb', 'it', 'ru', 'cn', 'jp', 'kr', 'in', 'es', 'nl'].map((code, index) => {
+                        const spacing = 4;
+                        const startX = -((12 * spacing) / 2) + (spacing / 2);
+                        return (
+                            <CountryFlag
+                                key={code}
+                                code={code}
+                                position={[startX + (index * spacing), 0, 0]}
+                                onClick={(c) => alert(`Selected Country: ${c.toUpperCase()}`)}
+                            />
+                        );
+                    })}
+                </group>
+
+                {/* Ambient Wall Light (Emissive Strip) */}
+                <mesh position={[0, 8, 0.5]}>
+                    <boxGeometry args={[200, 0.5, 0.5]} />
+                    <meshStandardMaterial color="#3b82f6" emissive="#3b82f6" emissiveIntensity={2} toneMapped={false} />
+                </mesh>
+            </group>
+
+            {/* Front Wall (Behind Camera - Invisible but blocking light/reflection if needed) */}
+            {/* Pushed further back to Z=35 to not clip camera at Z=25 */}
+            <mesh position={[0, 20, 35]} receiveShadow>
                 <boxGeometry args={[200, 40, 1]} />
                 <meshStandardMaterial color="#1e293b" roughness={0.5} />
             </mesh>
-            <mesh position={[-25, 20, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
-                <boxGeometry args={[200, 40, 1]} />
+
+            {/* Side Walls */}
+            {/* Pushed to X=60 to clear front/back views */}
+            <mesh position={[60, 20, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow>
+                <boxGeometry args={[100, 40, 1]} />
+                <meshStandardMaterial color="#1e293b" roughness={0.5} />
+            </mesh>
+            <mesh position={[-60, 20, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
+                <boxGeometry args={[100, 40, 1]} />
                 <meshStandardMaterial color="#1e293b" roughness={0.5} />
             </mesh>
 
@@ -235,8 +292,8 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck' }) => {
 
             {/* 3D GLB Truck Model (Cabin) - Only for Truck mode */}
             {!isTrain && !isPlane && !isShip && (
-                // Position Adjusted: Moved forward (-2.8) and slightly UP (0.2) to align with trailer
-                <TruckCabinModel position={[-tLen / 2 - 2.8, -tHei / 2 + 0.2, 0]} />
+                // Position Adjusted: Moved forward (-2.8) and slightly UP (0.5) to align with trailer and avoid floor clipping
+                <TruckCabinModel position={[-tLen / 2 - 2.8, -tHei / 2 + 0.5, 0]} />
             )}
 
             {/* Professional Wheel Assemblies */}
