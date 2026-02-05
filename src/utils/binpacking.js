@@ -80,34 +80,31 @@ export class BinPacking3D {
         const remainingWeight = this.container.maxWeight - stats.totalWeight;
 
         // Calculate remaining capacity for each item type
-        for (let itemDef of this.items) {
-            // 1. Geometric Potential (Empty Truck Limits)
-            const maxGeometric = this.calculateMaxPotential(itemDef);
-            const loaded = stats.itemBreakdown[itemDef.id]?.count || 0;
-            const geometricRemaining = Math.max(0, maxGeometric - loaded);
+        // Use the maxX to find "Real Empty Space At The Back" as requested by user
+        const maxX = this.placedItems.length > 0 ? Math.max(...this.placedItems.map(i => i.position.x + i.dimensions.length)) : 0;
+        const availableLengthAtBack = Math.max(0, this.container.length - maxX);
 
-            // 2. Volumetric Potential (Remaining Void)
+        for (let itemDef of this.items) {
+            // 1. Realistic Geometric Potential (Space at the back of the truck)
+            const geometricAtBack = this.calculateMaxPotential(itemDef, availableLengthAtBack, remainingWeight);
+
+            // 2. Volumetric Potential (Remaining Void) - as a secondary cap
             const itemVol = itemDef.length * itemDef.width * itemDef.height;
             const volumeRemaining = Math.floor(remainingVol / itemVol);
 
             // 3. Weight Potential (Remaining Payload)
             const itemWeight = itemDef.weight;
-            const weightRemaining = itemWeight > 0 ? Math.floor(remainingWeight / itemWeight) : 999999;
+            const weightRemainingForThis = itemWeight > 0 ? Math.floor(remainingWeight / itemWeight) : 999999;
 
-            // The actual remaining capacity is the bottleneck of all three
-            // For mixed cargo, volumeRemaining usually dictates.
-            // For single cargo, geometricRemaining usually dictates.
-            const finalRemaining = Math.min(geometricRemaining, volumeRemaining, weightRemaining);
+            // Use the bottleneck: must fit geometrically at back AND within total volume/weight limits
+            const finalRemaining = Math.min(geometricAtBack, volumeRemaining, weightRemainingForThis);
 
             if (stats.itemBreakdown[itemDef.id]) {
                 stats.itemBreakdown[itemDef.id].remainingCapacity = finalRemaining;
             } else {
                 stats.itemBreakdown[itemDef.id] = {
                     count: 0,
-                    remainingCapacity: finalRemaining, // Assuming we could theoretically load these if we started over?
-                    // Or strictly "in the remaining space"?
-                    // The 'finalRemaining' here effectively says "Into the remaining space/weight/slots".
-                    // But 'geometricRemaining' is structural.
+                    remainingCapacity: finalRemaining,
                     totalWeight: 0,
                     rows: 0,
                     columns: 0,
@@ -284,15 +281,15 @@ export class BinPacking3D {
         );
     }
 
-    calculateMaxPotential(itemDef) {
+    calculateMaxPotential(itemDef, length = this.container.length, weightLimit = this.container.maxWeight) {
         const orientations = this.getAllOrientations(itemDef);
         let maxFound = 0;
         for (let orient of orientations) {
-            const rowL = Math.floor(this.container.length / orient.length);
+            const rowL = Math.floor(length / orient.length);
             const rowW = Math.floor(this.container.width / orient.width);
             const rowH = Math.min(Math.floor(this.container.height / orient.height), itemDef.maxStack);
             const volumeCount = rowL * rowW * rowH;
-            const weightLimitCount = itemDef.weight > 0 ? Math.floor(this.container.maxWeight / itemDef.weight) : 999999;
+            const weightLimitCount = itemDef.weight > 0 ? Math.floor(weightLimit / itemDef.weight) : 999999;
             const count = Math.min(volumeCount, weightLimitCount);
 
             if (count > maxFound) maxFound = count;
