@@ -120,7 +120,16 @@ export class BinPacking3D {
      * Tries to place a stack of 'stackSize' items
      */
     tryPlaceStack(item, stackSize, isTemp = false) {
-        const orientations = this.getAllOrientations(item);
+        let orientations = this.getAllOrientations(item);
+
+        // HEURISTIC: Prioritize orientations that allow MORE items to fit across the container WIDTH.
+        // This solves the "Rotation" issue where the algorithm picks the default orientation even if rotation
+        // allows for a tighter row (e.g., 3 items vs 2 items).
+        orientations.sort((a, b) => {
+            const countA = Math.floor(this.container.width / a.width);
+            const countB = Math.floor(this.container.width / b.width);
+            return countB - countA;
+        });
 
         for (let orientation of orientations) {
             // Create a virtual item representing the full stack
@@ -165,42 +174,53 @@ export class BinPacking3D {
 
     getAllOrientations(item) {
         const orientations = [];
+        // Orientation 0: Original
         orientations.push({ length: item.length, width: item.width, height: item.height, rotation: 0 });
 
-        if (!item.allowRotation) return orientations;
+        if (item.allowRotation) {
+            // Rotation 1: Swap L & W (Standard Z-axis rotation)
+            orientations.push({ length: item.width, width: item.length, height: item.height, rotation: 1 });
+        }
 
-        // Rotation 1: Swap L & W (Standard rotation)
-        orientations.push({ length: item.width, width: item.length, height: item.height, rotation: 1 });
-
-        // Other rotations (tipping over) could be enabled, but usually cargo is 'this side up'
-        // For now, let's stick to Z-axis rotation for stability unless explicitly requested.
-        // User only asked for "90 degree turn", usually implying Z-axis spin.
-        // But the code previously had 6 orientations. Let's keep them if "tipping" is allowed?
-        // Usually pallets cannot be tipped. Boxes can.
-        // Let's assume FULL rotation is allowed if checkbox is checked.
-
-        orientations.push({ length: item.height, width: item.width, height: item.length, rotation: 2 });
-        orientations.push({ length: item.length, width: item.height, height: item.width, rotation: 3 });
-        orientations.push({ length: item.width, width: item.height, height: item.length, rotation: 4 });
-        orientations.push({ length: item.height, width: item.length, height: item.width, rotation: 5 });
+        // TIPPING (Changing Height) DISABLED
+        // Users reported "wrong placement", often caused by unrealistic tipping of pallets.
+        // We restrict rotation to only spinning on the floor (Z-axis).
 
         return orientations;
     }
 
     findBestPosition(itemDims, item) {
-        // Start from bottom-left-back
-        // Priority: Z (Layer) -> X (Length) -> Y (Width)
-        // This fills the truck floor-to-ceiling, back-to-front
+        // OPTIMIZATION: Coordinate Point Search (Corner Point Heuristic)
+        // Instead of checking every 1cm grid point (which causes millions of checks -> freezing),
+        // we only check coordinates defined by the corners of already placed items.
 
-        const stepSize = 1; // High precision (1cm steps) to avoid wasted space
+        const xPoints = new Set([0]);
+        const yPoints = new Set([0]);
+        const zPoints = new Set([0]);
 
-        const effectiveMaxZ = this.container.height - itemDims.height;
+        // Add potential snap points from existing items
+        for (const placed of this.placedItems) {
+            xPoints.add(placed.position.x + placed.dimensions.length);
+            yPoints.add(placed.position.y + placed.dimensions.width);
+            zPoints.add(placed.position.z + placed.dimensions.height);
+        }
 
-        for (let z = 0; z <= effectiveMaxZ; z += stepSize) {
-            for (let x = 0; x <= this.container.length - itemDims.length; x += stepSize) {
-                for (let y = 0; y <= this.container.width - itemDims.width; y += stepSize) {
+        const sortedX = [...xPoints].sort((a, b) => a - b);
+        const sortedY = [...yPoints].sort((a, b) => a - b);
+        const sortedZ = [...zPoints].sort((a, b) => a - b);
+
+        const effMaxZ = this.container.height - itemDims.height;
+        const effMaxX = this.container.length - itemDims.length;
+        const effMaxY = this.container.width - itemDims.width;
+
+        for (let z of sortedZ) {
+            if (z > effMaxZ) break;
+            for (let x of sortedX) {
+                if (x > effMaxX) break;
+                for (let y of sortedY) {
+                    if (y > effMaxY) break;
+
                     const position = { x, y, z };
-
                     if (this.canPlaceAt(position, itemDims)) {
                         return position;
                     }
