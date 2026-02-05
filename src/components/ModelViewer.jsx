@@ -96,7 +96,7 @@ const TruckCabinModel = ({ position }) => {
 
             // Determine current dimensions
 
-            // ROBUST SCALING STRATEGY:
+            // ROBUST SCALING STRATEGIES:
             // Instead of using max dimension (which could be length), we target the HEIGHT (Y-axis).
             // A typical truck cabin is about 2.8m - 3.2m tall.
             // We want the visual height to match the trailer height (~2.75m).
@@ -160,10 +160,8 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck' }) => {
 
             {/* 3D GLB Truck Model (Cabin) - Only for Truck mode */}
             {!isTrain && !isPlane && !isShip && (
-                // Position Adjusted: Moved forward to satisfy "25% ahead of trailer" request
-                // Was: -tLen/2 - 0.2
-                // New: -tLen/2 - 2.8 (Approx 2.5m - 3m forward shift)
-                <TruckCabinModel position={[-tLen / 2 - 2.8, -tHei / 2 - 0.8, 0]} />
+                // Position Adjusted: Moved forward (-2.8) and slightly UP (-0.45) to align with trailer
+                <TruckCabinModel position={[-tLen / 2 - 2.8, -tHei / 2 - 0.45, 0]} />
             )}
 
             {/* Professional Wheel Assemblies */}
