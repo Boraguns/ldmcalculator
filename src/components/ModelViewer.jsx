@@ -125,6 +125,42 @@ const TruckCabinModel = ({ position }) => {
     );
 };
 
+const TruckWheelModel = ({ position, rotation = [0, 0, 0], scale = [1, 1, 1] }) => {
+    const { scene } = useGLTF('/src/truck.glb');
+    const wheelRef = useRef();
+    const [wheelNode, setWheelNode] = useState(null);
+
+    useEffect(() => {
+        // Attempt to find a wheel mesh in the GLB
+        // Common names often used in 3D models
+        let found = null;
+        scene.traverse((child) => {
+            if (!found && child.isMesh &&
+                (child.name.toLowerCase().includes('wheel') ||
+                    child.name.toLowerCase().includes('tire') ||
+                    child.name.toLowerCase().includes('fr_') || // Front Right
+                    child.name.toLowerCase().includes('rl_'))) { // Rear Left
+                found = child;
+            }
+        });
+
+        if (found) {
+            setWheelNode(found.clone());
+        }
+    }, [scene]);
+
+    if (!wheelNode) return null; // Fallback or empty if not found
+
+    return (
+        <primitive
+            object={wheelNode}
+            position={position}
+            rotation={rotation}
+            scale={scale}
+        />
+    );
+};
+
 const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck' }) => {
     const scaleFactor = 0.01;
     const isTrain = mode === 'train';
@@ -138,8 +174,9 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck' }) => {
     return (
         <group>
             {/* Main Chassis Frame / ULD Platform */}
-            <mesh position={[(!isPlane && !isShip) ? -1.6 : 0, -tHei / 2 - 0.15, 0]}>
-                <boxGeometry args={[tLen + (isPlane ? 0.1 : 3.2), isPlane ? 0.1 : 0.3, isPlane ? tWid + 0.1 : tWid * 0.7]} />
+            {/* Removed the extra length (3.2) and offset (-1.6) for truck mode to prevent protruding black surface */}
+            <mesh position={[0, -tHei / 2 - 0.15, 0]}>
+                <boxGeometry args={[tLen + (isPlane ? 0.1 : 0), isPlane ? 0.1 : 0.3, isPlane ? tWid + 0.1 : tWid * 0.7]} />
                 <meshStandardMaterial color={(isPlane || isShip) ? "#cbd5e1" : "#0f172a"} metalness={(isPlane || isShip) ? 1 : 0.8} roughness={0.2} />
             </mesh>
 
@@ -157,7 +194,8 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck' }) => {
 
             {/* 3D GLB Truck Model (Cabin) - Only for Truck mode */}
             {!isTrain && !isPlane && !isShip && (
-                <TruckCabinModel position={[-tLen / 2 - 2.5, -tHei / 2 - 0.8, 0]} />
+                // Moved closer to 0 (was -2.5) to slide chassis under trailer
+                <TruckCabinModel position={[-tLen / 2 - 0.2, -tHei / 2 - 0.8, 0]} />
             )}
 
             {/* Professional Wheel Assemblies */}
@@ -178,14 +216,11 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck' }) => {
                 [tLen / 2 - 3.2, -tHei / 2 - 0.55, -tWid / 2]
             ]).map((pos, i) => (
                 <group key={i} position={pos} rotation={[Math.PI / 2, 0, 0]}>
-                    <mesh castShadow>
-                        <cylinderGeometry args={[0.5, 0.5, 0.45, 32]} />
-                        <meshStandardMaterial color="#020617" roughness={0.8} />
-                    </mesh>
-                    <mesh position={[0, 0.23, 0]}>
-                        <cylinderGeometry args={[0.3, 0.3, 0.05, 16]} />
-                        <meshStandardMaterial color="#94a3b8" metalness={1} roughness={0.1} />
-                    </mesh>
+                    <TruckWheelModel
+                        scale={[1.1, 1.1, 1.1]} // Match Truck Scale
+                        rotation={[Math.PI / 2, 0, 0]} // Adjust rotation if needed
+                    />
+                    {/* Fallback visual if wheel not found in GLB - hidden if WheelModel works, or we can just rely on the user checking visuals */}
                 </group>
             ))}
 
