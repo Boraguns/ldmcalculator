@@ -127,6 +127,49 @@ const TruckCabinModel = ({ position }) => {
 
 
 
+const WarehouseEnvironment = ({ floorY }) => {
+    return (
+        <group position={[0, floorY, 0]}>
+            {/* Floor - Concrete */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+                <planeGeometry args={[200, 200]} />
+                <meshStandardMaterial color="#1e293b" roughness={0.8} metalness={0.2} />
+            </mesh>
+
+            {/* Grid Helper - Subtle Industrial Floor Pattern */}
+            <gridHelper args={[200, 100, '#334155', '#0f172a']} position={[0, 0.01, 0]} />
+
+            {/* Safety Lines (Yellow Stripes) */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 2.5]}>
+                <planeGeometry args={[20, 0.2]} />
+                <meshBasicMaterial color="#fbbf24" />
+            </mesh>
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, -2.5]}>
+                <planeGeometry args={[20, 0.2]} />
+                <meshBasicMaterial color="#fbbf24" />
+            </mesh>
+
+            {/* Structural Columns */}
+            {[-12, 0, 12].map((x) => (
+                [-15, 15].map((z) => (
+                    <group key={`${x}-${z}`} position={[x, 4, z]}>
+                        <mesh castShadow receiveShadow>
+                            <boxGeometry args={[0.8, 8, 0.8]} />
+                            <meshStandardMaterial color="#475569" />
+                        </mesh>
+                        {/* Column Base protection */}
+                        <mesh position={[0, -3.5, 0]}>
+                            <boxGeometry args={[1, 1, 1]} />
+                            <meshStandardMaterial color="#fbbf24" />
+                        </mesh>
+                    </group>
+                ))
+            ))}
+        </group>
+    );
+};
+
+
 const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck' }) => {
     const scaleFactor = 0.01;
     const isTrain = mode === 'train';
@@ -249,12 +292,16 @@ const ModelViewer = ({
                 camera={{ fov: 38, position: [12, 12, 15] }}
                 gl={{ preserveDrawingBuffer: true }}
             >
-                <ambientLight intensity={0.7} />
-                <directionalLight position={[15, 25, 15]} intensity={1.5} castShadow />
-                <directionalLight position={[-15, 10, -5]} intensity={0.6} />
+                <ambientLight intensity={0.5} />
+                <directionalLight position={[15, 25, 15]} intensity={1.5} castShadow shadow-mapSize={[2048, 2048]} />
+                <directionalLight position={[-15, 10, -5]} intensity={0.5} />
                 <pointLight position={[0, 8, 0]} intensity={0.5} />
 
+                {/* Mood Atmosphere */}
+                <fog attach="fog" args={['#0f172a', 15, 60]} />
+
                 <Suspense fallback={<Loader />}>
+                    <WarehouseEnvironment floorY={(-((truckType?.height || 275) * 0.01) / 2) - 0.85} />
                     <TruckContent
                         truckType={truckType}
                         packedItems={packedItems}
