@@ -200,18 +200,20 @@ const WarehouseEnvironment = ({ floorY }) => {
                     <meshStandardMaterial color="#0f172a" roughness={0.5} />
                 </mesh>
 
-                {/* Flags Display */}
-                <group position={[0, 0, 0.6]}>
+                {/* Flags Display - Self Illuminated */}
+                <group position={[0, -2, 0.6]}>
                     {['tr', 'de', 'fr', 'gb', 'it', 'ru', 'cn', 'jp', 'kr', 'in', 'es', 'nl'].map((code, index) => {
                         const spacing = 4;
                         const startX = -((12 * spacing) / 2) + (spacing / 2);
                         return (
-                            <CountryFlag
-                                key={code}
-                                code={code}
-                                position={[startX + (index * spacing), 0, 0]}
-                                onClick={(c) => alert(`Selected Country: ${c.toUpperCase()}`)}
-                            />
+                            <group key={code} position={[startX + (index * spacing), 0, 0]}>
+                                <pointLight position={[0, 0, 1]} intensity={2} distance={5} decay={2} />
+                                <CountryFlag
+                                    code={code}
+                                    position={[0, 0, 0]}
+                                    onClick={(c) => alert(`Selected Country: ${c.toUpperCase()}`)}
+                                />
+                            </group>
                         );
                     })}
                 </group>
@@ -292,8 +294,8 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck' }) => {
 
             {/* 3D GLB Truck Model (Cabin) - Only for Truck mode */}
             {!isTrain && !isPlane && !isShip && (
-                // Position Adjusted: Moved forward (-2.8) and slightly UP (0.5) to align with trailer and avoid floor clipping
-                <TruckCabinModel position={[-tLen / 2 - 2.8, -tHei / 2 + 0.5, 0]} />
+                // Position Adjusted: Moved FURTHER forward (-3.5) and slightly UP (0.5) to align with trailer and avoid clipping/floor issues
+                <TruckCabinModel position={[-tLen / 2 - 3.5, -tHei / 2 + 0.55, 0]} />
             )}
 
             {/* Professional Wheel Assemblies */}
