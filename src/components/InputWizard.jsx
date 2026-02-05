@@ -236,19 +236,12 @@ const InputWizard = ({ onCalculate, onFullReset, mode = 'truck', customSpecs = n
                 </div>
             )}
 
-            {(truckType === 'closedBox' || truckType === 'custom') && (
+            {truckType === 'closedBox' && (
                 <div style={{ marginBottom: '20px', padding: '12px', background: 'rgba(234, 88, 12, 0.15)', borderRadius: '10px', border: '1px solid #ea580c' }}>
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
                         <span style={{ fontSize: '1.2rem' }}>⚠️</span>
                         <div style={{ fontSize: '0.85rem', color: '#fb923c', lineHeight: '1.4' }}>
-                            {truckType === 'custom' ? (
-                                <>
-                                    <strong>Özel Ölçü Dorse:</strong> {customDimensions.length}x{customDimensions.width}x{customDimensions.height} cm boyutlarında hesaplanacaktır.
-                                </>
-                            ) : (
-                                <strong>Kapalı Kasa Dorse</strong>
-                            )}
-                            tipinde yük sadece dorsenin arka kapağından yüklenebilmektedir. Bu hususu lütfen dikkate alınız.
+                            <strong>Kapalı Kasa Dorse</strong> tipinde yük sadece dorsenin arka kapağından yüklenebilmektedir. Bu hususu lütfen dikkate alınız.
                         </div>
                     </div>
                 </div>
