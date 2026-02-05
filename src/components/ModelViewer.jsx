@@ -94,14 +94,17 @@ const TruckCabinModel = ({ position }) => {
             const center = new THREE.Vector3();
             box.getCenter(center);
 
-            // Determine current max dimension (e.g. if it's 3000, it's mm. if 3, it's m)
-            const maxDim = Math.max(size.x, size.y, size.z);
+            // Determine current dimensions
 
-            // Target scale: Roughly 3 meters (typical truck cabin height/width)
-            // This ensures we see it whether it's massive or tiny.
-            // We use 3.5m as a safe guess for a large cabin.
-            const targetSize = 3.5;
-            const scale = maxDim > 0 ? targetSize / maxDim : 1;
+            // ROBUST SCALING STRATEGY:
+            // Instead of using max dimension (which could be length), we target the HEIGHT (Y-axis).
+            // A typical truck cabin is about 2.8m - 3.2m tall.
+            // We want the visual height to match the trailer height (~2.75m).
+
+            const targetHeight = 3.0; // Slightly taller than trailer for visual dominance
+            const currentHeight = size.y || 1; // Avoid divide by zero
+
+            const scale = targetHeight / currentHeight;
 
             // Apply normalization
             clone.scale.set(scale, scale, scale);
