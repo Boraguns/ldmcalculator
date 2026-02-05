@@ -1,0 +1,136 @@
+/* ================================== */
+/* 3D CUBE VISUALIZATION STYLES */
+/* ================================== */
+
+.cube-animation-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.truck-view-container {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+/* Product Legend (Top Area) */
+/* This fits into the red-marked area user requested */
+.product-legend {
+  width: 95%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0.75rem;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+  transition: all 0.3s ease;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  padding: 0.25rem 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.legend-text {
+  font-family: monospace;
+  font-weight: 500;
+}
+
+/* Truck Top View */
+.truck-top-view {
+  position: relative;
+  background: rgba(0, 0, 0, 0.3);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.1);
+  overflow: visible;
+  /* Allow grid numbers to show outside */
+  margin: 20px;
+  /* Space for grid numbers */
+}
+
+/* Grid Coordinates (1, 2, 3...) */
+.grid-number {
+  position: absolute;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.grid-number.x-axis {
+  top: -18px;
+  transform: translateX(-50%);
+}
+
+.grid-number.y-axis {
+  left: -18px;
+  top: 50%;
+  /* Will become dynamic in JS */
+  transform: translateY(-50%) rotate(-90deg);
+  /* Rotate for side view */
+  transform-origin: center;
+}
+
+/* Cargo Cubes (3D View) */
+.cargo-cube-3d {
+  position: absolute;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+  /* Clean look: no text on box */
+}
+
+.cargo-cube-3d:hover {
+  z-index: 100 !important;
+  filter: brightness(1.3) !important;
+  transform: scale(1.02);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Tooltip - Minimal Style */
+.box-tooltip {
+  position: absolute;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(59, 130, 246, 0.5);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  pointer-events: none;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+  backdrop-filter: blur(4px);
+}
+
+/* Loading/Empty States */
+.cube-animation-container.loading::after {
+  content: 'Hesaplanıyor...';
+  color: var(--text-muted);
+}
+
+.cube-animation-container.empty::after {
+  content: 'Henüz veri yok';
+  color: var(--text-muted);
+}

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Tır Yükleme Optimizasyonu | Akıllı Kargo İstifleme</title>
+    <meta name="description"
+        content="Gelişmiş 3D bin packing algoritması ile otomatik kargo optimizasyonu. Farklı boyutlardaki ürünler için en verimli yükleme planını hesaplayın.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="cubes.css">
+    <link rel="stylesheet" href="layers.css">
+    <!-- GSAP CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Left Section: Truck Visual -->
+        <div class="truck-section" id="truckSection">
+            <div class="truck-container">
+                <!-- Visual Canvas -->
+                <div class="truck-visual-canvas" id="truckVisualCanvas" style="display: none;">
+                    <div class="truck-canvas-container">
+                        <!-- Product Legend (Top Area) -->
+                        <div id="productLegend" class="product-legend">
+                            <!-- Items will be injected here via JS -->
+                        </div>
+
+                        <div class="truck-outline" id="truckOutline">
+                            <!-- 3D Visualization will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Truck Image (shown initially) -->
+                <img id="truckImage"
+                    src="C:/Users/Alp Tek Bilişim/.gemini/antigravity/brain/9c74c3b8-cbc0-480e-8c9c-84e7742dc4b4/truck_standard_1769897111092.png"
+                    alt="Tır Görseli" class="truck-img">
+
+                <div class="truck-specs" id="truckSpecs">
+                    <div class="spec-item">
+                        <span class="spec-label">Uzunluk</span>
+                        <span class="spec-value">13.60 m</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Genişlik</span>
+                        <span class="spec-value">2.45 m</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Yükseklik</span>
+                        <span class="spec-value">2.70 m</span>
+                    </div>
+                    <div class="spec-item">
+                        <span class="spec-label">Maks. Yük</span>
+                        <span class="spec-value">22,000 kg</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Section: Input Form -->
+        <div class="wizard-section">
+            <div class="wizard-container">
+                <!-- Progress Bar -->
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+
+                <!-- Step 1: Truck Type Selection -->
+                <div class="step active" id="step1">
+                    <h1 class="step-title">Dorse Tipini Seçin</h1>
+                    <p class="step-description">Kargo taşıyacağınız dorseyi belirleyin</p>
+
+                    <div class="options-grid">
+                        <button class="option-card" data-truck="standard">
+                            <div class="option-icon">🚛</div>
+                            <h3>Standart Dorse</h3>
+                            <p class="option-specs">13.60m × 2.45m × 2.70m</p>
+                        </button>
+                        <button class="option-card" data-truck="mega">
+                            <div class="option-icon">🚚</div>
+                            <h3>Mega Dorse</h3>
+                            <p class="option-specs">13.60m × 2.45m × 3.00m</p>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Cargo Input -->
+                <div class="step" id="step2">
+                    <h1 class="step-title">Gönderi Boyutlarını Girin</h1>
+                    <p class="step-description">Tüm ürünlerinizin ölçülerini girin (en fazla 20 farklı ürün)</p>
+
+                    <!-- Same Size Checkbox -->
+                    <div class="checkbox-group">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="sameSizeCheckbox">
+                            <span class="checkmark"></span>
+                            <span class="checkbox-label">Tüm ürünlerim aynı boyda</span>
+                        </label>
+                    </div>
+
+                    <!-- Product List -->
+                    <div id="productList" class="product-list">
+                        <!-- Products will be added here dynamically -->
+                    </div>
+
+                    <!-- Add Product Button -->
+                    <button class="btn-add-product" id="addProductBtn">
+                        <span class="plus-icon">+</span>
+                        Yeni Ürün Ekle
+                    </button>
+
+                    <button class="btn-primary" id="calculateOptimizationBtn">Optimum İstiflemeyi Hesapla 🔢</button>
+                    <button class="btn-back" onclick="goToStep(1)">← Geri</button>
+                </div>
+
+                <!-- Results Section (Inline) -->
+                <div class="step" id="step3">
+                    <h1 class="step-title">📊 Optimizasyon Sonuçları</h1>
+
+                    <div class="live-results" id="liveResults">
+                        <div class="result-summary" id="resultSummary">
+                            <!-- Results will be populated here -->
+                        </div>
+                    </div>
+
+                    <div id="warningSection" class="warning-section" style="display: none;">
+                        <div class="warning-icon">⚠️</div>
+                        <div class="warning-content" id="warningContent"></div>
+                    </div>
+
+                    <div class="results-actions">
+                        <button class="btn-primary" onclick="goToStep(1)">Yeni Hesaplama</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="binpacking.js"></script>
+    <script src="cubes.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
