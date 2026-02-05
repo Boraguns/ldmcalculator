@@ -87,8 +87,8 @@ const TruckCabinModel = ({ position }) => {
     return <primitive
         object={clone}
         position={position}
-        scale={[0.02, 0.02, 0.02]}
-        rotation={[0, Math.PI, 0]}
+        scale={[1.1, 1.1, 1.1]}
+        rotation={[0, Math.PI / 2, 0]}
     />;
 };
 

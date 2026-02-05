@@ -82,11 +82,26 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
         const canvas = document.getElementById('truck-canvas');
         if (!canvas) return;
         const actualCanvas = canvas.querySelector('canvas') || canvas;
+
+        // Create a temporary canvas to add background color
+        // This ensures transparency doesn't ruin the image on different viewers
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = actualCanvas.width;
+        tempCanvas.height = actualCanvas.height;
+        const ctx = tempCanvas.getContext('2d');
+
+        // Fill background with App's dark theme color to ensure white wireframes are visible
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+        // Draw the 3D scene on top
+        ctx.drawImage(actualCanvas, 0, 0);
+
         const link = document.createElement('a');
         const timestamp = new Date().getTime();
         const safeName = companyName ? companyName.replace(/[^a-z0-9]/gi, '_').toLowerCase() : 'adsiz';
         link.download = `${safeName}-${mode}-loading-${timestamp}.png`;
-        link.href = actualCanvas.toDataURL('image/png');
+        link.href = tempCanvas.toDataURL('image/png');
         link.click();
 
         // Modal logic
