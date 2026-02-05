@@ -200,14 +200,25 @@ const WarehouseEnvironment = ({ floorY }) => {
                     <meshStandardMaterial color="#0f172a" roughness={0.5} />
                 </mesh>
 
-                {/* Flags Display - Self Illuminated */}
-                <group position={[0, -2, 0.6]}>
+                {/* Flags Display - 4x3 Grid Layout */}
+                <group position={[0, -8, 0.6]}>
                     {['tr', 'de', 'fr', 'gb', 'it', 'ru', 'cn', 'jp', 'kr', 'in', 'es', 'nl'].map((code, index) => {
-                        const spacing = 4;
-                        const startX = -((12 * spacing) / 2) + (spacing / 2);
+                        const col = index % 4; // 0,1,2,3
+                        const row = Math.floor(index / 4); // 0,1,2
+
+                        const spacingX = 5;
+                        const spacingY = 3.5;
+
+                        // Center the grid
+                        const startX = -((4 * spacingX) / 2) + (spacingX / 2);
+                        const startY = 4; // Start from top
+
+                        const x = startX + (col * spacingX);
+                        const y = startY - (row * spacingY);
+
                         return (
-                            <group key={code} position={[startX + (index * spacing), 0, 0]}>
-                                <pointLight position={[0, 0, 1]} intensity={2} distance={5} decay={2} />
+                            <group key={code} position={[x, y, 0]}>
+                                <pointLight position={[0, 0, 1.5]} intensity={3} distance={4} decay={1.5} />
                                 <CountryFlag
                                     code={code}
                                     position={[0, 0, 0]}
@@ -274,14 +285,14 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck' }) => {
     return (
         <group>
             {/* Main Chassis Frame / ULD Platform */}
-            {/* Removed the extra length (3.2) and offset (-1.6) for truck mode to prevent protruding black surface */}
-            <mesh position={[0, -tHei / 2 - 0.15, 0]}>
+            {/* Raised Y by +0.3 to lift trailer higher */}
+            <mesh position={[0, -tHei / 2 + 0.15, 0]}>
                 <boxGeometry args={[tLen + (isPlane ? 0.1 : 0), isPlane ? 0.1 : 0.3, isPlane ? tWid + 0.1 : tWid * 0.7]} />
                 <meshStandardMaterial color={(isPlane || isShip) ? "#cbd5e1" : "#0f172a"} metalness={(isPlane || isShip) ? 1 : 0.8} roughness={0.2} />
             </mesh>
 
             {/* Truck Bed / ULD Surface */}
-            <mesh position={[0, -tHei / 2 - 0.05, 0]} receiveShadow>
+            <mesh position={[0, -tHei / 2 + 0.25, 0]} receiveShadow>
                 <boxGeometry args={[tLen, 0.1, tWid]} />
                 <meshStandardMaterial color={isPlane ? "#94a3b8" : "#1e293b"} />
             </mesh>
@@ -310,18 +321,19 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck' }) => {
                 [-tLen / 2 + 3.2, -tHei / 2 - 0.55, -tWid / 2]
             ] : [
                 // Trailer Rear Wheels ONLY (Front wheels are part of the GLB model now)
-                [tLen / 2 - 1.5, -tHei / 2 - 0.55, tWid / 2],
-                [tLen / 2 - 1.5, -tHei / 2 - 0.55, -tWid / 2],
-                [tLen / 2 - 3.2, -tHei / 2 - 0.55, tWid / 2],
-                [tLen / 2 - 3.2, -tHei / 2 - 0.55, -tWid / 2]
+                // Adjusted positions for raised chassis & bigger wheels
+                [tLen / 2 - 1.5, -tHei / 2 - 0.25, tWid / 2],
+                [tLen / 2 - 1.5, -tHei / 2 - 0.25, -tWid / 2],
+                [tLen / 2 - 3.2, -tHei / 2 - 0.25, tWid / 2],
+                [tLen / 2 - 3.2, -tHei / 2 - 0.25, -tWid / 2]
             ]).map((pos, i) => (
                 <group key={i} position={pos} rotation={[Math.PI / 2, 0, 0]}>
                     <mesh castShadow>
-                        <cylinderGeometry args={[0.3, 0.3, 0.3, 32]} />
+                        <cylinderGeometry args={[0.45, 0.45, 0.3, 32]} /> {/* Increased Radius to 0.45 */}
                         <meshStandardMaterial color="#111" roughness={0.8} />
                     </mesh>
                     <mesh position={[0, 0.15, 0]}>
-                        <cylinderGeometry args={[0.2, 0.2, 0.05, 16]} />
+                        <cylinderGeometry args={[0.3, 0.3, 0.05, 16]} />
                         <meshStandardMaterial color="#555" metalness={0.8} roughness={0.2} />
                     </mesh>
                 </group>
