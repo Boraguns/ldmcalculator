@@ -83,13 +83,43 @@ import { useGLTF } from '@react-three/drei';
 const TruckCabinModel = ({ position }) => {
     const { scene } = useGLTF('/src/truck.glb');
     const clone = useMemo(() => scene.clone(), [scene]);
+    const groupRef = useRef();
 
-    return <primitive
-        object={clone}
-        position={position}
-        scale={[1.1, 1.1, 1.1]}
-        rotation={[0, Math.PI / 2, 0]}
-    />;
+    useEffect(() => {
+        if (clone) {
+            // Calculate bounding box to normalize scale/position
+            const box = new THREE.Box3().setFromObject(clone);
+            const size = new THREE.Vector3();
+            box.getSize(size);
+            const center = new THREE.Vector3();
+            box.getCenter(center);
+
+            // Determine current max dimension (e.g. if it's 3000, it's mm. if 3, it's m)
+            const maxDim = Math.max(size.x, size.y, size.z);
+
+            // Target scale: Roughly 3 meters (typical truck cabin height/width)
+            // This ensures we see it whether it's massive or tiny.
+            // We use 3.5m as a safe guess for a large cabin.
+            const targetSize = 3.5;
+            const scale = maxDim > 0 ? targetSize / maxDim : 1;
+
+            // Apply normalization
+            clone.scale.set(scale, scale, scale);
+
+            // Re-center: Subtract the center offset so the model's pivot is (0,0,0)
+            clone.position.copy(center).multiplyScalar(-scale);
+
+            // If the model is facing Z instead of X, we might need rotation.
+            // Usually car models face +Z or -Z. Our scene is X-aligned.
+            // We'll leave the parent rotation control to the prop or below.
+        }
+    }, [clone]);
+
+    return (
+        <group position={position} rotation={[0, Math.PI / 2, 0]}>
+            <primitive object={clone} />
+        </group>
+    );
 };
 
 const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck' }) => {
