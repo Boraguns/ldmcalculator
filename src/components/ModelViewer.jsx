@@ -130,40 +130,72 @@ const TruckCabinModel = ({ position }) => {
 const WarehouseEnvironment = ({ floorY }) => {
     return (
         <group position={[0, floorY, 0]}>
-            {/* Floor - Concrete */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-                <planeGeometry args={[200, 200]} />
-                <meshStandardMaterial color="#1e293b" roughness={0.8} metalness={0.2} />
+            {/* --- FLOORING --- */}
+
+            {/* Asphalt Road (Center Lane) */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} receiveShadow>
+                <planeGeometry args={[200, 8]} />
+                <meshStandardMaterial color="#222222" roughness={0.9} />
             </mesh>
 
-            {/* Grid Helper - Subtle Industrial Floor Pattern */}
-            <gridHelper args={[200, 100, '#334155', '#0f172a']} position={[0, 0.01, 0]} />
+            {/* Concrete Warehouse Floor (Sides) */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 54]} receiveShadow>
+                <planeGeometry args={[200, 100]} />
+                <meshStandardMaterial color="#334155" roughness={0.6} metalness={0.1} />
+            </mesh>
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, -54]} receiveShadow>
+                <planeGeometry args={[200, 100]} />
+                <meshStandardMaterial color="#334155" roughness={0.6} metalness={0.1} />
+            </mesh>
 
-            {/* Safety Lines (Yellow Stripes) */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 2.5]}>
-                <planeGeometry args={[20, 0.2]} />
+            {/* Road Markings (Dashed White Line) */}
+            {[...Array(20)].map((_, i) => (
+                <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[-90 + (i * 10), 0.02, 0]} receiveShadow>
+                    <planeGeometry args={[4, 0.15]} />
+                    <meshBasicMaterial color="#e2e8f0" opacity={0.6} transparent />
+                </mesh>
+            ))}
+
+            {/* Safety Lines (Yellow Stripes) Borders of Road */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 4.1]}>
+                <planeGeometry args={[200, 0.2]} />
                 <meshBasicMaterial color="#fbbf24" />
             </mesh>
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, -2.5]}>
-                <planeGeometry args={[20, 0.2]} />
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, -4.1]}>
+                <planeGeometry args={[200, 0.2]} />
                 <meshBasicMaterial color="#fbbf24" />
             </mesh>
 
-            {/* Structural Columns */}
-            {[-12, 0, 12].map((x) => (
-                [-15, 15].map((z) => (
-                    <group key={`${x}-${z}`} position={[x, 4, z]}>
-                        <mesh castShadow receiveShadow>
-                            <boxGeometry args={[0.8, 8, 0.8]} />
-                            <meshStandardMaterial color="#475569" />
-                        </mesh>
-                        {/* Column Base protection */}
-                        <mesh position={[0, -3.5, 0]}>
-                            <boxGeometry args={[1, 1, 1]} />
-                            <meshStandardMaterial color="#fbbf24" />
-                        </mesh>
-                    </group>
-                ))
+            {/* --- WALLS (Enclosed Box) --- */}
+
+            {/* Back Wall (Loading Dock Side) */}
+            <mesh position={[0, 20, 15]} receiveShadow>
+                <boxGeometry args={[200, 40, 1]} />
+                <meshStandardMaterial color="#0f172a" roughness={0.5} />
+            </mesh>
+
+            {/* Side Walls to feel enclosed */}
+            <mesh position={[25, 20, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow>
+                <boxGeometry args={[200, 40, 1]} />
+                <meshStandardMaterial color="#1e293b" roughness={0.5} />
+            </mesh>
+            <mesh position={[-25, 20, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
+                <boxGeometry args={[200, 40, 1]} />
+                <meshStandardMaterial color="#1e293b" roughness={0.5} />
+            </mesh>
+
+            {/* Structural Pillars */}
+            {[-18, 0, 18].map((x) => (
+                <group key={`col-${x}`} position={[x, 5, 12]}>
+                    <mesh castShadow receiveShadow>
+                        <boxGeometry args={[1, 10, 1]} />
+                        <meshStandardMaterial color="#475569" />
+                    </mesh>
+                    <mesh position={[0, -4.5, 0]}>
+                        <boxGeometry args={[1.2, 1.2, 1.2]} />
+                        <meshBasicMaterial color="#fbbf24" />
+                    </mesh>
+                </group>
             ))}
         </group>
     );
@@ -298,7 +330,8 @@ const ModelViewer = ({
                 <pointLight position={[0, 8, 0]} intensity={0.5} />
 
                 {/* Mood Atmosphere */}
-                <fog attach="fog" args={['#0f172a', 15, 60]} />
+                <color attach="background" args={['#020617']} />
+                <fog attach="fog" args={['#020617', 5, 50]} />
 
                 <Suspense fallback={<Loader />}>
                     <WarehouseEnvironment floorY={(-((truckType?.height || 275) * 0.01) / 2) - 0.85} />
