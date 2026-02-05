@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 /* eslint-disable react/no-unknown-property */
-import { Suspense, useRef, useEffect, useState } from 'react';
+import { Suspense, useRef, useEffect, useState, useMemo } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, useProgress, Html } from '@react-three/drei';
 import * as THREE from 'three';
@@ -78,6 +78,20 @@ const CameraController = ({ viewMode, onUserInteraction }) => {
     );
 };
 
+import { useGLTF } from '@react-three/drei';
+
+const TruckCabinModel = ({ position }) => {
+    const { scene } = useGLTF('/src/truck.glb');
+    const clone = useMemo(() => scene.clone(), [scene]);
+
+    return <primitive
+        object={clone}
+        position={position}
+        scale={[0.02, 0.02, 0.02]}
+        rotation={[0, Math.PI, 0]}
+    />;
+};
+
 const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck' }) => {
     const scaleFactor = 0.01;
     const isTrain = mode === 'train';
@@ -108,43 +122,9 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck' }) => {
                 <lineBasicMaterial color="#ffffff" opacity={0.2} transparent />
             </lineSegments>
 
-            {/* Advanced Truck Cabin - Lowered and aligned */}
+            {/* 3D GLB Truck Model (Cabin) - Only for Truck mode */}
             {!isTrain && !isPlane && !isShip && (
-                <group position={[-tLen / 2 - 1.4, -tHei / 2 + 0.9, 0]}>
-                    {/* Lower Cabin Body */}
-                    <mesh castShadow>
-                        <boxGeometry args={[2.8, 1.8, tWid + 0.1]} />
-                        <meshStandardMaterial color="#f8fafc" />
-                    </mesh>
-
-                    {/* Upper Cabin / Roof with Slant */}
-                    <mesh position={[0.2, 1.1, 0]} rotation={[0, 0, -0.1]}>
-                        <boxGeometry args={[2.2, 1.0, tWid + 0.1]} />
-                        <meshStandardMaterial color="#f8fafc" />
-                    </mesh>
-
-                    {/* Windshield */}
-                    <mesh position={[-1.41, 0.6, 0]} rotation={[0, Math.PI / 2, 0]}>
-                        <planeGeometry args={[tWid - 0.2, 1.2]} />
-                        <meshStandardMaterial color="#020617" roughness={0} metalness={1} transparent opacity={0.6} />
-                    </mesh>
-
-                    {/* Front Grill & Bumper */}
-                    <mesh position={[-1.3, -0.85, 0]}>
-                        <boxGeometry args={[0.3, 0.4, tWid + 0.2]} />
-                        <meshStandardMaterial color="#1e293b" />
-                    </mesh>
-
-                    {/* Detailed Headlights */}
-                    <mesh position={[-1.41, -0.7, tWid / 2 - 0.2]}>
-                        <boxGeometry args={[0.05, 0.25, 0.5]} />
-                        <meshStandardMaterial color="#f1f5f9" emissive="#f1f5f9" emissiveIntensity={1} />
-                    </mesh>
-                    <mesh position={[-1.41, -0.7, -tWid / 2 + 0.2]}>
-                        <boxGeometry args={[0.05, 0.25, 0.5]} />
-                        <meshStandardMaterial color="#f1f5f9" emissive="#f1f5f9" emissiveIntensity={1} />
-                    </mesh>
-                </group>
+                <TruckCabinModel position={[-tLen / 2 - 2.5, -tHei / 2 - 0.8, 0]} />
             )}
 
             {/* Professional Wheel Assemblies */}
@@ -158,16 +138,11 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck' }) => {
                 [-tLen / 2 + 3.2, -tHei / 2 - 0.55, tWid / 2],
                 [-tLen / 2 + 3.2, -tHei / 2 - 0.55, -tWid / 2]
             ] : [
-                // Trailer Rear Wheels
+                // Trailer Rear Wheels ONLY (Front wheels are part of the GLB model now)
                 [tLen / 2 - 1.5, -tHei / 2 - 0.55, tWid / 2],
                 [tLen / 2 - 1.5, -tHei / 2 - 0.55, -tWid / 2],
                 [tLen / 2 - 3.2, -tHei / 2 - 0.55, tWid / 2],
-                [tLen / 2 - 3.2, -tHei / 2 - 0.55, -tWid / 2],
-                // Cabin / Front Wheels
-                [-tLen / 2 - 0.5, -tHei / 2 - 0.55, tWid / 2],
-                [-tLen / 2 - 0.5, -tHei / 2 - 0.55, -tWid / 2],
-                [-tLen / 2 - 2.4, -tHei / 2 - 0.55, tWid / 2],
-                [-tLen / 2 - 2.4, -tHei / 2 - 0.55, -tWid / 2]
+                [tLen / 2 - 3.2, -tHei / 2 - 0.55, -tWid / 2]
             ]).map((pos, i) => (
                 <group key={i} position={pos} rotation={[Math.PI / 2, 0, 0]}>
                     <mesh castShadow>
