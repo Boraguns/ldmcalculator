@@ -94,7 +94,8 @@ const CountryFlag = ({ code, position, onClick }) => {
             onPointerOut={() => document.body.style.cursor = 'auto'}
         >
             <planeGeometry args={[2.4, 1.6]} /> {/* 3:2 Aspect Ratio */}
-            <meshStandardMaterial map={texture} roughness={0.2} metalness={0.1} />
+            {/* Use Basic Material so it's immune to shadows/darkness and looks vivid */}
+            <meshBasicMaterial map={texture} />
             {/* Frame */}
             <mesh position={[0, 0, -0.02]}>
                 <boxGeometry args={[2.5, 1.7, 0.04]} />
@@ -104,166 +105,734 @@ const CountryFlag = ({ code, position, onClick }) => {
     );
 };
 
+const GLBWheelPrototypeInstances = ({ targets = [], glbPath = '/src/rear-wheel.glb', prefer = 'rear' }) => {
+    // Extract wheel-like meshes from a wheel-specific GLB and reuse them for each wheel position.
+    // `prefer` tries to pick rear wheels out of a multi-wheel export (fallback to all wheel meshes).
+    const { scene } = useGLTF(glbPath);
+
+    const proto = useMemo(() => {
+        const rotMatrix = new THREE.Matrix4().makeRotationY(Math.PI / 2);
+        const groupQuat = new THREE.Quaternion().setFromRotationMatrix(rotMatrix);
+
+        const normalized = scene.clone(true);
+
+        // Scale based on approximate wheel diameter, not model height (wheel-only GLB exports).
+        // Our legacy fallback cylinders use radius ~0.45 => diameter ~0.9.
+        const targetWheelDiameter = 0.9;
+
+        // 1) Prefer wheel-like meshes by name in the whole hierarchy.
+        // Exports sometimes use non-English tokens (e.g. Spanish "Llantas_delantera_*").
+        const allMeshes = [];
+        normalized.traverse((obj) => {
+            if (obj.isMesh) allMeshes.push(obj);
+        });
+
+        const hierarchyText = (obj) => {
+            let cur = obj;
+            const parts = [];
+            while (cur) {
+                parts.push((cur.name || '').toLowerCase());
+                cur = cur.parent;
+            }
+            return parts.join(' ');
+        };
+
+        const hasWheelInHierarchy = (obj) => {
+            const t = hierarchyText(obj);
+            // English + Spanish tokens
+            return (
+                /wheel|tire|tyre|rim/.test(t) ||
+                /llanta|llantas|rueda/.test(t)
+            );
+        };
+
+        const matchesFrontWheelInHierarchy = (obj) => {
+            const t = hierarchyText(obj);
+            // Front wheel tokens: "delantera" means "front" in Spanish.
+            return (
+                /delantera/.test(t) ||
+                /front/.test(t)
+            );
+        };
+
+        const matchesRearWheelInHierarchy = (obj) => {
+            const t = hierarchyText(obj);
+            // Rear wheel tokens: "trasera" means "rear" in Spanish.
+            return (
+                /trasera/.test(t) ||
+                /trasero/.test(t) ||
+                /rear/.test(t) ||
+                /back/.test(t)
+            );
+        };
+
+        // First select all wheel-like meshes, then prefer subset (rear/front) when possible.
+        let wheelLikeMeshes = allMeshes.filter(hasWheelInHierarchy);
+        const rearWheelMeshes = wheelLikeMeshes.filter(matchesRearWheelInHierarchy);
+        const frontWheelMeshes = wheelLikeMeshes.filter(matchesFrontWheelInHierarchy);
+
+        let candidateMeshes = wheelLikeMeshes;
+        if (prefer === 'rear' && rearWheelMeshes.length > 0) candidateMeshes = rearWheelMeshes;
+        if (prefer === 'front' && frontWheelMeshes.length > 0) candidateMeshes = frontWheelMeshes;
+        
+
+        // 2) Fallback heuristic: use bounding-box shape (thin disk-ish parts at the bottom).
+        // This is intentionally conservative to avoid picking cargo/body parts.
+        if (candidateMeshes.length === 0) {
+            const tmpPos = new THREE.Vector3();
+            let minY = Infinity;
+            let maxY = -Infinity;
+
+            // First pass: min/max Y across the model for "bottom" detection
+            for (const mesh of allMeshes) {
+                mesh.getWorldPosition(tmpPos);
+                minY = Math.min(minY, tmpPos.y);
+                maxY = Math.max(maxY, tmpPos.y);
+            }
+
+            const yRange = Math.max(1e-6, maxY - minY);
+            const tmpBox = new THREE.Box3();
+            const size = new THREE.Vector3();
+
+            candidateMeshes = [];
+            for (const mesh of allMeshes) {
+                // Compute approximate world size for this mesh
+                tmpBox.setFromObject(mesh);
+                tmpBox.getSize(size);
+
+                const maxXZ = Math.max(size.x, size.z);
+                const thicknessRatio = size.y / (maxXZ || 1);
+                mesh.getWorldPosition(tmpPos);
+                const yNorm = (tmpPos.y - minY) / yRange; // 0 => bottom
+
+                const wheelLike =
+                    maxXZ > 0.12 &&
+                    thicknessRatio < 0.35 &&
+                    yNorm < 0.6;
+
+                if (wheelLike) candidateMeshes.push(mesh);
+            }
+        }
+
+        if (candidateMeshes.length === 0) return null;
+
+        // Cluster by quantized X/Z (scene-space) so a "wheel assembly" is grouped.
+        const clusters = new Map();
+        const tmpV = new THREE.Vector3();
+
+        for (const mesh of candidateMeshes) {
+            mesh.getWorldPosition(tmpV);
+            const scenePos = tmpV.clone().applyMatrix4(rotMatrix);
+            const key = `${Math.round(scenePos.x * 10) / 10}|${Math.round(scenePos.z * 10) / 10}`;
+            if (!clusters.has(key)) clusters.set(key, []);
+            clusters.get(key).push(mesh);
+        }
+
+        if (clusters.size === 0) return null;
+
+        // Choose the densest cluster as the prototype.
+        let bestKey = null;
+        let bestCount = -1;
+        for (const [key, meshes] of clusters.entries()) {
+            if (meshes.length > bestCount) {
+                bestKey = key;
+                bestCount = meshes.length;
+            }
+        }
+
+        const bestMeshes = clusters.get(bestKey) || [];
+        if (bestMeshes.length === 0) return null;
+
+        // Apply wheel-only scaling so the visible diameter matches the legacy wheel size.
+        // This keeps wheel scale consistent regardless of what the GLB exporter used as its model height.
+        const tmpBox = new THREE.Box3();
+        const tmpSize = new THREE.Vector3();
+        tmpBox.makeEmpty();
+        for (const mesh of bestMeshes) {
+            const box = new THREE.Box3().setFromObject(mesh);
+            tmpBox.union(box);
+        }
+        tmpBox.getSize(tmpSize);
+        const currentDiameter = Math.max(tmpSize.x, tmpSize.z) || 1;
+        const scale = targetWheelDiameter / currentDiameter;
+        normalized.scale.setScalar(scale);
+        normalized.updateMatrixWorld(true);
+
+        const tmpQ = new THREE.Quaternion();
+        const tmpS = new THREE.Vector3();
+        const tmpCenter = new THREE.Vector3(0, 0, 0);
+
+        const parts = bestMeshes.map((mesh) => {
+            mesh.getWorldPosition(tmpV);
+            const scenePos = tmpV.clone().applyMatrix4(rotMatrix);
+            mesh.getWorldQuaternion(tmpQ);
+            mesh.getWorldScale(tmpS);
+
+            // After we remove the group rotation, we bake it into each part.
+            const sceneQuat = groupQuat.clone().multiply(tmpQ);
+            const worldScale = tmpS.clone();
+
+            tmpCenter.add(scenePos);
+            return {
+                geometry: mesh.geometry,
+                material: mesh.material,
+                scenePos,
+                sceneQuat,
+                worldScale
+            };
+        });
+
+        tmpCenter.multiplyScalar(1 / Math.max(1, parts.length));
+
+        return { parts, center: tmpCenter };
+    }, [scene, prefer]);
+
+    // Fallback: if we couldn't detect wheel meshes from the GLB,
+    // render the previous simple cylinder wheels to avoid disappearing wheels.
+    if (!proto) {
+        return (
+            <group>
+                {targets.map((t, idx) => {
+                    const pos = Array.isArray(t) ? t : [t.x, t.y, t.z];
+                    return (
+                        <group key={idx} position={pos} rotation={[Math.PI / 2, 0, 0]}>
+                            <mesh castShadow>
+                                <cylinderGeometry args={[0.45, 0.45, 0.3, 32]} />
+                                <meshStandardMaterial color="#111" roughness={0.8} />
+                            </mesh>
+                            <mesh position={[0, 0.15, 0]}>
+                                <cylinderGeometry args={[0.3, 0.3, 0.05, 16]} />
+                                <meshStandardMaterial color="#555" metalness={0.8} roughness={0.2} />
+                            </mesh>
+                        </group>
+                    );
+                })}
+            </group>
+        );
+    }
+    if (!targets || targets.length === 0) return null;
+
+    return (
+        <group>
+            {targets.map((t, idx) => {
+                const targetPos = Array.isArray(t) ? t : [t.x, t.y, t.z];
+                const offset = new THREE.Vector3(targetPos[0], targetPos[1], targetPos[2]).sub(proto.center);
+
+                return (
+                    <group key={idx}>
+                        {proto.parts.map((p, pIdx) => (
+                            <mesh
+                                // Wheel meshes may share geometry/material references; keys still required.
+                                key={pIdx}
+                                geometry={p.geometry}
+                                material={p.material}
+                                position={[p.scenePos.x + offset.x, p.scenePos.y + offset.y, p.scenePos.z + offset.z]}
+                                quaternion={p.sceneQuat}
+                                scale={[p.worldScale.x, p.worldScale.y, p.worldScale.z]}
+                                castShadow
+                            />
+                        ))}
+                    </group>
+                );
+            })}
+        </group>
+    );
+};
+
+const GLBWheelAssembly = ({ targets = [], glbPath = '/src/rear-wheel.glb' }) => {
+    // Render individual wheel instances at each target position.
+    // Each target gets its own clone of the GLB scene, properly scaled and positioned.
+    const { scene } = useGLTF(glbPath);
+
+    // Pre-process: compute bounding box, scale factor, and normalized clone data once.
+    const wheelData = useMemo(() => {
+        const normalized = scene.clone(true);
+
+        // Rotate into our truck orientation (truck faces along X axis).
+        normalized.applyMatrix4(new THREE.Matrix4().makeRotationY(Math.PI / 2));
+        normalized.updateMatrixWorld(true);
+
+        // Force wheel materials to be dark rubber-like.
+        normalized.traverse((obj) => {
+            if (!obj.isMesh) return;
+            const materials = Array.isArray(obj.material) ? obj.material : [obj.material];
+            for (const mat of materials) {
+                if (!mat) continue;
+                if (mat.color) mat.color.set('#111111');
+                if ('map' in mat) mat.map = null;
+                if ('emissive' in mat && mat.emissive) mat.emissive.set('#000000');
+                if ('roughness' in mat) mat.roughness = 0.85;
+                if ('metalness' in mat) mat.metalness = 0.1;
+                mat.needsUpdate = true;
+            }
+        });
+
+        // Calculate bounding box for scaling
+        const box = new THREE.Box3().setFromObject(normalized);
+        const size = new THREE.Vector3();
+        box.getSize(size);
+        const center = new THREE.Vector3();
+        box.getCenter(center);
+
+        // Target wheel diameter ~0.9m (matching the fallback cylinder wheels)
+        const targetDiameter = 0.9;
+        // The wheel's visual diameter is max of X and Y after rotation
+        const currentDiameter = Math.max(size.x, size.y) || 1;
+        const scale = targetDiameter / currentDiameter;
+
+        return { normalized, box, size, center, scale };
+    }, [scene]);
+
+    if (!targets || targets.length === 0) return null;
+
+    return (
+        <group>
+            {targets.map((t, idx) => {
+                const pos = Array.isArray(t) ? t : [t.x, t.y, t.z];
+                const clone = wheelData.normalized.clone(true);
+
+                // Determine if this is a right-side wheel (negative Z = right side of truck)
+                // If so, mirror on Z axis to create the opposite side wheel
+                const isRightSide = pos[2] < 0;
+
+                return (
+                    <group
+                        key={idx}
+                        position={[pos[0], pos[1] + 0.45, pos[2]]}
+                        scale={[
+                            wheelData.scale,
+                            wheelData.scale,
+                            isRightSide ? -wheelData.scale : wheelData.scale
+                        ]}
+                    >
+                        <primitive object={clone} />
+                    </group>
+                );
+            })}
+        </group>
+    );
+};
+
 const TruckCabinModel = ({ position }) => {
     const { scene } = useGLTF('/src/truck.glb');
-    const clone = useMemo(() => scene.clone(), [scene]);
-    const groupRef = useRef();
+    
+    // Deep clone and pre-calculate bounding box/scaling exactly once
+    const truckData = useMemo(() => {
+        const normalized = scene.clone(true);
+        
+        // Ensure PBR materials map correctly
+        normalized.traverse((obj) => {
+            if (obj.isMesh && obj.material) {
+                // Remove specular/glossiness limitations if any, 
+                // force them into standard material if they got corrupted
+                if (obj.material.type === 'MeshStandardMaterial') {
+                    obj.material.needsUpdate = true;
+                }
+            }
+        });
 
-    useEffect(() => {
-        if (clone) {
-            // Calculate bounding box to normalize scale/position
-            const box = new THREE.Box3().setFromObject(clone);
-            const size = new THREE.Vector3();
-            box.getSize(size);
-            const center = new THREE.Vector3();
-            box.getCenter(center);
+        const box = new THREE.Box3().setFromObject(normalized);
+        const size = new THREE.Vector3();
+        box.getSize(size);
+        const center = new THREE.Vector3();
+        box.getCenter(center);
 
-            // Determine current dimensions
+        // Typical truck cabin is about 3.0m tall
+        const targetHeight = 3.0; 
+        const currentHeight = size.y || 1;
+        const scale = targetHeight / currentHeight;
 
-            // ROBUST SCALING STRATEGIES:
-            // Instead of using max dimension (which could be length), we target the HEIGHT (Y-axis).
-            // A typical truck cabin is about 2.8m - 3.2m tall.
-            // We want the visual height to match the trailer height (~2.75m).
-
-            const targetHeight = 3.0; // Slightly taller than trailer for visual dominance
-            const currentHeight = size.y || 1; // Avoid divide by zero
-
-            const scale = targetHeight / currentHeight;
-
-            // Apply normalization
-            clone.scale.set(scale, scale, scale);
-
-            // Re-center: Subtract the center offset so the model's pivot is (0,0,0)
-            clone.position.copy(center).multiplyScalar(-scale);
-
-            // If the model is facing Z instead of X, we might need rotation.
-            // Usually car models face +Z or -Z. Our scene is X-aligned.
-            // We'll leave the parent rotation control to the prop or below.
-        }
-    }, [clone]);
+        return { normalized, center, scale };
+    }, [scene]);
 
     return (
         <group position={position} rotation={[0, Math.PI / 2, 0]}>
-            <primitive object={clone} />
+            <group scale={[truckData.scale, truckData.scale, truckData.scale]}>
+                <group position={[-truckData.center.x, -truckData.center.y, -truckData.center.z]}>
+                    <primitive object={truckData.normalized} />
+                </group>
+            </group>
         </group>
     );
 };
 
 
+/* Reusable small components for warehouse props */
+const WarehouseContainer = ({ position, size = [2.4, 2.6, 6], color = '#2563eb' }) => (
+    <group position={position}>
+        {/* Main container body */}
+        <mesh castShadow receiveShadow>
+            <boxGeometry args={size} />
+            <meshStandardMaterial color={color} roughness={0.6} metalness={0.3} />
+        </mesh>
+        {/* Corrugation ridges (horizontal lines) */}
+        {[...Array(5)].map((_, i) => (
+            <mesh key={i} position={[0, -size[1] / 2 + 0.4 + i * (size[1] / 6), size[2] / 2 + 0.01]}>
+                <boxGeometry args={[size[0] - 0.1, 0.05, 0.02]} />
+                <meshStandardMaterial color={color} roughness={0.4} metalness={0.5} />
+            </mesh>
+        ))}
+        {/* Side ridges */}
+        {[...Array(5)].map((_, i) => (
+            <mesh key={`s${i}`} position={[size[0] / 2 + 0.01, -size[1] / 2 + 0.4 + i * (size[1] / 6), 0]}>
+                <boxGeometry args={[0.02, 0.05, size[2] - 0.1]} />
+                <meshStandardMaterial color={color} roughness={0.4} metalness={0.5} />
+            </mesh>
+        ))}
+        {/* Container door bars (front face) */}
+        <mesh position={[0, 0, -size[2] / 2 - 0.02]}>
+            <boxGeometry args={[0.08, size[1] - 0.2, 0.04]} />
+            <meshStandardMaterial color="#1a1a2e" roughness={0.3} metalness={0.7} />
+        </mesh>
+        {/* Door handle */}
+        <mesh position={[0.15, -0.2, -size[2] / 2 - 0.04]}>
+            <boxGeometry args={[0.06, 0.4, 0.06]} />
+            <meshStandardMaterial color="#94a3b8" roughness={0.2} metalness={0.9} />
+        </mesh>
+    </group>
+);
 
-const WarehouseEnvironment = ({ floorY }) => {
+const PalletStack = ({ position, boxColor = '#c2884a', count = 3, boxSize = [1.2, 0.8, 1.0] }) => (
+    <group position={position}>
+        {/* Wooden pallet base */}
+        <mesh position={[0, 0.075, 0]} castShadow receiveShadow>
+            <boxGeometry args={[1.2, 0.15, 1.0]} />
+            <meshStandardMaterial color="#8B7355" roughness={0.9} metalness={0} />
+        </mesh>
+        {/* Pallet slats */}
+        {[-0.4, 0, 0.4].map((z, i) => (
+            <mesh key={i} position={[0, -0.01, z]}>
+                <boxGeometry args={[1.2, 0.04, 0.12]} />
+                <meshStandardMaterial color="#6d5a3a" roughness={0.95} />
+            </mesh>
+        ))}
+        {/* Stacked boxes on the pallet */}
+        {[...Array(count)].map((_, i) => (
+            <mesh key={`b${i}`} position={[0, 0.15 + 0.4 + i * (boxSize[1] + 0.02), 0]} castShadow>
+                <boxGeometry args={boxSize} />
+                <meshStandardMaterial color={boxColor} roughness={0.7} metalness={0.05} />
+            </mesh>
+        ))}
+        {/* Stretch wrap effect (translucent) for top boxes */}
+        {count > 2 && (
+            <mesh position={[0, 0.15 + 0.4 + (count - 1) * (boxSize[1] + 0.02) / 2 + 0.2, 0]}>
+                <boxGeometry args={[boxSize[0] + 0.02, count * (boxSize[1] + 0.02), boxSize[2] + 0.02]} />
+                <meshStandardMaterial color="#ffffff" transparent opacity={0.06} roughness={0.1} />
+            </mesh>
+        )}
+    </group>
+);
+
+const SteelBeam = ({ position, size = [0.3, 0.3, 30], color = '#374151' }) => (
+    <mesh position={position} castShadow>
+        <boxGeometry args={size} />
+        <meshStandardMaterial color={color} roughness={0.3} metalness={0.8} />
+    </mesh>
+);
+
+const WarehouseEnvironment = ({ floorY, showFlags = true, onFlagClick }) => {
+    const containerColors = ['#1e40af', '#15803d', '#b91c1c', '#854d0e', '#4338ca', '#0f766e', '#9f1239', '#1d4ed8'];
+    const boxColors = ['#c2884a', '#a3855a', '#d4a574', '#b8956a', '#8B7355', '#c49a6c'];
+
     return (
         <group position={[0, floorY, 0]}>
-            {/* --- FLOORING --- */}
+            {/* ============= FLOORING ============= */}
 
-            {/* Asphalt Road (Center Lane) */}
+            {/* Epoxy-coated Industrial Floor (main warehouse area) */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]} receiveShadow>
+                <planeGeometry args={[200, 120]} />
+                <meshStandardMaterial color="#1e293b" roughness={0.4} metalness={0.15} />
+            </mesh>
+
+            {/* Asphalt Road (Center Lane - truck driving area) */}
             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} receiveShadow>
                 <planeGeometry args={[200, 8]} />
-                <meshStandardMaterial color="#222222" roughness={0.9} />
+                <meshStandardMaterial color="#1a1a1a" roughness={0.92} />
             </mesh>
 
-            {/* Concrete Warehouse Floor (Sides) */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 54]} receiveShadow>
-                <planeGeometry args={[200, 100]} />
-                <meshStandardMaterial color="#334155" roughness={0.6} metalness={0.1} />
-            </mesh>
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, -54]} receiveShadow>
-                <planeGeometry args={[200, 100]} />
-                <meshStandardMaterial color="#334155" roughness={0.6} metalness={0.1} />
+            {/* Road Surface Detail (slight texture variation) */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.015, 0]}>
+                <planeGeometry args={[200, 7.5]} />
+                <meshStandardMaterial color="#222222" roughness={0.95} transparent opacity={0.3} />
             </mesh>
 
-            {/* Road Markings (Dashed White Line) */}
-            {[...Array(20)].map((_, i) => (
-                <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[-90 + (i * 10), 0.02, 0]} receiveShadow>
-                    <planeGeometry args={[4, 0.15]} />
-                    <meshBasicMaterial color="#e2e8f0" opacity={0.6} transparent />
+            {/* Road Markings (Dashed Center Line) */}
+            {[...Array(25)].map((_, i) => (
+                <mesh key={`dash${i}`} rotation={[-Math.PI / 2, 0, 0]} position={[-96 + (i * 8), 0.025, 0]} receiveShadow>
+                    <planeGeometry args={[3, 0.12]} />
+                    <meshBasicMaterial color="#e2e8f0" opacity={0.5} transparent />
                 </mesh>
             ))}
 
-            {/* Safety Lines (Yellow Stripes) Borders of Road */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 4.1]}>
-                <planeGeometry args={[200, 0.2]} />
+            {/* Safety Lines (Yellow Hazard Stripes) */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.025, 4.2]}>
+                <planeGeometry args={[200, 0.25]} />
                 <meshBasicMaterial color="#fbbf24" />
             </mesh>
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, -4.1]}>
-                <planeGeometry args={[200, 0.2]} />
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.025, -4.2]}>
+                <planeGeometry args={[200, 0.25]} />
                 <meshBasicMaterial color="#fbbf24" />
             </mesh>
 
-            {/* --- WALLS (Enclosed Box) --- */}
+            {/* Pedestrian walkway markings */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 5.5]}>
+                <planeGeometry args={[200, 0.1]} />
+                <meshBasicMaterial color="#ffffff" opacity={0.3} transparent />
+            </mesh>
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, -5.5]}>
+                <planeGeometry args={[200, 0.1]} />
+                <meshBasicMaterial color="#ffffff" opacity={0.3} transparent />
+            </mesh>
 
-            {/* Back Wall (Behind the Truck - Flag Wall) */}
-            {/* Moved from Z=15 to Z=-15 to be in background of Side View (Z=25) */}
-            <group position={[0, 15, -15]}>
-                <mesh receiveShadow>
-                    <boxGeometry args={[200, 30, 1]} />
-                    <meshStandardMaterial color="#0f172a" roughness={0.5} />
+            {/* ============= WALLS ============= */}
+
+            {/* Back Wall - Main Visible Wall (Concrete Panels) */}
+            <group position={[0, 0, -20]}>
+                {/* Base concrete wall */}
+                <mesh position={[0, 15, 0]} receiveShadow>
+                    <boxGeometry args={[120, 30, 0.8]} />
+                    <meshStandardMaterial color="#94a3b8" roughness={0.85} metalness={0.05} />
+                </mesh>
+                {/* Concrete panel lines (horizontal) */}
+                {[3, 6, 9, 12, 18, 24].map((y, i) => (
+                    <mesh key={`wh${i}`} position={[0, y, 0.42]}>
+                        <boxGeometry args={[120, 0.06, 0.02]} />
+                        <meshStandardMaterial color="#64748b" roughness={0.7} metalness={0.1} />
+                    </mesh>
+                ))}
+                {/* Concrete panel lines (vertical) */}
+                {[-50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 50].map((x, i) => (
+                    <mesh key={`wv${i}`} position={[x, 15, 0.42]}>
+                        <boxGeometry args={[0.06, 30, 0.02]} />
+                        <meshStandardMaterial color="#64748b" roughness={0.7} metalness={0.1} />
+                    </mesh>
+                ))}
+                {/* Lower wall kick plate (darker concrete) */}
+                <mesh position={[0, 0.75, 0.42]} receiveShadow>
+                    <boxGeometry args={[120, 1.5, 0.05]} />
+                    <meshStandardMaterial color="#475569" roughness={0.9} />
                 </mesh>
 
-                {/* Flags Display - 4x3 Grid Layout */}
-                <group position={[0, -8, 0.6]}>
-                    {['tr', 'de', 'fr', 'gb', 'it', 'ru', 'cn', 'jp', 'kr', 'in', 'es', 'nl'].map((code, index) => {
-                        const col = index % 4; // 0,1,2,3
-                        const row = Math.floor(index / 4); // 0,1,2
-
-                        const spacingX = 5;
-                        const spacingY = 3.5;
-
-                        // Center the grid
-                        const startX = -((4 * spacingX) / 2) + (spacingX / 2);
-                        const startY = 4; // Start from top
-
-                        const x = startX + (col * spacingX);
-                        const y = startY - (row * spacingY);
-
-                        return (
-                            <group key={code} position={[x, y, 0]}>
-                                <pointLight position={[0, 0, 1.5]} intensity={3} distance={4} decay={1.5} />
-                                <CountryFlag
-                                    code={code}
-                                    position={[0, 0, 0]}
-                                    onClick={(c) => alert(`Selected Country: ${c.toUpperCase()}`)}
-                                />
-                            </group>
-                        );
-                    })}
-                </group>
-
-                {/* Ambient Wall Light (Emissive Strip) */}
-                <mesh position={[0, 8, 0.5]}>
-                    <boxGeometry args={[200, 0.5, 0.5]} />
-                    <meshStandardMaterial color="#3b82f6" emissive="#3b82f6" emissiveIntensity={2} toneMapped={false} />
+                {/* Blue Accent Light Strip (Top of wall) */}
+                <mesh position={[0, 28, 0.5]}>
+                    <boxGeometry args={[120, 0.4, 0.3]} />
+                    <meshStandardMaterial color="#3b82f6" emissive="#3b82f6" emissiveIntensity={1.5} toneMapped={false} />
                 </mesh>
+
+                {/* Warning signs on back wall */}
+                {[-45, -25, 25, 45].map((x, i) => (
+                    <group key={`sign${i}`} position={[x, 22, 0.5]}>
+                        {/* Sign plate */}
+                        <mesh>
+                            <boxGeometry args={[3, 1.5, 0.08]} />
+                            <meshStandardMaterial color="#1e40af" roughness={0.3} metalness={0.4} />
+                        </mesh>
+                        {/* Sign text area (white) */}
+                        <mesh position={[0, 0, 0.05]}>
+                            <planeGeometry args={[2.6, 1.1]} />
+                            <meshStandardMaterial color="#e2e8f0" roughness={0.5} />
+                        </mesh>
+                    </group>
+                ))}
+
+                {/* Country Flags (Hanging like portraits on the wall) */}
+                {showFlags && (
+                    <group position={[0, 1.5, 0.6]}> {/* Lowered from 6 to 1.5 so they are at truck cabin eye-level */}
+                        {['tr', 'de', 'fr', 'nl', 'it', 'be', 'es', 'gb', 'at', 'ch'].map((code, index) => {
+                            const cols = 5;
+                            const col = index % cols; 
+                            const row = Math.floor(index / cols);
+
+                            const spacingX = 4.5;
+                            const spacingY = 3.2;
+
+                            // Center the grid
+                            const startX = -((cols * spacingX) / 2) + (spacingX / 2);
+                            const startY = 3; 
+
+                            const x = startX + (col * spacingX);
+                            const y = startY - (row * spacingY);
+
+                            return (
+                                <group key={code} position={[x, y, 0]}>
+                                    <pointLight position={[0, 0, 1.5]} intensity={1.5} distance={5} decay={1.5} color="#e6f2ff" />
+                                    <mesh position={[0, 2, 0]}> {/* Spotlight housing above flag */}
+                                        <boxGeometry args={[1, 0.1, 0.3]} />
+                                        <meshStandardMaterial color="#333" />
+                                    </mesh>
+                                    <CountryFlag
+                                        code={code}
+                                        position={[0, 0, 0]}
+                                        onClick={onFlagClick}
+                                    />
+                                </group>
+                            );
+                        })}
+                    </group>
+                )}
             </group>
 
-            {/* Front Wall (Behind Camera - Invisible but blocking light/reflection if needed) */}
-            {/* Pushed further back to Z=35 to not clip camera at Z=25 */}
-            <mesh position={[0, 20, 35]} receiveShadow>
-                <boxGeometry args={[200, 40, 1]} />
-                <meshStandardMaterial color="#1e293b" roughness={0.5} />
+            {/* Front Wall (behind camera) */}
+            <mesh position={[0, 15, 40]} receiveShadow>
+                <boxGeometry args={[120, 30, 0.8]} />
+                <meshStandardMaterial color="#1e293b" roughness={0.7} />
             </mesh>
 
-            {/* Side Walls */}
-            {/* Pushed to X=60 to clear front/back views */}
-            <mesh position={[60, 20, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow>
-                <boxGeometry args={[100, 40, 1]} />
-                <meshStandardMaterial color="#1e293b" roughness={0.5} />
-            </mesh>
-            <mesh position={[-60, 20, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
-                <boxGeometry args={[100, 40, 1]} />
-                <meshStandardMaterial color="#1e293b" roughness={0.5} />
-            </mesh>
-
-            {/* Structural Pillars */}
-            {[-18, 0, 18].map((x) => (
-                <group key={`col-${x}`} position={[x, 5, 12]}>
-                    <mesh castShadow receiveShadow>
-                        <boxGeometry args={[1, 10, 1]} />
-                        <meshStandardMaterial color="#475569" />
+            {/* Side Walls with Panels */}
+            {[1, -1].map((side) => (
+                <group key={`sidewall${side}`} position={[60 * side, 0, 10]}>
+                    {/* Main wall */}
+                    <mesh position={[0, 15, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
+                        <boxGeometry args={[60, 30, 0.8]} />
+                        <meshStandardMaterial color="#334155" roughness={0.8} metalness={0.05} />
                     </mesh>
-                    <mesh position={[0, -4.5, 0]}>
-                        <boxGeometry args={[1.2, 1.2, 1.2]} />
-                        <meshBasicMaterial color="#fbbf24" />
+                    {/* Wall panel grooves */}
+                    {[5, 10, 15, 20, 25].map((y, i) => (
+                        <mesh key={`sp${i}`} position={[side * 0.42, y, 0]} rotation={[0, Math.PI / 2, 0]}>
+                            <boxGeometry args={[60, 0.05, 0.02]} />
+                            <meshStandardMaterial color="#1e293b" roughness={0.6} />
+                        </mesh>
+                    ))}
+                </group>
+            ))}
+
+            {/* ============= STRUCTURAL STEEL ============= */}
+
+            {/* Vertical Steel Columns along back wall (removed center ones to make room for flags) */}
+            {[-50, -35, -20, 25, 40, 55].map((x, i) => (
+                <group key={`col${i}`} position={[x, 0, -19.5]}>
+                    {/* H-beam column */}
+                    <SteelBeam position={[0, 15, 0]} size={[0.4, 30, 0.4]} color="#374151" />
+                    {/* Flange */}
+                    <SteelBeam position={[0, 15, 0]} size={[0.6, 30, 0.12]} color="#4b5563" />
+                </group>
+            ))}
+
+            {/* Horizontal Roof Beams (trusses) */}
+            {[-40, -20, 0, 20, 40].map((x, i) => (
+                <SteelBeam key={`truss${i}`} position={[x, 29, 10]} size={[0.25, 0.4, 60]} color="#374151" />
+            ))}
+
+            {/* Cross beams */}
+            {[-30, -10, 10, 30].map((x, i) => (
+                <SteelBeam key={`cross${i}`} position={[x, 28.5, 10]} size={[20, 0.15, 0.15]} color="#4b5563" />
+            ))}
+
+            {/* ============= CEILING ============= */}
+            <mesh position={[0, 29.5, 10]} rotation={[-Math.PI / 2, 0, 0]}>
+                <planeGeometry args={[120, 60]} />
+                <meshStandardMaterial color="#1e293b" roughness={0.8} side={THREE.DoubleSide} />
+            </mesh>
+
+            {/* ============= INDUSTRIAL LIGHTING ============= */}
+            {[-30, -10, 10, 30].map((x, i) => (
+                <group key={`light${i}`} position={[x, 28, 0]}>
+                    {/* Light fixture housing */}
+                    <mesh>
+                        <boxGeometry args={[3, 0.2, 0.6]} />
+                        <meshStandardMaterial color="#94a3b8" roughness={0.3} metalness={0.7} />
+                    </mesh>
+                    {/* Light panel (emissive) */}
+                    <mesh position={[0, -0.12, 0]}>
+                        <boxGeometry args={[2.8, 0.05, 0.45]} />
+                        <meshStandardMaterial
+                            color="#f8fafc"
+                            emissive="#e2e8f0"
+                            emissiveIntensity={0.8}
+                            toneMapped={false}
+                        />
+                    </mesh>
+                    {/* Actual point light */}
+                    <pointLight position={[0, -1, 0]} intensity={0.4} distance={20} decay={2} color="#f1f5f9" />
+                </group>
+            ))}
+
+            {/* Left side was removed per request */}
+
+            {/* ============= WAREHOUSE STORAGE - RIGHT SIDE (Z < -4) ============= */}
+            <group position={[0, 0, -10]}>
+                {/* Shipping Containers Row */}
+                {[-20, -7, 6, 19, 32, 45].map((x, i) => (
+                    <WarehouseContainer
+                        key={`cr1_${i}`}
+                        position={[x, 1.3, 0]}
+                        size={[2.4, 2.6, 5]}
+                        // Muted brown tones for realistic cardboard/box look
+                        color={['#8B7355', '#a3855a', '#c2884a'][i % 3]}
+                    />
+                ))}
+
+                {/* Second level containers */}
+                {[-7, 19, 45].map((x, i) => (
+                    <WarehouseContainer
+                        key={`cr2_${i}`}
+                        position={[x, 3.9, 0]}
+                        size={[2.4, 2.6, 5]}
+                        // Muted brown tones
+                        color={['#a3855a', '#c2884a', '#d4a574'][i % 3]}
+                    />
+                ))}
+
+                {/* Pallet stacks */}
+                {[-30, -26, -14, -10, 12, 16, 25, 29, 38, 50].map((x, i) => (
+                    <PalletStack
+                        key={`pr1_${i}`}
+                        position={[x, 0, -5]}
+                        boxColor={boxColors[(i + 2) % boxColors.length]}
+                        count={2 + (i % 3)}
+                        boxSize={[1.1 + (i % 2) * 0.2, 0.7 + (i % 3) * 0.15, 0.9]}
+                    />
+                ))}
+            </group>
+
+            {/* ============= FLOOR DETAILS ============= */}
+
+            {/* Floor zone marking rectangles */}
+            {[-30, -10, 10, 30].map((x, i) => (
+                <group key={`zone${i}`}>
+                    {/* Zone box on positive Z side */}
+                    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[x, 0.015, 7]}>
+                        <planeGeometry args={[8, 4]} />
+                        <meshBasicMaterial color="#1e40af" transparent opacity={0.08} />
+                    </mesh>
+                    {/* Zone box on negative Z side */}
+                    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[x, 0.015, -7]}>
+                        <planeGeometry args={[8, 4]} />
+                        <meshBasicMaterial color="#1e40af" transparent opacity={0.08} />
+                    </mesh>
+                </group>
+            ))}
+
+            {/* ============= LOADING DOCK DETAILS ============= */}
+
+            {/* Dock bumpers at back wall */}
+            {[-10, 0, 10].map((x, i) => (
+                <group key={`dock${i}`} position={[x, 1.5, -19.5]}>
+                    {/* Rubber bumper */}
+                    <mesh>
+                        <boxGeometry args={[0.8, 1.2, 0.3]} />
+                        <meshStandardMaterial color="#111827" roughness={0.95} />
+                    </mesh>
+                    {/* Bumper bracket */}
+                    <mesh position={[0, 0.7, 0]}>
+                        <boxGeometry args={[1.2, 0.15, 0.15]} />
+                        <meshStandardMaterial color="#374151" metalness={0.7} roughness={0.3} />
+                    </mesh>
+                </group>
+            ))}
+
+            {/* Fire extinguisher stations */}
+            {[-45, 50].map((x, i) => (
+                <group key={`fire${i}`} position={[x, 1.5, -19.2]}>
+                    {/* Bracket */}
+                    <mesh>
+                        <boxGeometry args={[0.4, 0.8, 0.15]} />
+                        <meshStandardMaterial color="#dc2626" roughness={0.5} metalness={0.3} />
+                    </mesh>
+                    {/* Cylinder body */}
+                    <mesh position={[0, -0.1, 0.15]}>
+                        <cylinderGeometry args={[0.08, 0.08, 0.5, 8]} />
+                        <meshStandardMaterial color="#b91c1c" roughness={0.4} metalness={0.4} />
                     </mesh>
                 </group>
             ))}
@@ -310,34 +879,43 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck' }) => {
             )}
 
             {/* Professional Wheel Assemblies */}
-            {!isPlane && !isShip && (isTrain ? [
-                [tLen / 2 - 1.5, -tHei / 2 - 0.55, tWid / 2],
-                [tLen / 2 - 1.5, -tHei / 2 - 0.55, -tWid / 2],
-                [tLen / 2 - 3.2, -tHei / 2 - 0.55, tWid / 2],
-                [tLen / 2 - 3.2, -tHei / 2 - 0.55, -tWid / 2],
-                [-tLen / 2 + 1.5, -tHei / 2 - 0.55, tWid / 2],
-                [-tLen / 2 + 1.5, -tHei / 2 - 0.55, -tWid / 2],
-                [-tLen / 2 + 3.2, -tHei / 2 - 0.55, tWid / 2],
-                [-tLen / 2 + 3.2, -tHei / 2 - 0.55, -tWid / 2]
-            ] : [
-                // Trailer Rear Wheels ONLY (Front wheels are part of the GLB model now)
-                // Adjusted positions for raised chassis & bigger wheels
-                [tLen / 2 - 1.5, -tHei / 2 - 0.25, tWid / 2],
-                [tLen / 2 - 1.5, -tHei / 2 - 0.25, -tWid / 2],
-                [tLen / 2 - 3.2, -tHei / 2 - 0.25, tWid / 2],
-                [tLen / 2 - 3.2, -tHei / 2 - 0.25, -tWid / 2]
-            ]).map((pos, i) => (
-                <group key={i} position={pos} rotation={[Math.PI / 2, 0, 0]}>
-                    <mesh castShadow>
-                        <cylinderGeometry args={[0.45, 0.45, 0.3, 32]} /> {/* Increased Radius to 0.45 */}
-                        <meshStandardMaterial color="#111" roughness={0.8} />
-                    </mesh>
-                    <mesh position={[0, 0.15, 0]}>
-                        <cylinderGeometry args={[0.3, 0.3, 0.05, 16]} />
-                        <meshStandardMaterial color="#555" metalness={0.8} roughness={0.2} />
-                    </mesh>
-                </group>
-            ))}
+            {!isPlane && !isShip && (
+                isTrain ? (
+                    [
+                        [tLen / 2 - 1.5, -tHei / 2 - 0.55, tWid / 2],
+                        [tLen / 2 - 1.5, -tHei / 2 - 0.55, -tWid / 2],
+                        [tLen / 2 - 3.2, -tHei / 2 - 0.55, tWid / 2],
+                        [tLen / 2 - 3.2, -tHei / 2 - 0.55, -tWid / 2],
+                        [-tLen / 2 + 1.5, -tHei / 2 - 0.55, tWid / 2],
+                        [-tLen / 2 + 1.5, -tHei / 2 - 0.55, -tWid / 2],
+                        [-tLen / 2 + 3.2, -tHei / 2 - 0.55, tWid / 2],
+                        [-tLen / 2 + 3.2, -tHei / 2 - 0.55, -tWid / 2]
+                    ].map((pos, i) => (
+                        <group key={i} position={pos} rotation={[Math.PI / 2, 0, 0]}>
+                            <mesh castShadow>
+                                <cylinderGeometry args={[0.45, 0.45, 0.3, 32]} />
+                                <meshStandardMaterial color="#111" roughness={0.8} />
+                            </mesh>
+                            <mesh position={[0, 0.15, 0]}>
+                                <cylinderGeometry args={[0.3, 0.3, 0.05, 16]} />
+                                <meshStandardMaterial color="#555" metalness={0.8} roughness={0.2} />
+                            </mesh>
+                        </group>
+                    ))
+                ) : (
+                    // Truck mode: Replace trailer rear wheels with GLB wheel visuals
+                    // so it looks consistent with the (already good-looking) front wheels.
+                    <GLBWheelAssembly
+                        targets={[
+                            [tLen / 2 - 1.5, -tHei / 2 - 0.55, tWid / 2],
+                            [tLen / 2 - 1.5, -tHei / 2 - 0.55, -tWid / 2],
+                            [tLen / 2 - 3.2, -tHei / 2 - 0.55, tWid / 2],
+                            [tLen / 2 - 3.2, -tHei / 2 - 0.55, -tWid / 2]
+                        ]}
+                        glbPath="/src/rear-wheel.glb"
+                    />
+                )
+            )}
 
             {/* Placed Cargo Items */}
             {packedItems.map((item, i) => {
@@ -387,6 +965,8 @@ const ModelViewer = ({
     onUserInteraction,
     mode = 'truck'
 }) => {
+    const [selectedCountry, setSelectedCountry] = useState(null);
+
     return (
         <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', borderRadius: '1rem', background: 'transparent' }}>
             <Canvas
@@ -395,17 +975,22 @@ const ModelViewer = ({
                 camera={{ fov: 38, position: [12, 12, 15] }}
                 gl={{ preserveDrawingBuffer: true }}
             >
-                <ambientLight intensity={0.5} />
-                <directionalLight position={[15, 25, 15]} intensity={1.5} castShadow shadow-mapSize={[2048, 2048]} />
-                <directionalLight position={[-15, 10, -5]} intensity={0.5} />
+                {/* Warehouse lighting (brighter for industrial indoor look) */}
+                <ambientLight intensity={0.85} />
+                <directionalLight position={[15, 25, 15]} intensity={2.0} castShadow shadow-mapSize={[2048, 2048]} />
+                <directionalLight position={[-15, 10, -5]} intensity={0.65} />
                 <pointLight position={[0, 8, 0]} intensity={0.5} />
 
                 {/* Mood Atmosphere */}
-                <color attach="background" args={['#020617']} />
-                <fog attach="fog" args={['#020617', 5, 50]} />
+                <color attach="background" args={['#0b1220']} />
+                <fog attach="fog" args={['#0b1220', 8, 80]} />
 
                 <Suspense fallback={<Loader />}>
-                    <WarehouseEnvironment floorY={(-((truckType?.height || 275) * 0.01) / 2) - 0.85} />
+                    <WarehouseEnvironment 
+                        floorY={(-((truckType?.height || 275) * 0.01) / 2) - 0.85} 
+                        showFlags={true} 
+                        onFlagClick={(code) => setSelectedCountry(code)}
+                    />
                     <TruckContent
                         truckType={truckType}
                         packedItems={packedItems}
@@ -416,6 +1001,86 @@ const ModelViewer = ({
 
                 <CameraController viewMode={viewMode} onUserInteraction={onUserInteraction} />
             </Canvas>
+
+            {/* UI Overlay Modal for Country Cargo Locations */}
+            {selectedCountry && (
+                <div style={{
+                    position: 'absolute',
+                    top: 0, left: 0, width: '100%', height: '100%',
+                    backgroundColor: 'rgba(11, 18, 32, 0.8)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 50,
+                    backdropFilter: 'blur(4px)'
+                }}>
+                    <div style={{
+                        background: '#1e293b',
+                        padding: '24px',
+                        borderRadius: '12px',
+                        width: '90%',
+                        maxWidth: '500px',
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+                        border: '1px solid #334155'
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <img 
+                                    src={`https://flagcdn.com/w40/${selectedCountry}.png`} 
+                                    alt={selectedCountry}
+                                    style={{ borderRadius: '4px', width: '32px' }}
+                                />
+                                <h3 style={{ margin: 0, color: '#f8fafc', fontSize: '1.25rem', textTransform: 'uppercase' }}>
+                                    {selectedCountry} Yükleme Noktaları
+                                </h3>
+                            </div>
+                            <button 
+                                onClick={() => setSelectedCountry(null)}
+                                style={{ 
+                                    background: 'transparent', border: 'none', color: '#94a3b8', 
+                                    cursor: 'pointer', fontSize: '1.5rem', lineHeight: 1 
+                                }}
+                            >
+                                &times;
+                            </button>
+                        </div>
+                        
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            {/* Mock Data Cards */}
+                            {[
+                                { city: 'Merkez Hub', type: 'Endüstriyel Palet', weight: '12.000 kg', date: 'Bugün' },
+                                { city: 'Kuzey Liman', type: 'Konteyner Parsiyel', weight: '4.500 kg', date: 'Yarın' },
+                                { city: 'Doğu Lojistik', type: 'Hassas Yük', weight: '800 kg', date: '2 Gün Sonra' }
+                            ].map((mock, i) => (
+                                <div key={i} style={{
+                                    background: '#0f172a',
+                                    padding: '16px',
+                                    borderRadius: '8px',
+                                    borderLeft: '4px solid #3b82f6',
+                                    cursor: 'pointer',
+                                    transition: 'background 0.2s',
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = '#1e3a8a'}
+                                onMouseLeave={(e) => e.currentTarget.style.background = '#0f172a'}
+                                >
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                        <div style={{ fontWeight: 'bold', color: '#e2e8f0' }}>{mock.city} Tesisleri</div>
+                                        <div style={{ fontSize: '0.85rem', color: '#94a3b8', background: '#334155', padding: '2px 8px', borderRadius: '12px' }}>{mock.date}</div>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#cbd5e1', fontSize: '0.9rem' }}>
+                                        <span>📦 {mock.type}</span>
+                                        <span style={{ color: '#fbbf24', fontWeight: '500' }}>{mock.weight}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        
+                        <div style={{ marginTop: '20px', textAlign: 'center', color: '#64748b', fontSize: '0.8rem' }}>
+                            <p>Bu alan ileride sponsorlu firmalar veya canlı veritabanı (API) ile doldurulacaktır.</p>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

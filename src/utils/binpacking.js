@@ -74,37 +74,19 @@ export class BinPacking3D {
         }
 
         const stats = this.calculateStatistics();
-        const containerVol = this.container.length * this.container.width * this.container.height;
-        const usedVol = stats.totalVolume; // Now returned from stats
-        const remainingVol = containerVol - usedVol;
         const remainingWeight = this.container.maxWeight - stats.totalWeight;
 
-        // Calculate remaining capacity for each item type
-        // Use the maxX to find "Real Empty Space At The Back" as requested by user
-        const maxX = this.placedItems.length > 0 ? Math.max(...this.placedItems.map(i => i.position.x + i.dimensions.length)) : 0;
-        const availableLengthAtBack = Math.max(0, this.container.length - maxX);
-
+        // Calculate remaining capacity for each item type using trial-packing
+        // This actually tests how many more items can physically fit
         for (let itemDef of this.items) {
-            // 1. Realistic Geometric Potential (Space at the back of the truck)
-            const geometricAtBack = this.calculateMaxPotential(itemDef, availableLengthAtBack, remainingWeight);
-
-            // 2. Volumetric Potential (Remaining Void) - as a secondary cap
-            const itemVol = itemDef.length * itemDef.width * itemDef.height;
-            const volumeRemaining = Math.floor(remainingVol / itemVol);
-
-            // 3. Weight Potential (Remaining Payload)
-            const itemWeight = itemDef.weight;
-            const weightRemainingForThis = itemWeight > 0 ? Math.floor(remainingWeight / itemWeight) : 999999;
-
-            // Use the bottleneck: must fit geometrically at back AND within total volume/weight limits
-            const finalRemaining = Math.min(geometricAtBack, volumeRemaining, weightRemainingForThis);
+            const remaining = this.calculateRemainingByTrialPacking(itemDef, remainingWeight);
 
             if (stats.itemBreakdown[itemDef.id]) {
-                stats.itemBreakdown[itemDef.id].remainingCapacity = finalRemaining;
+                stats.itemBreakdown[itemDef.id].remainingCapacity = remaining;
             } else {
                 stats.itemBreakdown[itemDef.id] = {
                     count: 0,
-                    remainingCapacity: finalRemaining,
+                    remainingCapacity: remaining,
                     totalWeight: 0,
                     rows: 0,
                     columns: 0,
@@ -141,6 +123,7 @@ export class BinPacking3D {
 
         // HEURISTIC: Prioritize orientations that allow MORE items to fit across the container WIDTH.
         // If counts are equal, prioritize the one that fills the width TIGHTER (less waste).
+        // Then consider height utilization as tertiary.
         orientations.sort((a, b) => {
             const countA = Math.floor(this.container.width / a.width);
             const countB = Math.floor(this.container.width / b.width);
@@ -149,11 +132,15 @@ export class BinPacking3D {
                 return countB - countA; // Higher count first
             }
 
-            // Tie-breaker: Less remaining width waste is better
+            // Tie-breaker 1: Less remaining width waste is better
             const wasteA = this.container.width - (countA * a.width);
             const wasteB = this.container.width - (countB * b.width);
+            if (wasteA !== wasteB) return wasteA - wasteB;
 
-            return wasteA - wasteB; // Lower waste first
+            // Tie-breaker 2: Prefer orientations that maximize vertical stacking
+            const stackCountA = Math.min(Math.floor(this.container.height / a.height), item.maxStack);
+            const stackCountB = Math.min(Math.floor(this.container.height / b.height), item.maxStack);
+            return stackCountB - stackCountA;
         });
 
         for (let orientation of orientations) {
@@ -295,6 +282,39 @@ export class BinPacking3D {
             if (count > maxFound) maxFound = count;
         }
         return maxFound;
+    }
+
+    /**
+     * Calculate remaining capacity by actually trying to place items into a cloned state.
+     * This is much more accurate than pure geometric estimation because it accounts
+     * for gaps and irregular shapes in the current packing.
+     */
+    calculateRemainingByTrialPacking(itemDef, remainingWeight) {
+        // Save current state
+        const savedPlacedItems = [...this.placedItems];
+        const savedWeight = this.currentWeight;
+
+        let count = 0;
+        let trialWeight = 0;
+        const maxTrials = 200; // Safety limit to prevent infinite loops
+
+        while (count < maxTrials) {
+            // Check weight limit
+            if (itemDef.weight > 0 && trialWeight + itemDef.weight > remainingWeight) break;
+
+            // Try to place one more item (stack of 1)
+            const placed = this.tryPlaceStack(itemDef, 1, true);
+            if (!placed) break;
+
+            count++;
+            trialWeight += itemDef.weight;
+        }
+
+        // Restore original state: remove all trial items
+        this.placedItems = savedPlacedItems;
+        this.currentWeight = savedWeight;
+
+        return count;
     }
 
     calculateStatistics() {
