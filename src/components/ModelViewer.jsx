@@ -645,12 +645,12 @@ const WarehouseEnvironment = ({ floorY, showFlags = true, onFlagClick }) => {
                     </group>
                 ))}
 
-                {/* Country Flags (Hanging like portraits on the wall) */}
+                {/* Country Flags — raised so warehouse boxes in front don't block them. */}
                 {showFlags && (
-                    <group position={[0, 1.5, 0.6]}> {/* Lowered from 6 to 1.5 so they are at truck cabin eye-level */}
-                        {['tr', 'de', 'fr', 'nl', 'it', 'be', 'es', 'gb', 'at', 'ch'].map((code, index) => {
-                            const cols = 5;
-                            const col = index % cols; 
+                    <group position={[0, 0.5, 0.6]}>
+                        {['tr', 'de', 'fr', 'nl', 'it', 'be', 'es', 'gb', 'at', 'ch', 'cn', 'kz', 'tm', 'uz'].map((code, index) => {
+                            const cols = 14;
+                            const col = index % cols;
                             const row = Math.floor(index / cols);
 
                             const spacingX = 4.5;
@@ -658,7 +658,7 @@ const WarehouseEnvironment = ({ floorY, showFlags = true, onFlagClick }) => {
 
                             // Center the grid
                             const startX = -((cols * spacingX) / 2) + (spacingX / 2);
-                            const startY = 3; 
+                            const startY = 0;
 
                             const x = startX + (col * spacingX);
                             const y = startY - (row * spacingY);
@@ -760,25 +760,13 @@ const WarehouseEnvironment = ({ floorY, showFlags = true, onFlagClick }) => {
 
             {/* ============= WAREHOUSE STORAGE - RIGHT SIDE (Z < -4) ============= */}
             <group position={[0, 0, -10]}>
-                {/* Shipping Containers Row */}
+                {/* Shipping Containers Row — single tier, shorter so flags above stay fully visible */}
                 {[-20, -7, 6, 19, 32, 45].map((x, i) => (
                     <WarehouseContainer
                         key={`cr1_${i}`}
-                        position={[x, 1.3, 0]}
-                        size={[2.4, 2.6, 5]}
-                        // Muted brown tones for realistic cardboard/box look
+                        position={[x, 1.0, 0]}
+                        size={[2.4, 2.0, 5]}
                         color={['#8B7355', '#a3855a', '#c2884a'][i % 3]}
-                    />
-                ))}
-
-                {/* Second level containers */}
-                {[-7, 19, 45].map((x, i) => (
-                    <WarehouseContainer
-                        key={`cr2_${i}`}
-                        position={[x, 3.9, 0]}
-                        size={[2.4, 2.6, 5]}
-                        // Muted brown tones
-                        color={['#a3855a', '#c2884a', '#d4a574'][i % 3]}
                     />
                 ))}
 
