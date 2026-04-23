@@ -4,7 +4,7 @@ import '../checkbox.css';
 import '../input-style.css';
 import StepLoader from './StepLoader';
 
-const InputWizard = ({ onCalculate, onFullReset, mode = 'truck', customSpecs = null }) => {
+const InputWizard = ({ onCalculate, onFullReset, onClearPacked, mode = 'truck', customSpecs = null }) => {
     const [step, setStep] = useState(1);
     const [truckType, setTruckType] = useState(null); // 'standard' or 'mega'
     const [sameSize, setSameSize] = useState(false);
@@ -298,12 +298,7 @@ const InputWizard = ({ onCalculate, onFullReset, mode = 'truck', customSpecs = n
                                 )}
                             </div>
 
-                            <div className="product-inputs" style={{
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(6, 1fr)',
-                                gap: '8px',
-                                alignItems: 'end'
-                            }}>
+                            <div className="product-inputs">
                                 <div className="ai-input-group">
                                     <span className="ai-input-label">Uzunluk</span>
                                     <div className="ai-input-container">
@@ -493,6 +488,7 @@ const InputWizard = ({ onCalculate, onFullReset, mode = 'truck', customSpecs = n
                 <button className="ai-btn" onClick={() => {
                     setStep(2);
                     setResultData(null);
+                    if (onClearPacked) onClearPacked();
                 }} style={{ flex: 1 }}>
                     <div className="ai-btn-inner">Düzenle ve Yeniden Hesapla</div>
                 </button>

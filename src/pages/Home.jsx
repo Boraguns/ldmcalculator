@@ -181,7 +181,9 @@ const Home = () => {
                                 )}
                                 <div className="ai-btn-inner" style={{
                                     flexDirection: isDesktop ? 'column' : 'row',
-                                    padding: isDesktop ? '30px 20px' : '15px 12px',
+                                    padding: isDesktop
+                                        ? (isDisabled ? '30px 20px 30px 20px' : '30px 20px')
+                                        : (isDisabled ? '15px 95px 15px 12px' : '15px 12px'),
                                     height: '100%',
                                     gap: '12px',
                                     textAlign: isDesktop ? 'center' : 'left',

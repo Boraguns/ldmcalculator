@@ -484,6 +484,7 @@ body {
     padding: var(--spacing-md);
     overflow: hidden;
     max-height: 100vh;
+    position: relative;
 }
 
 .wizard-container {
@@ -891,21 +892,103 @@ body {
     }
 
     .ai-btn-inner {
-        padding: 15px 10px !important;
+        padding: 15px 10px;
     }
 
-    /* Fixed View Controls for Mobile */
+    /* Fixed View Controls for Mobile: horizontal row at bottom so they don't cover the 3D scene */
     .view-controls {
-        bottom: 1rem !important;
-        right: 1rem !important;
-        width: 100px;
-        height: 100px;
-        transform: scale(0.8);
+        bottom: 0.5rem !important;
+        right: 0.5rem !important;
+        left: 0.5rem !important;
+        flex-direction: row !important;
+        justify-content: center !important;
+        flex-wrap: wrap;
+        gap: 4px !important;
+        transform: none !important;
+        width: auto !important;
+        height: auto !important;
+    }
+
+    .view-controls .ai-btn {
+        height: 28px !important;
+    }
+
+    .view-controls .ai-btn-inner {
+        min-width: 56px !important;
+        padding: 0 6px !important;
+        font-size: 0.65rem !important;
     }
 
     /* Adjust Result Cards for Mobile */
     .summary-cards-grid {
         grid-template-columns: 1fr;
+    }
+
+    /* Stretch inline-styled truck/wizard sections full width on mobile */
+    .truck-section,
+    .train-section,
+    .plane-section,
+    .ship-section {
+        flex: 0 0 auto !important;
+        width: 100% !important;
+        min-height: 45vh !important;
+        max-height: 55vh !important;
+    }
+
+    .wizard-section {
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        padding: 1rem !important;
+    }
+
+    /* Force inputs to 2-column grid on mobile regardless of inline styles */
+    .product-inputs {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+@media (max-width: 600px) {
+    .product-inputs {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.5rem !important;
+    }
+}
+
+/* On mobile the back button inside the wizard overlaps the content.
+   The logo in the 3D area is already clickable and navigates home,
+   so suppress the redundant floating button below tablet width. */
+@media (max-width: 1024px) {
+    .wizard-section > button.ai-btn {
+        display: none !important;
+    }
+}
+
+/* Shrink the 3D-area logo and screenshot button on narrow screens so
+   they don't collide along the top edge. */
+@media (max-width: 600px) {
+    .truck-section > img,
+    .train-section > img,
+    .plane-section > img,
+    .ship-section > img {
+        width: 110px !important;
+        top: 0.75rem !important;
+        left: 0.75rem !important;
+    }
+
+    .truck-section .ai-btn,
+    .train-section .ai-btn,
+    .plane-section .ai-btn,
+    .ship-section .ai-btn {
+        top: 0.75rem !important;
+        right: 0.75rem !important;
+    }
+
+    .truck-section .ai-btn .ai-btn-inner,
+    .train-section .ai-btn .ai-btn-inner,
+    .plane-section .ai-btn .ai-btn-inner,
+    .ship-section .ai-btn .ai-btn-inner {
+        font-size: 0.7rem !important;
+        padding: 0 10px !important;
     }
 }
 

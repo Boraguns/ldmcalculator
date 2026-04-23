@@ -58,11 +58,12 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
                     result.missingCount = requestedTotal - result.totalItems;
                 }
                 setPackedItems(result.placedItems);
+                return result;
             } else {
                 alert('Ürünler sığmadı veya bir hata oluştu.');
                 setPackedItems([]);
+                return null;
             }
-            return result;
         } catch (error) {
             console.error("Error:", error);
             alert('Hata oluştu');
@@ -139,11 +140,18 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
         setHoveredItem(null);
     };
 
-    const legendItems = [...new Set(packedItems.map(i => i.id))].map(id => {
-        const item = packedItems.find(i => i.id === id);
-        const count = packedItems.filter(i => i.id === id).length;
-        return { id, count, colorId: id };
-    });
+    const handleClearPacked = () => {
+        setPackedItems([]);
+        setHoveredItem(null);
+    };
+
+    const legendItems = Object.values(
+        packedItems.reduce((acc, item) => {
+            if (!acc[item.id]) acc[item.id] = { id: item.id, count: 0, colorId: item.id };
+            acc[item.id].count++;
+            return acc;
+        }, {})
+    );
 
     const colors = ['#3b82f6', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
 
@@ -288,7 +296,7 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
             </div>
 
             {/* RIGHT: WIZARD */}
-            <InputWizard onCalculate={handleCalculate} onFullReset={handleFullReset} mode={mode} />
+            <InputWizard onCalculate={handleCalculate} onFullReset={handleFullReset} onClearPacked={handleClearPacked} mode={mode} />
 
             {/* SCREENSHOT MODAL */}
             {showScreenshotModal && (

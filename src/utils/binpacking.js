@@ -110,8 +110,9 @@ export class BinPacking3D {
         return [...this.items].sort((a, b) => {
             const volA = a.length * a.width * a.height;
             const volB = b.length * b.width * b.height;
-            // Sort by Max Stack as secondary criteria? No, volume is standard.
-            return volB - volA;
+            if (volB !== volA) return volB - volA;
+            // Stable tie-break by id so results are reproducible
+            return String(a.id).localeCompare(String(b.id));
         });
     }
 
@@ -295,19 +296,19 @@ export class BinPacking3D {
         const savedWeight = this.currentWeight;
 
         let count = 0;
-        let trialWeight = 0;
         const maxTrials = 200; // Safety limit to prevent infinite loops
 
         while (count < maxTrials) {
-            // Check weight limit
-            if (itemDef.weight > 0 && trialWeight + itemDef.weight > remainingWeight) break;
+            // Check weight limit against actual container capacity
+            if (itemDef.weight > 0 && this.currentWeight + itemDef.weight > this.container.maxWeight) break;
 
             // Try to place one more item (stack of 1)
             const placed = this.tryPlaceStack(itemDef, 1, true);
             if (!placed) break;
 
+            // Reflect the trial item's weight so internal checks stay consistent
+            this.currentWeight += itemDef.weight;
             count++;
-            trialWeight += itemDef.weight;
         }
 
         // Restore original state: remove all trial items

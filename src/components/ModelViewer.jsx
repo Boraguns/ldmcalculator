@@ -84,7 +84,7 @@ const CountryFlag = ({ code, position, onClick }) => {
     // Load texture with loose cors policy
     const texture = useTexture(`https://flagcdn.com/w640/${code}.png`);
     return (
-        <mesh
+        <group
             position={position}
             onClick={(e) => {
                 e.stopPropagation();
@@ -93,15 +93,25 @@ const CountryFlag = ({ code, position, onClick }) => {
             onPointerOver={() => document.body.style.cursor = 'pointer'}
             onPointerOut={() => document.body.style.cursor = 'auto'}
         >
-            <planeGeometry args={[2.4, 1.6]} /> {/* 3:2 Aspect Ratio */}
-            {/* Use Basic Material so it's immune to shadows/darkness and looks vivid */}
-            <meshBasicMaterial map={texture} />
-            {/* Frame */}
-            <mesh position={[0, 0, -0.02]}>
-                <boxGeometry args={[2.5, 1.7, 0.04]} />
-                <meshStandardMaterial color="#111" />
+            {/* Frame (behind the flag, clearly separated to prevent z-fighting) */}
+            <mesh position={[0, 0, -0.05]}>
+                <boxGeometry args={[2.5, 1.7, 0.08]} />
+                <meshStandardMaterial color="#111" roughness={0.6} />
             </mesh>
-        </mesh>
+            {/* Flag plane — opaque, immune to lighting, polygonOffset keeps it crisp */}
+            <mesh position={[0, 0, 0.05]}>
+                <planeGeometry args={[2.4, 1.6]} />
+                <meshBasicMaterial
+                    map={texture}
+                    toneMapped={false}
+                    transparent={false}
+                    depthWrite={true}
+                    polygonOffset
+                    polygonOffsetFactor={-1}
+                    polygonOffsetUnits={-1}
+                />
+            </mesh>
+        </group>
     );
 };
 
@@ -655,7 +665,6 @@ const WarehouseEnvironment = ({ floorY, showFlags = true, onFlagClick }) => {
 
                             return (
                                 <group key={code} position={[x, y, 0]}>
-                                    <pointLight position={[0, 0, 1.5]} intensity={1.5} distance={5} decay={1.5} color="#e6f2ff" />
                                     <mesh position={[0, 2, 0]}> {/* Spotlight housing above flag */}
                                         <boxGeometry args={[1, 0.1, 0.3]} />
                                         <meshStandardMaterial color="#333" />
