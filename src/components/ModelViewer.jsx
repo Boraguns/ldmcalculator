@@ -647,7 +647,7 @@ const WarehouseEnvironment = ({ floorY, showFlags = true, onFlagClick }) => {
 
                 {/* Country Flags — raised so warehouse boxes in front don't block them. */}
                 {showFlags && (
-                    <group position={[0, 0, 0.6]}>
+                    <group position={[0, 3, 0.6]}>
                         {['tr', 'de', 'fr', 'nl', 'it', 'be', 'es', 'gb', 'at', 'ch', 'cn', 'kz', 'tm', 'uz'].map((code, index) => {
                             const cols = 5;
                             const col = index % cols;
