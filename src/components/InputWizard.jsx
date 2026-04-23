@@ -121,8 +121,14 @@ const InputWizard = ({ onCalculate, onFullReset, onClearPacked, mode = 'truck', 
         }));
     };
 
-    // Auto-close drawer when the step advances, so the new 3D state is visible on mobile.
-    useEffect(() => { setDrawerOpen(false); }, [step]);
+    // Mobile drawer orchestration:
+    //  - Step 2 (product entry): auto-open so the user sees the form immediately after picking a type.
+    //  - Step 3 (results): auto-close so the 3D scene with the packed truck is visible.
+    //  - Step 1 (type selection): closed by default, user can tap handle.
+    useEffect(() => {
+        if (step === 2) setDrawerOpen(true);
+        else setDrawerOpen(false);
+    }, [step]);
 
     const handleCalculate = () => {
         // If "sameSize" is true, we only care about the first product in the list
