@@ -10,8 +10,11 @@ const InputWizard = ({ onCalculate, onFullReset, onClearPacked, mode = 'truck', 
     const [sameSize, setSameSize] = useState(false);
     const [resultData, setResultData] = useState(null);
     const [customDimensions, setCustomDimensions] = useState({ length: 1360, width: 245, height: 275 });
+    const [drawerOpen, setDrawerOpen] = useState(false);
     const productListRef = useRef(null);
     const navigate = useNavigate();
+
+    const stepTitles = { 1: 'Tip Seçimi', 2: 'Ürün Girişi', 3: 'Sonuç' };
 
     const isTrain = mode === 'train';
     const isPlane = mode === 'plane';
@@ -117,6 +120,9 @@ const InputWizard = ({ onCalculate, onFullReset, onClearPacked, mode = 'truck', 
             return { ...p, allowRotation: !p.allowRotation };
         }));
     };
+
+    // Auto-close drawer when the step advances, so the new 3D state is visible on mobile.
+    useEffect(() => { setDrawerOpen(false); }, [step]);
 
     const handleCalculate = () => {
         // If "sameSize" is true, we only care about the first product in the list
@@ -500,7 +506,7 @@ const InputWizard = ({ onCalculate, onFullReset, onClearPacked, mode = 'truck', 
     );
 
     return (
-        <div className="wizard-section">
+        <div className={`wizard-section ${drawerOpen ? 'drawer-open' : ''}`}>
             {/* BACK BUTTON */}
             <button
                 className="ai-btn"
@@ -511,12 +517,23 @@ const InputWizard = ({ onCalculate, onFullReset, onClearPacked, mode = 'truck', 
                     right: '20px',
                     zIndex: 100,
                     padding: '2px',
-                    height: '40px' // Total 40px matching Screenshot button
+                    height: '40px'
                 }}
             >
                 <div className="ai-btn-inner" style={{ padding: '0 16px', height: '100%', gap: '8px', fontSize: '0.85rem' }}>
                     <span style={{ fontSize: '1.2rem', lineHeight: '1' }}>←</span> Ana Menüye Dön
                 </div>
+            </button>
+
+            {/* MOBILE STICKY DRAWER HANDLE — visible only via CSS on mobile */}
+            <button
+                className="mobile-drawer-handle"
+                onClick={() => setDrawerOpen(v => !v)}
+                aria-label="Adım panelini aç/kapat"
+            >
+                <span className="drawer-step-dot">{step}</span>
+                <span className="drawer-step-title">{stepTitles[step]}</span>
+                <span className={`drawer-chevron ${drawerOpen ? 'up' : ''}`}>▲</span>
             </button>
 
             <div className="wizard-container">

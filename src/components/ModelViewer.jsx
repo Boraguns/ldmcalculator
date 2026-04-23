@@ -875,11 +875,38 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck' }) => {
                 <meshStandardMaterial color={isPlane ? "#94a3b8" : "#1e293b"} />
             </mesh>
 
-            {/* Wireframe Outline */}
-            <lineSegments>
-                <edgesGeometry args={[new THREE.BoxGeometry(tLen, tHei, tWid)]} />
-                <lineBasicMaterial color="#ffffff" opacity={0.2} transparent />
-            </lineSegments>
+            {/* Solid trailer frame (replaces the ghostly wireframe). Slim metallic
+                corner posts + bottom side rails so boxes inside stay visible while
+                the trailer itself reads as a real structure, not a hologram. */}
+            {(() => {
+                const t = 0.06; // strut thickness
+                const hx = tLen / 2, hy = tHei / 2, hz = tWid / 2;
+                const frameMat = (
+                    <meshStandardMaterial color="#1f2937" metalness={0.6} roughness={0.4} />
+                );
+                const edges = [
+                    // 4 vertical corner posts
+                    { p: [ hx, 0,  hz], s: [t, tHei, t] },
+                    { p: [-hx, 0,  hz], s: [t, tHei, t] },
+                    { p: [ hx, 0, -hz], s: [t, tHei, t] },
+                    { p: [-hx, 0, -hz], s: [t, tHei, t] },
+                    // top rails (along length)
+                    { p: [0,  hy,  hz], s: [tLen, t, t] },
+                    { p: [0,  hy, -hz], s: [tLen, t, t] },
+                    // top rails (along width)
+                    { p: [ hx,  hy, 0], s: [t, t, tWid] },
+                    { p: [-hx,  hy, 0], s: [t, t, tWid] },
+                    // bottom side rails (short wall feel)
+                    { p: [0, -hy + 0.15,  hz], s: [tLen, 0.3, t] },
+                    { p: [0, -hy + 0.15, -hz], s: [tLen, 0.3, t] },
+                ];
+                return edges.map((e, i) => (
+                    <mesh key={`frame${i}`} position={e.p} castShadow>
+                        <boxGeometry args={e.s} />
+                        {frameMat}
+                    </mesh>
+                ));
+            })()}
 
             {/* 3D GLB Truck Model (Cabin) - Only for Truck mode */}
             {!isTrain && !isPlane && !isShip && (

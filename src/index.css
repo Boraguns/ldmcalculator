@@ -895,28 +895,33 @@ body {
         padding: 15px 10px;
     }
 
-    /* Fixed View Controls for Mobile: horizontal row at bottom so they don't cover the 3D scene */
+    /* Mobile view controls: guarantee all 5 buttons fit in a single row */
     .view-controls {
-        bottom: 0.5rem !important;
-        right: 0.5rem !important;
-        left: 0.5rem !important;
+        bottom: 0.4rem !important;
+        right: 0.4rem !important;
+        left: 0.4rem !important;
         flex-direction: row !important;
-        justify-content: center !important;
-        flex-wrap: wrap;
-        gap: 4px !important;
+        justify-content: space-between !important;
+        flex-wrap: nowrap !important;
+        gap: 3px !important;
         transform: none !important;
         width: auto !important;
         height: auto !important;
     }
 
     .view-controls .ai-btn {
-        height: 28px !important;
+        height: 26px !important;
+        flex: 1 1 0 !important;
+        min-width: 0 !important;
+        padding: 1px !important;
     }
 
     .view-controls .ai-btn-inner {
-        min-width: 56px !important;
-        padding: 0 6px !important;
-        font-size: 0.65rem !important;
+        min-width: 0 !important;
+        width: 100% !important;
+        padding: 0 2px !important;
+        font-size: 0.62rem !important;
+        white-space: nowrap !important;
     }
 
     /* Adjust Result Cards for Mobile */
@@ -924,21 +929,46 @@ body {
         grid-template-columns: 1fr;
     }
 
-    /* Stretch inline-styled truck/wizard sections full width on mobile */
+    /* Stretch inline-styled truck/wizard sections full width on mobile.
+       3D viewer gets more vertical space; wizard is a scrollable panel below. */
     .truck-section,
     .train-section,
     .plane-section,
     .ship-section {
         flex: 0 0 auto !important;
         width: 100% !important;
-        min-height: 45vh !important;
-        max-height: 55vh !important;
+        min-height: 60vh !important;
+        max-height: 65vh !important;
     }
 
     .wizard-section {
         flex: 1 1 auto !important;
         width: 100% !important;
-        padding: 1rem !important;
+        padding: 0.75rem !important;
+    }
+
+    /* Compact option cards (dorse/ULD/konteyner selection) on mobile */
+    .options-grid .ai-btn .ai-btn-inner {
+        padding: 12px 10px !important;
+        gap: 4px !important;
+    }
+
+    .options-grid .ai-btn h3 {
+        font-size: 0.95rem !important;
+    }
+
+    .options-grid .ai-btn .option-specs {
+        font-size: 0.72rem !important;
+    }
+
+    .step-title {
+        font-size: 1.2rem !important;
+        margin-bottom: 0.25rem !important;
+    }
+
+    .step-description {
+        font-size: 0.82rem !important;
+        margin-bottom: 0.75rem !important;
     }
 
     /* Force inputs to 2-column grid on mobile regardless of inline styles */
@@ -960,6 +990,127 @@ body {
 @media (max-width: 1024px) {
     .wizard-section > button.ai-btn {
         display: none !important;
+    }
+}
+
+/* Mobile-only drawer handle — hidden on desktop */
+.mobile-drawer-handle {
+    display: none;
+}
+
+@media (max-width: 1024px) {
+    /* Switch the wizard into a fixed bottom-sheet */
+    .container {
+        overflow: hidden !important;
+        height: 100vh !important;
+    }
+
+    .truck-section,
+    .train-section,
+    .plane-section,
+    .ship-section {
+        min-height: calc(100vh - 56px) !important;
+        max-height: calc(100vh - 56px) !important;
+    }
+
+    .wizard-section {
+        position: fixed !important;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 85vh;
+        max-height: 85vh !important;
+        min-height: 56px !important;
+        background: #0f172a;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.5);
+        border-radius: 18px 18px 0 0;
+        padding: 0 !important;
+        transform: translateY(calc(100% - 56px));
+        transition: transform 0.32s cubic-bezier(0.32, 0.72, 0.24, 1);
+        z-index: 200;
+        display: block;
+        align-items: stretch;
+        justify-content: flex-start;
+        overflow: hidden;
+    }
+
+    .wizard-section.drawer-open {
+        transform: translateY(0);
+    }
+
+    /* Hide the floating view-controls while the drawer is open so they don't overlap the form */
+    .wizard-section.drawer-open ~ * .view-controls,
+    .container:has(.wizard-section.drawer-open) .view-controls {
+        display: none !important;
+    }
+
+    .mobile-drawer-handle {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        height: 56px;
+        padding: 0 18px;
+        background: transparent;
+        border: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        color: #f1f5f9;
+        font-family: inherit;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .mobile-drawer-handle::before {
+        content: '';
+        position: absolute;
+        top: 6px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 40px;
+        height: 4px;
+        border-radius: 2px;
+        background: rgba(255, 255, 255, 0.25);
+    }
+
+    .drawer-step-dot {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: #3b82f6;
+        color: #fff;
+        font-weight: 700;
+        font-size: 0.85rem;
+        margin-top: 8px;
+    }
+
+    .drawer-step-title {
+        flex: 1;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin-top: 8px;
+    }
+
+    .drawer-chevron {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        transition: transform 0.25s ease;
+        margin-top: 8px;
+    }
+
+    .drawer-chevron.up {
+        transform: rotate(180deg);
+    }
+
+    .wizard-container {
+        height: calc(85vh - 56px);
+        max-height: calc(85vh - 56px);
+        overflow-y: auto !important;
+        padding: 1rem !important;
     }
 }
 
