@@ -647,18 +647,18 @@ const WarehouseEnvironment = ({ floorY, showFlags = true, onFlagClick }) => {
 
                 {/* Country Flags — raised so warehouse boxes in front don't block them. */}
                 {showFlags && (
-                    <group position={[0, 0.5, 0.6]}>
+                    <group position={[0, 0, 0.6]}>
                         {['tr', 'de', 'fr', 'nl', 'it', 'be', 'es', 'gb', 'at', 'ch', 'cn', 'kz', 'tm', 'uz'].map((code, index) => {
-                            const cols = 14;
+                            const cols = 5;
                             const col = index % cols;
                             const row = Math.floor(index / cols);
 
                             const spacingX = 4.5;
-                            const spacingY = 3.2;
+                            const spacingY = 1.9;
 
-                            // Center the grid
+                            // Center the grid (3 rows stacked upward from baseline)
                             const startX = -((cols * spacingX) / 2) + (spacingX / 2);
-                            const startY = 0;
+                            const startY = spacingY * 2;
 
                             const x = startX + (col * spacingX);
                             const y = startY - (row * spacingY);
@@ -858,8 +858,8 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck' }) => {
             </mesh>
 
             {/* Truck Bed / ULD Surface */}
-            <mesh position={[0, -tHei / 2 + 0.25, 0]} receiveShadow>
-                <boxGeometry args={[tLen, 0.1, tWid]} />
+            <mesh position={[0, -tHei / 2 + 0.36, 0]} receiveShadow>
+                <boxGeometry args={[tLen - 0.02, 0.1, tWid - 0.02]} />
                 <meshStandardMaterial color={isPlane ? "#94a3b8" : "#1e293b"} />
             </mesh>
 
