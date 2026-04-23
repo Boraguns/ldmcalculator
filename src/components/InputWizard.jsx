@@ -384,7 +384,7 @@ const InputWizard = ({ onCalculate, onFullReset, onClearPacked, mode = 'truck', 
             </div>
         </div>
     );
-
+// bir comment
     const renderStep3 = () => (
         <div className="step active" style={{ width: '100%' }}>
             <h1 className="step-title">Sonuç Raporu</h1>
