@@ -665,10 +665,6 @@ const WarehouseEnvironment = ({ floorY, showFlags = true, onFlagClick }) => {
 
                             return (
                                 <group key={code} position={[x, y, 0]}>
-                                    <mesh position={[0, 2, 0]}> {/* Spotlight housing above flag */}
-                                        <boxGeometry args={[1, 0.1, 0.3]} />
-                                        <meshStandardMaterial color="#333" />
-                                    </mesh>
                                     <CountryFlag
                                         code={code}
                                         position={[0, 0, 0]}
