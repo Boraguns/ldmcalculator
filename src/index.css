@@ -475,6 +475,20 @@ body {
 /* END 3D STYLES */
 /* ================================== */
 
+/* Global select option styling — keep dropdown options readable (white on dark)
+   across the whole app, including the language switcher. */
+select option,
+select optgroup {
+    background-color: #1e293b !important;
+    color: #ffffff !important;
+}
+
+select option:checked,
+select option:hover {
+    background-color: #3b82f6 !important;
+    color: #ffffff !important;
+}
+
 /* Right Section - Wizard */
 .wizard-section {
     flex: 1;

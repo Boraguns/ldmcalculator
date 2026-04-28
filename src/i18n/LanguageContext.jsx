@@ -67,27 +67,61 @@ export const LanguageProvider = ({ children }) => {
 
 export const useT = () => useContext(LanguageContext);
 
-export const LanguageSwitcher = ({ style = {}, compact = false }) => {
+export const LanguageSwitcher = ({ style = {}, compact = false, height }) => {
     const { lang, setLang } = useContext(LanguageContext);
+    const h = height ?? (compact ? 40 : 48);
     return (
-        <select
-            value={lang}
-            onChange={(e) => setLang(e.target.value)}
-            aria-label="Language"
+        <div
+            className="ai-btn ai-language-switcher"
             style={{
-                background: 'rgba(0,0,0,0.55)',
-                color: '#fff',
-                border: '1px solid rgba(255,255,255,0.2)',
-                borderRadius: '6px',
-                padding: compact ? '4px 6px' : '6px 10px',
-                fontSize: compact ? '0.75rem' : '0.85rem',
+                padding: '2px',
+                height: `${h}px`,
                 cursor: 'pointer',
                 ...style
             }}
         >
-            {SUPPORTED_LANGS.map(l => (
-                <option key={l.code} value={l.code} style={{ color: '#000' }}>{l.label}</option>
-            ))}
-        </select>
+            <div
+                className="ai-btn-inner"
+                style={{
+                    padding: 0,
+                    height: '100%',
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    background: '#1a1a1a',
+                    borderRadius: '10px'
+                }}
+            >
+                <select
+                    value={lang}
+                    onChange={(e) => setLang(e.target.value)}
+                    aria-label="Language"
+                    className="ai-language-select"
+                    style={{
+                        appearance: 'none',
+                        WebkitAppearance: 'none',
+                        background: 'transparent',
+                        border: 'none',
+                        outline: 'none',
+                        color: '#fff',
+                        fontFamily: 'inherit',
+                        fontSize: compact ? '0.85rem' : '0.95rem',
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                        padding: `0 32px 0 16px`,
+                        height: '100%',
+                        width: '100%',
+                        backgroundImage: "url(\"data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e\")",
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'right 10px center',
+                        backgroundSize: '14px'
+                    }}
+                >
+                    {SUPPORTED_LANGS.map(l => (
+                        <option key={l.code} value={l.code}>{l.label}</option>
+                    ))}
+                </select>
+            </div>
+        </div>
     );
 };

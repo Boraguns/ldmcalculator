@@ -89,10 +89,11 @@ const Home = () => {
             alignItems: 'center',
             paddingTop: 'calc(env(safe-area-inset-top, 0px) + 3vh)',
         }}>
-            {/* Hero wrapper keeps the original full-viewport hero on top */}
+            {/* Hero wrapper — slightly less than full viewport on desktop so the
+                SEO section below peeks into view and signals scrollable content. */}
             <div style={{
                 width: '100%',
-                minHeight: isDesktop ? '100vh' : 'auto',
+                minHeight: isDesktop ? '88vh' : 'auto',
                 position: 'relative',
                 display: 'flex',
                 alignItems: 'flex-start',
@@ -317,17 +318,17 @@ const Home = () => {
                 </article>
             </section>
 
-            {/* COPYRIGHT FOOTER */}
+            {/* COPYRIGHT FOOTER — placed at the end of the document flow so it
+                doesn't cover the SEO section content. */}
             <div className="home-footer" style={{
-                position: 'fixed',
-                bottom: 'calc(env(safe-area-inset-bottom, 0px) + 20px)',
+                position: 'relative',
                 width: '100%',
                 textAlign: 'center',
                 color: '#1b1b1b',
                 fontSize: isDesktop ? '13px' : '11px',
                 fontWeight: '600',
                 zIndex: 100,
-                padding: '0 10px',
+                padding: '20px 10px calc(env(safe-area-inset-bottom, 0px) + 20px)',
                 pointerEvents: 'none'
             }}>
                 <span style={{ pointerEvents: 'auto' }}>

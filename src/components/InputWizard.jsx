@@ -635,9 +635,9 @@ const InputWizard = ({ onCalculate, onFullReset, onClearPacked, mode = 'truck', 
                 </div>
             </button>
 
-            {/* Language switcher within wizard header */}
-            <div style={{ position: 'absolute', top: 22, right: 180, zIndex: 100 }}>
-                <LanguageSwitcher compact />
+            {/* Language switcher within wizard header — same height as back button (40px) and clearly separated */}
+            <div style={{ position: 'absolute', top: 20, right: 240, zIndex: 100 }}>
+                <LanguageSwitcher height={40} compact />
             </div>
 
             {/* MOBILE STICKY DRAWER HANDLE — visible only via CSS on mobile */}
