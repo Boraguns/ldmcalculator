@@ -39,6 +39,10 @@ export class BinPacking3D {
         // Sort items by volume (largest first)
         const sortedItems = this.sortItemsByVolume();
 
+        // Track per-item placed counts so we can report unplaced quantities
+        const placedPerItem = {};
+        for (let it of this.items) placedPerItem[it.id] = 0;
+
         for (let item of sortedItems) {
             let remaining = item.quantity;
 
@@ -66,6 +70,7 @@ export class BinPacking3D {
 
                 if (placedAmount > 0) {
                     remaining -= placedAmount;
+                    placedPerItem[item.id] = (placedPerItem[item.id] || 0) + placedAmount;
                 } else {
                     console.warn(`⚠️ Cannot fit remaining ${remaining} items of #${item.id}`);
                     break; // Cannot fit anymore of this item
@@ -80,19 +85,33 @@ export class BinPacking3D {
         // This actually tests how many more items can physically fit
         for (let itemDef of this.items) {
             const remaining = this.calculateRemainingByTrialPacking(itemDef, remainingWeight);
+            const placedCount = placedPerItem[itemDef.id] || 0;
+            const unplaced = Math.max(0, (itemDef.quantity || 0) - placedCount);
 
-            if (stats.itemBreakdown[itemDef.id]) {
-                stats.itemBreakdown[itemDef.id].remainingCapacity = remaining;
-            } else {
-                stats.itemBreakdown[itemDef.id] = {
-                    count: 0,
-                    remainingCapacity: remaining,
-                    totalWeight: 0,
-                    rows: 0,
-                    columns: 0,
-                    layers: 0
-                };
+            // Rotation hint: if rotation was disabled and items couldn't fit,
+            // estimate how many MORE could fit if rotation were enabled.
+            let rotationHint = 0;
+            if (unplaced > 0 && !itemDef.allowRotation) {
+                const swapped = { ...itemDef, length: itemDef.width, width: itemDef.length };
+                const withRotation = this.calculateMaxPotential(swapped);
+                const withoutRotation = this.calculateMaxPotential(itemDef);
+                if (withRotation > withoutRotation) {
+                    rotationHint = Math.min(unplaced, withRotation - withoutRotation);
+                }
             }
+
+            const breakdown = stats.itemBreakdown[itemDef.id] || {
+                count: 0,
+                totalWeight: 0,
+                rows: 0,
+                columns: 0,
+                layers: 0
+            };
+            breakdown.remainingCapacity = remaining;
+            breakdown.requestedQuantity = itemDef.quantity || 0;
+            breakdown.unplaced = unplaced;
+            breakdown.rotationHint = rotationHint;
+            stats.itemBreakdown[itemDef.id] = breakdown;
         }
 
         return {

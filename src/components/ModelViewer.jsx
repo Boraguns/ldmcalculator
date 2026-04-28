@@ -1050,8 +1050,8 @@ const ModelViewer = ({
                                     alt={selectedCountry}
                                     style={{ borderRadius: '4px', width: '32px' }}
                                 />
-                                <h3 style={{ margin: 0, color: '#f8fafc', fontSize: '1.25rem', textTransform: 'uppercase' }}>
-                                    {selectedCountry} Yükleme Noktaları
+                                <h3 style={{ margin: 0, color: '#f8fafc', fontSize: '1.25rem' }}>
+                                    <span style={{ textTransform: 'uppercase' }}>{selectedCountry}</span> için Önerilen Nakliyeciler
                                 </h3>
                             </div>
                             <button 
@@ -1066,37 +1066,30 @@ const ModelViewer = ({
                         </div>
                         
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            {/* Mock Data Cards */}
-                            {[
-                                { city: 'Merkez Hub', type: 'Endüstriyel Palet', weight: '12.000 kg', date: 'Bugün' },
-                                { city: 'Kuzey Liman', type: 'Konteyner Parsiyel', weight: '4.500 kg', date: 'Yarın' },
-                                { city: 'Doğu Lojistik', type: 'Hassas Yük', weight: '800 kg', date: '2 Gün Sonra' }
-                            ].map((mock, i) => (
-                                <div key={i} style={{
-                                    background: '#0f172a',
-                                    padding: '16px',
-                                    borderRadius: '8px',
-                                    borderLeft: '4px solid #3b82f6',
-                                    cursor: 'pointer',
-                                    transition: 'background 0.2s',
-                                }}
-                                onMouseEnter={(e) => e.currentTarget.style.background = '#1e3a8a'}
-                                onMouseLeave={(e) => e.currentTarget.style.background = '#0f172a'}
-                                >
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                        <div style={{ fontWeight: 'bold', color: '#e2e8f0' }}>{mock.city} Tesisleri</div>
-                                        <div style={{ fontSize: '0.85rem', color: '#94a3b8', background: '#334155', padding: '2px 8px', borderRadius: '12px' }}>{mock.date}</div>
-                                    </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#cbd5e1', fontSize: '0.9rem' }}>
-                                        <span>📦 {mock.type}</span>
-                                        <span style={{ color: '#fbbf24', fontWeight: '500' }}>{mock.weight}</span>
-                                    </div>
+                            {/* Featured carrier */}
+                            <div style={{
+                                background: 'linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%)',
+                                padding: '20px',
+                                borderRadius: '10px',
+                                borderLeft: '4px solid #fbbf24',
+                                cursor: 'pointer',
+                                transition: 'transform 0.2s',
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                            onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                            >
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                    <div style={{ fontWeight: 'bold', color: '#fbbf24', fontSize: '1.1rem' }}>Etnalog</div>
+                                    <div style={{ fontSize: '0.7rem', color: '#0f172a', background: '#fbbf24', padding: '3px 10px', borderRadius: '12px', fontWeight: '700' }}>ÖNE ÇIKAN</div>
                                 </div>
-                            ))}
+                                <div style={{ color: '#cbd5e1', fontSize: '0.9rem', lineHeight: '1.5' }}>
+                                    Uluslararası karayolu taşımacılığında <span style={{ textTransform: 'uppercase' }}>{selectedCountry}</span> hattında düzenli sefer ve parsiyel yük çözümleri.
+                                </div>
+                            </div>
                         </div>
                         
                         <div style={{ marginTop: '20px', textAlign: 'center', color: '#64748b', fontSize: '0.8rem' }}>
-                            <p>Bu alan ileride sponsorlu firmalar veya canlı veritabanı (API) ile doldurulacaktır.</p>
+                            <p>Daha fazla nakliyeci listelemek ister misiniz? İletişime geçin.</p>
                         </div>
                     </div>
                 </div>

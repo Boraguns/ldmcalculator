@@ -474,12 +474,34 @@ const InputWizard = ({ onCalculate, onFullReset, onClearPacked, mode = 'truck', 
                                         <div className="report-card-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                                             <span className="report-id" style={{ fontWeight: 'bold', color: 'white', fontSize: '0.9rem' }}>Ürün #{id}</span>
                                             <div style={{ textAlign: 'right' }}>
-                                                <div className="report-count" style={{ color: '#10b981', fontSize: '0.85rem' }}>{data.count} Yüklendi</div>
-                                                <div className="report-remaining" style={{ color: data.remainingCapacity > 0 ? '#3b82f6' : '#64748b', fontSize: '0.75rem', fontWeight: '500' }}>
-                                                    {data.remainingCapacity} adet yer kaldı
+                                                <div className="report-count" style={{ color: '#10b981', fontSize: '0.85rem' }}>
+                                                    {data.count}{data.requestedQuantity ? ` / ${data.requestedQuantity}` : ''} Yüklendi
                                                 </div>
+                                                {data.unplaced > 0 ? (
+                                                    <div style={{ color: '#ef4444', fontSize: '0.75rem', fontWeight: '600' }}>
+                                                        {data.unplaced} adet sığmadı
+                                                    </div>
+                                                ) : (
+                                                    <div className="report-remaining" style={{ color: data.remainingCapacity > 0 ? '#3b82f6' : '#64748b', fontSize: '0.75rem', fontWeight: '500' }}>
+                                                        {data.remainingCapacity} adet yer kaldı
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
+                                        {data.unplaced > 0 && data.rotationHint > 0 && (
+                                            <div style={{
+                                                marginTop: '6px',
+                                                padding: '6px 8px',
+                                                background: 'rgba(251, 191, 36, 0.12)',
+                                                border: '1px solid rgba(251, 191, 36, 0.35)',
+                                                borderRadius: '6px',
+                                                fontSize: '0.75rem',
+                                                color: '#fbbf24',
+                                                lineHeight: '1.4'
+                                            }}>
+                                                💡 Bu ürünü 90° döndürmeye izin verirseniz yaklaşık <b>{data.rotationHint} adet daha</b> sığabilir.
+                                            </div>
+                                        )}
                                         <div className="report-dims" style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '4px' }}>
                                             {original.length}x{original.width}x{original.height} cm
                                         </div>
