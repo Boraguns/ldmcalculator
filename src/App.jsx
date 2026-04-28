@@ -5,8 +5,10 @@ import InputWizard from './components/InputWizard';
 import { BinPacking3D } from './utils/binpacking';
 import Home from './pages/Home';
 import PlaceholderPage from './pages/PlaceholderPage';
+import { useT } from './i18n/LanguageContext';
 
 const GeneralCalculator = ({ mode = 'truck' }) => {
+    const { t } = useT();
     const [specs, setSpecs] = useState(null);
     const [packedItems, setPackedItems] = useState([]);
     const [viewMode, setViewMode] = useState('iso');
@@ -60,13 +62,13 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
                 setPackedItems(result.placedItems);
                 return result;
             } else {
-                alert('Ürünler sığmadı veya bir hata oluştu.');
+                alert(t('wizard.notFitErr'));
                 setPackedItems([]);
                 return null;
             }
         } catch (error) {
             console.error("Error:", error);
-            alert('Hata oluştu');
+            alert(t('wizard.errorOccurred'));
         }
         return null;
     };
@@ -203,7 +205,7 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
                             }}
                         >
                             <div className="ai-btn-inner" style={{ padding: '0 16px', height: '100%', gap: '8px', fontSize: '0.85rem' }}>
-                                📸 Ekran Görüntüsü Al
+                                📸 {t('viewer.screenshot')}
                             </div>
                         </button>
                     )}
@@ -220,11 +222,11 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
                         pointerEvents: 'auto'
                     }}>
                         {[
-                            { id: 'iso', label: 'İzometrik' },
-                            { id: 'top', label: 'Üst Bakış' },
-                            { id: 'side', label: 'Yan Bakış' },
-                            { id: 'front', label: 'Ön Bakış' },
-                            { id: 'back', label: 'Arka Bakış' }
+                            { id: 'iso', label: t('viewer.iso') },
+                            { id: 'top', label: t('viewer.top') },
+                            { id: 'side', label: t('viewer.side') },
+                            { id: 'front', label: t('viewer.front') },
+                            { id: 'back', label: t('viewer.back') }
                         ].map((btn) => (
                             <button
                                 key={btn.id}
@@ -260,11 +262,11 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
                             backdropFilter: 'blur(4px)',
                             zIndex: 10
                         }}>
-                            <h4 style={{ margin: '0 0 8px 0', color: 'white', fontSize: '0.9rem' }}>Yüklenen Ürünler</h4>
+                            <h4 style={{ margin: '0 0 8px 0', color: 'white', fontSize: '0.9rem' }}>{t('viewer.loadedProducts')}</h4>
                             {legendItems.map(l => (
                                 <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', color: 'white', fontSize: '0.8rem' }}>
                                     <div style={{ width: '12px', height: '12px', borderRadius: '2px', background: colors[l.colorId % colors.length] }}></div>
-                                    <span>#{l.id} - {l.count} Adet</span>
+                                    <span>#{l.id} - {l.count} {t('viewer.qty')}</span>
                                 </div>
                             ))}
                         </div>
@@ -286,7 +288,7 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
                             fontSize: '0.85rem',
                             fontWeight: '500'
                         }}>
-                            <div>Ürün #{hoveredItem.item.id}</div>
+                            <div>{t('viewer.product')} #{hoveredItem.item.id}</div>
                             <div style={{ fontSize: '0.75rem', color: '#666' }}>
                                 {hoveredItem.item.dimensions.length}x{hoveredItem.item.dimensions.width}x{hoveredItem.item.dimensions.height}
                             </div>
@@ -302,15 +304,15 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
             {showScreenshotModal && (
                 <div className="modal-overlay" onClick={() => setShowScreenshotModal(false)}>
                     <div className="ldm-modal" onClick={e => e.stopPropagation()}>
-                        <h2 style={{ color: 'white', marginBottom: '20px', textAlign: 'center' }}>Ekran Görüntüsü Kaydet</h2>
+                        <h2 style={{ color: 'white', marginBottom: '20px', textAlign: 'center' }}>{t('viewer.saveScreenshot')}</h2>
 
                         <div className="ai-input-group" style={{ marginBottom: '25px' }}>
-                            <label className="ai-input-label">Firmanızın Adını Yazınız</label>
+                            <label className="ai-input-label">{t('viewer.companyName')}</label>
                             <div className="ai-input-container">
                                 <div className="ai-input-inner">
                                     <input
                                         type="text"
-                                        placeholder="Firma Adı (opsiyonel)"
+                                        placeholder={t('viewer.companyPlaceholder')}
                                         value={companyName}
                                         onChange={(e) => setCompanyName(e.target.value)}
                                         autoFocus
@@ -321,7 +323,7 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
 
                         <div style={{ display: 'flex', gap: '10px' }}>
                             <button className="ai-btn" onClick={() => setShowScreenshotModal(false)} style={{ flex: 1, height: '44px' }}>
-                                <div className="ai-btn-inner">Vazgeç</div>
+                                <div className="ai-btn-inner">{t('viewer.cancel')}</div>
                             </button>
                             <button
                                 className="ai-btn ai-btn-primary"
@@ -329,7 +331,7 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
                                 style={{ flex: 2, height: '44px' }}
                             >
                                 <div className="ai-btn-inner" style={{ background: '#3b82f6', color: 'white' }}>
-                                    Ekran Görüntüsünü İndir
+                                    {t('viewer.download')}
                                 </div>
                             </button>
                         </div>

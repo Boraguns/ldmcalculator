@@ -1018,8 +1018,12 @@ body {
         left: 0;
         right: 0;
         bottom: 0;
-        height: 85vh;
-        max-height: 85vh !important;
+        /* Use dynamic viewport units so Safari/Chrome mobile address bar
+           collapsing/expanding doesn't crop the bottom buttons. */
+        height: 92vh;
+        height: 92dvh;
+        max-height: 92vh !important;
+        max-height: 92dvh !important;
         min-height: 56px !important;
         background: #0f172a;
         border-top: 1px solid rgba(255, 255, 255, 0.1);
@@ -1114,10 +1118,15 @@ body {
     }
 
     .wizard-container {
-        height: calc(85vh - 56px);
-        max-height: calc(85vh - 56px);
+        height: calc(92vh - 56px);
+        height: calc(92dvh - 56px);
+        max-height: calc(92vh - 56px);
+        max-height: calc(92dvh - 56px);
         overflow-y: auto !important;
-        padding: 1rem !important;
+        -webkit-overflow-scrolling: touch;
+        /* Extra bottom padding so the last button (e.g. "Calculate") is never
+           hidden behind the iOS home-indicator or the browser bottom UI. */
+        padding: 1rem 1rem calc(env(safe-area-inset-bottom, 0px) + 80px) !important;
     }
 }
 

@@ -4,6 +4,7 @@ import { Suspense, useRef, useEffect, useState, useMemo } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, useProgress, Html } from '@react-three/drei';
 import * as THREE from 'three';
+import { useT } from '../i18n/LanguageContext';
 
 const Loader = () => {
     const { progress, active } = useProgress();
@@ -647,18 +648,25 @@ const WarehouseEnvironment = ({ floorY, showFlags = true, onFlagClick }) => {
 
                 {/* Country Flags — raised so warehouse boxes in front don't block them. */}
                 {showFlags && (
-                    <group position={[0, 3, 0.6]}>
-                        {['tr', 'de', 'fr', 'nl', 'it', 'be', 'es', 'gb', 'at', 'ch', 'cn', 'kz', 'tm', 'uz'].map((code, index) => {
-                            const cols = 5;
+                    <group position={[0, 6, 0.6]}>
+                        {[
+                            'tr', 'de', 'fr', 'nl', 'it', 'be',
+                            'es', 'gb', 'at', 'ch', 'pl', 'ro',
+                            'cz', 'se', 'no', 'dk', 'gr', 'pt',
+                            'hu', 'bg', 'cn', 'kz', 'tm', 'uz',
+                            'jp', 'kr', 'in', 'id', 'vn', 'th'
+                        ].map((code, index) => {
+                            const cols = 6;
+                            const rows = 5;
                             const col = index % cols;
                             const row = Math.floor(index / cols);
 
-                            const spacingX = 4.5;
-                            const spacingY = 1.9;
+                            const spacingX = 4.0;
+                            const spacingY = 1.7;
 
-                            // Center the grid (3 rows stacked upward from baseline)
+                            // Center the grid both horizontally and vertically around parent group
                             const startX = -((cols * spacingX) / 2) + (spacingX / 2);
-                            const startY = spacingY * 2;
+                            const startY = ((rows - 1) * spacingY) / 2;
 
                             const x = startX + (col * spacingX);
                             const y = startY - (row * spacingY);
@@ -986,6 +994,7 @@ const ModelViewer = ({
     mode = 'truck'
 }) => {
     const [selectedCountry, setSelectedCountry] = useState(null);
+    const { t } = useT();
 
     return (
         <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', borderRadius: '1rem', background: 'transparent' }}>
@@ -1051,7 +1060,7 @@ const ModelViewer = ({
                                     style={{ borderRadius: '4px', width: '32px' }}
                                 />
                                 <h3 style={{ margin: 0, color: '#f8fafc', fontSize: '1.25rem' }}>
-                                    <span style={{ textTransform: 'uppercase' }}>{selectedCountry}</span> için Önerilen Nakliyeciler
+                                    {t('viewer.shippers', { country: selectedCountry.toUpperCase() })}
                                 </h3>
                             </div>
                             <button 
@@ -1080,16 +1089,16 @@ const ModelViewer = ({
                             >
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                                     <div style={{ fontWeight: 'bold', color: '#fbbf24', fontSize: '1.1rem' }}>Etnalog</div>
-                                    <div style={{ fontSize: '0.7rem', color: '#0f172a', background: '#fbbf24', padding: '3px 10px', borderRadius: '12px', fontWeight: '700' }}>ÖNE ÇIKAN</div>
+                                    <div style={{ fontSize: '0.7rem', color: '#0f172a', background: '#fbbf24', padding: '3px 10px', borderRadius: '12px', fontWeight: '700' }}>{t('viewer.featured')}</div>
                                 </div>
                                 <div style={{ color: '#cbd5e1', fontSize: '0.9rem', lineHeight: '1.5' }}>
-                                    Uluslararası karayolu taşımacılığında <span style={{ textTransform: 'uppercase' }}>{selectedCountry}</span> hattında düzenli sefer ve parsiyel yük çözümleri.
+                                    {t('viewer.etnalogDesc', { country: selectedCountry.toUpperCase() })}
                                 </div>
                             </div>
                         </div>
                         
                         <div style={{ marginTop: '20px', textAlign: 'center', color: '#64748b', fontSize: '0.8rem' }}>
-                            <p>Daha fazla nakliyeci listelemek ister misiniz? İletişime geçin.</p>
+                            <p>{t('viewer.moreShippers')}</p>
                         </div>
                     </div>
                 </div>
