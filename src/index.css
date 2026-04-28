@@ -475,6 +475,14 @@ body {
 /* END 3D STYLES */
 /* ================================== */
 
+/* Language switcher visibility: desktop variant on >=1024px, mobile flag
+   variant on <1024px. */
+.lang-switcher-mobile { display: none; }
+@media (max-width: 1024px) {
+    .lang-switcher-desktop { display: none !important; }
+    .lang-switcher-mobile { display: block !important; }
+}
+
 /* Global select option styling — keep dropdown options readable (white on dark)
    across the whole app, including the language switcher. */
 select option,

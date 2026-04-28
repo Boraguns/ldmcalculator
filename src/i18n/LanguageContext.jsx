@@ -6,12 +6,13 @@ import ru from './locales/ru.json';
 import fr from './locales/fr.json';
 
 const dictionaries = { en, tr, de, ru, fr };
+// Flag emojis (regional indicator pairs). Country mapping: en→GB, tr→TR, de→DE, ru→RU, fr→FR.
 export const SUPPORTED_LANGS = [
-    { code: 'en', label: 'English' },
-    { code: 'tr', label: 'Türkçe' },
-    { code: 'de', label: 'Deutsch' },
-    { code: 'ru', label: 'Русский' },
-    { code: 'fr', label: 'Français' }
+    { code: 'en', label: 'English', flag: '🇬🇧' },
+    { code: 'tr', label: 'Türkçe', flag: '🇹🇷' },
+    { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
+    { code: 'ru', label: 'Русский', flag: '🇷🇺' },
+    { code: 'fr', label: 'Français', flag: '🇫🇷' }
 ];
 
 const LanguageContext = createContext({ lang: 'en', setLang: () => {}, t: (k) => k });
@@ -67,9 +68,64 @@ export const LanguageProvider = ({ children }) => {
 
 export const useT = () => useContext(LanguageContext);
 
-export const LanguageSwitcher = ({ style = {}, compact = false, height }) => {
+export const LanguageSwitcher = ({ style = {}, compact = false, height, flagOnly = false }) => {
     const { lang, setLang } = useContext(LanguageContext);
     const h = height ?? (compact ? 40 : 48);
+    const current = SUPPORTED_LANGS.find(l => l.code === lang) || SUPPORTED_LANGS[0];
+
+    if (flagOnly) {
+        // Compact icon-style: flag in a circular ai-btn shell with hidden but
+        // accessible select overlaying it.
+        return (
+            <div
+                className="ai-btn ai-language-switcher"
+                style={{
+                    padding: '2px',
+                    width: `${h}px`,
+                    height: `${h}px`,
+                    borderRadius: '50%',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    ...style
+                }}
+            >
+                <div
+                    style={{
+                        width: '100%',
+                        height: '100%',
+                        background: '#1a1a1a',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: `${Math.round(h * 0.55)}px`,
+                        lineHeight: 1
+                    }}
+                    aria-hidden="true"
+                >
+                    {current.flag}
+                </div>
+                <select
+                    value={lang}
+                    onChange={(e) => setLang(e.target.value)}
+                    aria-label="Language"
+                    style={{
+                        position: 'absolute',
+                        inset: 0,
+                        width: '100%',
+                        height: '100%',
+                        opacity: 0,
+                        cursor: 'pointer',
+                        border: 'none'
+                    }}
+                >
+                    {SUPPORTED_LANGS.map(l => (
+                        <option key={l.code} value={l.code}>{l.flag} {l.label}</option>
+                    ))}
+                </select>
+            </div>
+        );
+    }
     return (
         <div
             className="ai-btn ai-language-switcher"

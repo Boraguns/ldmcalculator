@@ -15,6 +15,23 @@ const Home = () => {
         { id: 'ship', path: '/ship', img: '/src/gemi.png', bg: '/src/bg4.jpg' }
     ];
 
+    // Allow native body scroll on the Home route only — global CSS pins body
+    // to overflow:hidden / height:100vh for the 3D viewer pages, but the home
+    // page is content-heavy (hero + SEO + footer) and needs to scroll natively.
+    useEffect(() => {
+        const prevOverflow = document.body.style.overflow;
+        const prevHeight = document.body.style.height;
+        const prevHtmlOverflow = document.documentElement.style.overflow;
+        document.body.style.overflow = 'auto';
+        document.body.style.height = 'auto';
+        document.documentElement.style.overflow = 'auto';
+        return () => {
+            document.body.style.overflow = prevOverflow;
+            document.body.style.height = prevHeight;
+            document.documentElement.style.overflow = prevHtmlOverflow;
+        };
+    }, []);
+
     useEffect(() => {
         const checkDevice = () => {
             const hasFinePointer = window.matchMedia('(pointer: fine)').matches;
@@ -78,12 +95,11 @@ const Home = () => {
 
     return (
         <div style={{
-            width: '100vw',
+            width: '100%',
             minHeight: '100vh',
             backgroundColor: '#000',
             position: 'relative',
             overflowX: 'hidden',
-            overflowY: 'auto',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -99,9 +115,10 @@ const Home = () => {
                 alignItems: 'flex-start',
                 justifyContent: 'center'
             }}>
-            {/* Language switcher top-right */}
+            {/* Language switcher top-right (smaller height on mobile so it
+                doesn't crowd the centered logo) */}
             <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 200 }}>
-                <LanguageSwitcher />
+                <LanguageSwitcher height={isDesktop ? 44 : 36} compact={!isDesktop} />
             </div>
             {/*
                 DESKTOP BACKGROUND LAYERS
@@ -173,8 +190,12 @@ const Home = () => {
                     alt="LDM Logo"
                     className="home-logo"
                     style={{
-                        width: isDesktop ? '320px' : '200px',
+                        width: isDesktop ? '320px' : '180px',
                         height: 'auto',
+                        // On mobile push the logo below the switcher row so they
+                        // don't overlap when the switcher widens with longer
+                        // language labels (e.g. "Русский").
+                        marginTop: isDesktop ? 0 : '50px',
                         marginBottom: isDesktop ? '80px' : '30px',
                         objectFit: 'contain'
                     }}
