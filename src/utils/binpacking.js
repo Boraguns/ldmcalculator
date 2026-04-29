@@ -482,17 +482,33 @@ export class BinPacking3D {
             // either side has different id.
             const wouldViolate = (newPos, mover) => {
                 if (newPos.z <= 0) return false;
+                // Check items DIRECTLY BELOW the mover's new position.
+                for (const p of this.placedItems) {
+                    if (p === a || p === b) continue;
+                    const ptop = p.position.z + p.dimensions.height;
+                    if (Math.abs(ptop - newPos.z) > 0.001) continue;
+                    const overlapX = !(newPos.x + mover.dimensions.length <= p.position.x ||
+                                        p.position.x + p.dimensions.length <= newPos.x);
+                    const overlapY = !(newPos.y + mover.dimensions.width <= p.position.y ||
+                                        p.position.y + p.dimensions.width <= newPos.y);
+                    if (!overlapX || !overlapY) continue;
+                    if (p.id === mover.id) continue;
+                    // Cross-product stacking only allowed if BOTH stackable.
+                    if (p.stackable === false || mover.stackable === false) return true;
+                }
+                // Also check items DIRECTLY ABOVE this position (in case mover
+                // is unstackable, nothing should sit on top of it after the swap).
                 if (mover.stackable === false) {
-                    // Look for any item directly below newPos with a different id.
+                    const moverTop = newPos.z + mover.dimensions.height;
                     for (const p of this.placedItems) {
                         if (p === a || p === b) continue;
-                        const ptop = p.position.z + p.dimensions.height;
-                        if (Math.abs(ptop - newPos.z) > 0.001) continue;
+                        if (Math.abs(p.position.z - moverTop) > 0.001) continue;
                         const overlapX = !(newPos.x + mover.dimensions.length <= p.position.x ||
                                             p.position.x + p.dimensions.length <= newPos.x);
                         const overlapY = !(newPos.y + mover.dimensions.width <= p.position.y ||
                                             p.position.y + p.dimensions.width <= newPos.y);
-                        if (overlapX && overlapY && p.id !== mover.id) return true;
+                        if (!overlapX || !overlapY) continue;
+                        if (p.id !== mover.id) return true;
                     }
                 }
                 return false;
