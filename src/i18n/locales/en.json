@@ -105,7 +105,9 @@
     "drawerAria": "Open/close step panel",
     "editName": "Edit name",
     "color": "Color",
-    "colorTitle": "Box color in 3D preview"
+    "colorTitle": "Box color in 3D preview",
+    "stackable": "Stackable",
+    "unstackable": "Unstackable"
   },
   "step3": {
     "title": "Result Report",
@@ -138,7 +140,8 @@
     "front": "Front",
     "rear": "Rear",
     "balanceWarn": "Load distribution exceeds the 60/40 limit. Per EU Directive 96/53/EC and road traffic regulations, uneven axle loading is a safety risk. Stack heavier boxes closer to the kingpin (front).",
-    "rebalance": "Restack Balanced"
+    "rebalance": "Restack Balanced",
+    "rebalanceNoOp": "No further balance improvement is geometrically possible for this load (likely a single-product cargo where the trailer length leaves an asymmetric remainder)."
   },
   "viewer": {
     "iso": "Isometric",

@@ -105,7 +105,9 @@
     "drawerAria": "Adım panelini aç/kapat",
     "editName": "İsim düzenle",
     "color": "Renk",
-    "colorTitle": "3D önizlemede koli rengi"
+    "colorTitle": "3D önizlemede koli rengi",
+    "stackable": "İstiflenebilir",
+    "unstackable": "İstiflenemez"
   },
   "step3": {
     "title": "Sonuç Raporu",
@@ -138,7 +140,8 @@
     "front": "Ön",
     "rear": "Arka",
     "balanceWarn": "Yük dağılımı 60/40 sınırını aşıyor. EU 96/53/EC ve KGM yönetmeliğine göre aks yükü dengesizliği güvenlik riski oluşturur. Ağır kolileri kingpin (ön) tarafına yakın istifleyin.",
-    "rebalance": "Dengeli Yeniden İstifle"
+    "rebalance": "Dengeli Yeniden İstifle",
+    "rebalanceNoOp": "Bu yük için daha fazla denge iyileştirmesi geometrik olarak mümkün değil (büyük ihtimalle tek tip ürün ve dorse uzunluğunun asimetrik artığı sebebiyle)."
   },
   "viewer": {
     "iso": "İzometrik",

@@ -84,9 +84,10 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
             const packer = new BinPacking3D(truck, products);
             const result = packer.pack();
             if (!result.success) return null;
-            packer.rebalance();
+            const rb = packer.rebalance();
             // Reflect the swapped positions back into the result object.
             result.placedItems = packer.placedItems;
+            result.rebalanceInfo = rb;
             const requestedTotal = products.reduce((sum, p) => sum + (parseInt(p.quantity) || 0), 0);
             if (result.totalItems < requestedTotal) {
                 result.isOverloaded = true;

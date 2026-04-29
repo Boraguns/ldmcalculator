@@ -105,7 +105,9 @@
     "drawerAria": "Ouvrir/fermer le panneau",
     "editName": "Modifier le nom",
     "color": "Couleur",
-    "colorTitle": "Couleur de la caisse en 3D"
+    "colorTitle": "Couleur de la caisse en 3D",
+    "stackable": "Empilable",
+    "unstackable": "Non empilable"
   },
   "step3": {
     "title": "Rapport de résultat",
@@ -138,7 +140,8 @@
     "front": "Avant",
     "rear": "Arrière",
     "balanceWarn": "La répartition de la charge dépasse la limite 60/40. Selon la directive UE 96/53/CE et le code de la route, un déséquilibre des essieux constitue un risque de sécurité. Empilez les caisses lourdes près du pivot d'attelage (avant).",
-    "rebalance": "Réempiler équilibré"
+    "rebalance": "Réempiler équilibré",
+    "rebalanceNoOp": "Aucune amélioration supplémentaire de l'équilibre n'est géométriquement possible pour cette charge (charge mono-produit avec reste asymétrique de la longueur de la remorque)."
   },
   "viewer": {
     "iso": "Isométrique",

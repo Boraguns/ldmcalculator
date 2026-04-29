@@ -28,7 +28,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
 
     // Initial product state
     const [products, setProducts] = useState([
-        { id: 1, name: '', length: '', width: '', height: '', weight: '', quantity: '', maxStack: 1, allowRotation: false, color: '' }
+        { id: 1, name: '', length: '', width: '', height: '', weight: '', quantity: '', maxStack: 1, allowRotation: false, color: '', stackable: true }
     ]);
 
     const handleResetAll = () => {
@@ -39,7 +39,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
         setTotalTons('');
         setTonnageInfo(null);
         setResultData(null);
-        setProducts([{ id: 1, name: '', length: '', width: '', height: '', weight: '', quantity: '', maxStack: 1, allowRotation: false, color: '' }]);
+        setProducts([{ id: 1, name: '', length: '', width: '', height: '', weight: '', quantity: '', maxStack: 1, allowRotation: false, color: '', stackable: true }]);
         if (onFullReset) onFullReset();
     };
 
@@ -100,7 +100,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
             id: newId,
             name: '',
             length: '', width: '', height: '', weight: '', quantity: sameSize ? '' : '1',
-            maxStack: 1, allowRotation: false, color: ''
+            maxStack: 1, allowRotation: false, color: '', stackable: true
         }]);
     };
 
@@ -403,7 +403,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                                             fontSize: '0.8rem',
                                             color: '#94a3b8'
                                         }}
-                                        title={t('wizard.colorTitle') || 'Box color'}
+                                        title={t('wizard.colorTitle')}
                                     >
                                         <input
                                             type="color"
@@ -419,7 +419,21 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                                                 padding: 0
                                             }}
                                         />
-                                        <span>{t('wizard.color') || 'Color'}</span>
+                                        <span>{t('wizard.color')}</span>
+                                    </label>
+                                    {/* Stackable / Unstackable toggle */}
+                                    <label className="pulse-checkbox-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', width: 'auto', fontSize: '0.8rem' }}>
+                                        <div className="pulse-checkbox-wrapper" style={{ fontSize: '0.8rem', width: '1.2em', height: '1.2em', minWidth: '1.2em' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={product.stackable === false}
+                                                onChange={(e) => updateProduct(product.id, 'stackable', !e.target.checked)}
+                                            />
+                                            <div className="checkmark" style={{ height: '1.1em', width: '1.1em' }}></div>
+                                        </div>
+                                        <span style={{ color: product.stackable === false ? '#fbbf24' : '#94a3b8', fontWeight: product.stackable === false ? 600 : 400 }}>
+                                            {product.stackable === false ? t('wizard.unstackable') : t('wizard.stackable')}
+                                        </span>
                                     </label>
                                 </div>
                                 {(!sameSize && products.length > 1) && (
@@ -464,7 +478,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                                 </div>
                                 <div className="ai-input-group">
                                     <span className="ai-input-label">{t('wizard.maxStack')}</span>
-                                    <div className="ai-input-container">
+                                    <div className={`ai-input-container ${product.stackable === false ? 'maxstack-pulse' : ''}`}>
                                         <div className="ai-input-inner">
                                             <select value={product.maxStack} onChange={(e) => updateProduct(product.id, 'maxStack', e.target.value)} style={{ color: 'white' }}>
                                                 {[...Array(10)].map((_, i) => <option key={i} value={i + 1} style={{ color: 'black' }}>{i + 1}</option>)}
@@ -640,7 +654,12 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                                             className="ai-btn"
                                             onClick={() => {
                                                 const updated = onRebalance();
-                                                if (updated) setResultData(updated);
+                                                if (updated) {
+                                                    setResultData(updated);
+                                                    if (updated.rebalanceInfo && !updated.rebalanceInfo.improved) {
+                                                        alert(t('step3.rebalanceNoOp'));
+                                                    }
+                                                }
                                             }}
                                             style={{ marginTop: '10px', padding: '2px', height: '36px', width: '100%' }}
                                         >

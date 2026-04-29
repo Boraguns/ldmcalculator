@@ -23,6 +23,11 @@ export class BinPacking3D {
             quantity: parseInt(item.quantity),
             maxStack: parseInt(item.maxStack) || 999, // User defined constraint
             allowRotation: item.allowRotation !== false,
+            // Cross-product stacking control. Default true. When false, no
+            // OTHER product may sit on top of this one, and this product may
+            // not be placed on top of any other product (only on the floor or
+            // on more units of itself).
+            stackable: item.stackable !== false,
             placed: false,
             position: null,
             rotation: null
@@ -253,7 +258,7 @@ export class BinPacking3D {
                     if (y > effMaxY) break;
 
                     const position = { x, y, z };
-                    if (this.canPlaceAt(position, itemDims)) {
+                    if (this.canPlaceAt(position, itemDims, item)) {
                         return position;
                     }
                 }
@@ -262,7 +267,7 @@ export class BinPacking3D {
         return null;
     }
 
-    canPlaceAt(position, itemDims) {
+    canPlaceAt(position, itemDims, candidateItem) {
         // Bounds check
         if (position.x + itemDims.length > this.container.length) return false;
         if (position.y + itemDims.width > this.container.width) return false;
@@ -272,6 +277,30 @@ export class BinPacking3D {
         for (let placed of this.placedItems) {
             if (this.isColliding(position, itemDims, placed.position, placed.dimensions)) {
                 return false;
+            }
+        }
+
+        // Cross-product stacking check.
+        // If we're stacking (z > 0), look at the items directly below the
+        // candidate footprint. If any directly-below item has a DIFFERENT id,
+        // the placement is only allowed when BOTH items are stackable (true).
+        // Otherwise (either side unstackable + different products) → reject.
+        if (candidateItem && position.z > 0) {
+            const candStackable = candidateItem.stackable !== false;
+            for (const placed of this.placedItems) {
+                const placedTop = placed.position.z + placed.dimensions.height;
+                if (Math.abs(placedTop - position.z) > 0.001) continue; // not touching from below
+                // Footprint overlap in X/Y?
+                const overlapX = !(position.x + itemDims.length <= placed.position.x ||
+                                    placed.position.x + placed.dimensions.length <= position.x);
+                const overlapY = !(position.y + itemDims.width <= placed.position.y ||
+                                    placed.position.y + placed.dimensions.width <= position.y);
+                if (!overlapX || !overlapY) continue;
+                // Item directly below this candidate.
+                if (placed.id !== candidateItem.id) {
+                    const placedStackable = placed.stackable !== false;
+                    if (!candStackable || !placedStackable) return false;
+                }
             }
         }
         return true;
@@ -412,9 +441,11 @@ export class BinPacking3D {
 
         let frontW = sumWeight(this.placedItems, 'front');
         let rearW = sumWeight(this.placedItems, 'rear');
+        const initialDiff = Math.abs(frontW - rearW);
+        let swapsMade = 0;
 
         // Iterative pair swap. Cap iterations to keep it bounded.
-        const MAX_ITER = 200;
+        const MAX_ITER = 500;
         for (let iter = 0; iter < MAX_ITER; iter++) {
             const diff = frontW - rearW;
             if (Math.abs(diff) / Math.max(1, frontW + rearW) <= 0.05) break; // <=5% gap is good enough
@@ -449,12 +480,22 @@ export class BinPacking3D {
             const tmp = a.position;
             a.position = b.position;
             b.position = tmp;
+            swapsMade++;
 
             // Recompute (cheap because we know the delta but recompute to be safe)
             frontW = sumWeight(this.placedItems, 'front');
             rearW  = sumWeight(this.placedItems, 'rear');
         }
 
-        return { front: frontW, rear: rearW };
+        // Rebuild the array reference so React state updates detect the change
+        // even if individual item positions were mutated in place.
+        this.placedItems = this.placedItems.map(it => ({ ...it, position: { ...it.position } }));
+
+        return {
+            front: frontW,
+            rear: rearW,
+            swapsMade,
+            improved: Math.abs(frontW - rearW) < initialDiff - 1
+        };
     }
 }

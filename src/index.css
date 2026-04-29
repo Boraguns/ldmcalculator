@@ -483,6 +483,20 @@ body {
     .lang-switcher-mobile { display: block !important; }
 }
 
+/* When a product is marked "unstackable" the maxStack selectbox pulses with
+   an amber glow so the user notices they should still set how many of the
+   SAME product can stack with itself (cross-product stacking is blocked
+   by the algorithm). */
+.maxstack-pulse {
+    box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7);
+    animation: maxstackPulse 1.4s ease-in-out infinite;
+    border-radius: 12px;
+}
+@keyframes maxstackPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
+    50%      { box-shadow: 0 0 0 6px rgba(251, 191, 36, 0.45); }
+}
+
 /* Global select option styling — keep dropdown options readable (white on dark)
    across the whole app, including the language switcher. */
 select option,

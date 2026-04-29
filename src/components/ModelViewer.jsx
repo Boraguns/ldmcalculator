@@ -81,6 +81,39 @@ const CameraController = ({ viewMode, onUserInteraction }) => {
 
 import { useGLTF, useTexture } from '@react-three/drei';
 
+/**
+ * Decorative banner (branda) hanging on the back wall around the flag grid.
+ * Just a textured plane with a thin dark backing to keep the edges crisp
+ * and avoid z-fighting with the wall.
+ */
+const Banner = ({ url, position, size }) => {
+    const texture = useTexture(url);
+    const [w, h] = size;
+    return (
+        <group position={position}>
+            {/* Dark backing slightly larger than the print so the banner reads
+                as a printed canvas with a small bezel. */}
+            <mesh position={[0, 0, -0.05]}>
+                <boxGeometry args={[w + 0.08, h + 0.08, 0.06]} />
+                <meshStandardMaterial color="#0f172a" roughness={0.7} />
+            </mesh>
+            {/* Printed surface */}
+            <mesh position={[0, 0, 0.03]}>
+                <planeGeometry args={[w, h]} />
+                <meshBasicMaterial
+                    map={texture}
+                    toneMapped={false}
+                    transparent={false}
+                    depthWrite={true}
+                    polygonOffset
+                    polygonOffsetFactor={-1}
+                    polygonOffsetUnits={-1}
+                />
+            </mesh>
+        </group>
+    );
+};
+
 const CountryFlag = ({ code, position, onClick }) => {
     // Load texture with loose cors policy
     const texture = useTexture(`https://flagcdn.com/w640/${code}.png`);
@@ -649,6 +682,48 @@ const WarehouseEnvironment = ({ floorY, showFlags = true, onFlagClick }) => {
                 {/* Country Flags — raised so warehouse boxes in front don't block them. */}
                 {showFlags && (
                     <group position={[0, 6, 0.6]}>
+                        {/* ============= BANNERS (Brandalar) =============
+                            Three banners decorate the back wall around the flag
+                            grid: a tall banner on the left and right (height =
+                            5 flag-rows, top edge aligned with the top flag row,
+                            with a horizontal gap from the flags), and a wide
+                            banner above (width = 6 flag-columns, with a
+                            vertical gap from the top flag row). Images are
+                            served from /banners/{left,right,top}.jpg. */}
+                        {(() => {
+                            // Flag-grid metrics matching the loop below.
+                            const cols = 6;
+                            const rows = 5;
+                            const spacingX = 4.0;
+                            const spacingY = 1.7;
+                            const flagW = 2.4;
+                            const flagH = 1.6;
+                            const gridHalfW = (cols * spacingX) / 2; // 12
+                            const gridHalfH = ((rows - 1) * spacingY) / 2 + flagH / 2; // top edge
+                            const sideBannerH = rows * spacingY;     // 8.5 — matches 5 rows
+                            const sideBannerW = 2.0;
+                            const sideGap = 1.2;
+                            const topBannerW = cols * spacingX;      // 24 — matches 6 cols
+                            const topBannerH = 1.8;
+                            const topGap = 1.0;
+                            // Top edge alignment: banner top at gridHalfH (top of top row).
+                            const sideCenterY = gridHalfH - sideBannerH / 2;
+                            const sideX = gridHalfW + sideGap + sideBannerW / 2;
+                            const topCenterY = gridHalfH + topGap + topBannerH / 2;
+                            return (
+                                <Suspense fallback={null}>
+                                    <Banner url="/banners/left.jpg"
+                                            position={[-sideX, sideCenterY, 0]}
+                                            size={[sideBannerW, sideBannerH]} />
+                                    <Banner url="/banners/right.jpg"
+                                            position={[ sideX, sideCenterY, 0]}
+                                            size={[sideBannerW, sideBannerH]} />
+                                    <Banner url="/banners/top.jpg"
+                                            position={[0, topCenterY, 0]}
+                                            size={[topBannerW, topBannerH]} />
+                                </Suspense>
+                            );
+                        })()}
                         {[
                             'tr', 'de', 'fr', 'nl', 'it', 'be',
                             'es', 'gb', 'at', 'ch', 'pl', 'ro',
@@ -982,6 +1057,70 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck' }) => {
                     </mesh>
                 )
             })}
+
+            {/* ============= ŞTANGA / CARGO LOAD BARS =============
+                When two adjacent stack columns along the trailer length have
+                different top heights, place a horizontal bracing bar at the
+                lower of the two tops to keep the taller stack from tipping
+                over the shorter one. This mirrors real-world telescoping load
+                bars (a.k.a. shoring bars / "ştanga") used in EU/TR road
+                freight to brace mixed-height loads. */}
+            {(() => {
+                if (!packedItems || packedItems.length < 2) return null;
+                // 1) Build column tops: keyed by x-start (cm), stored as
+                //    { topZcm, x0cm, x1cm }.
+                const columnsByX = {};
+                for (const it of packedItems) {
+                    const x0 = it.position.x;
+                    const x1 = x0 + it.dimensions.length;
+                    const topZ = it.position.z + it.dimensions.height;
+                    const key = `${Math.round(x0)}_${Math.round(x1)}`;
+                    if (!columnsByX[key] || topZ > columnsByX[key].topZcm) {
+                        columnsByX[key] = { x0cm: x0, x1cm: x1, topZcm: topZ };
+                    }
+                }
+                const cols = Object.values(columnsByX).sort((a, b) => a.x0cm - b.x0cm);
+                if (cols.length < 2) return null;
+
+                // 2) For each adjacent pair where tops differ, draw a bar.
+                const bars = [];
+                for (let i = 0; i < cols.length - 1; i++) {
+                    const a = cols[i];
+                    const b = cols[i + 1];
+                    if (Math.abs(a.topZcm - b.topZcm) < 5) continue; // same height ±5cm
+                    const lowerZ = Math.min(a.topZcm, b.topZcm);
+                    // Boundary X: between the two columns. Use a's right edge.
+                    const boundaryX = (a.x1cm + b.x0cm) / 2;
+                    bars.push({ boundaryX, lowerZ, key: `bar${i}` });
+                }
+                if (bars.length === 0) return null;
+
+                return bars.map((bar) => {
+                    // Convert to scene coords. The bar spans the trailer width
+                    // (Y axis in world / Z visually) at z=lowerZ + small offset.
+                    const x = (bar.boundaryX * scaleFactor) - (tLen / 2);
+                    const y = (bar.lowerZ * scaleFactor) - (tHei / 2) + 0.3 + 0.04; // sit slightly above the lower stack top
+                    const barLen = (truckType?.width || 245) * scaleFactor * 0.95;
+                    return (
+                        <group key={bar.key} position={[x, y, 0]}>
+                            {/* Telescopic shoring bar (metallic cylinder across the trailer width) */}
+                            <mesh rotation={[Math.PI / 2, 0, 0]} castShadow>
+                                <cylinderGeometry args={[0.04, 0.04, barLen, 12]} />
+                                <meshStandardMaterial color="#9ca3af" metalness={0.85} roughness={0.25} />
+                            </mesh>
+                            {/* End caps in a subtle yellow to read as a real load bar */}
+                            <mesh position={[0, 0,  barLen / 2]} rotation={[Math.PI / 2, 0, 0]}>
+                                <cylinderGeometry args={[0.06, 0.06, 0.05, 12]} />
+                                <meshStandardMaterial color="#fbbf24" metalness={0.6} roughness={0.4} />
+                            </mesh>
+                            <mesh position={[0, 0, -barLen / 2]} rotation={[Math.PI / 2, 0, 0]}>
+                                <cylinderGeometry args={[0.06, 0.06, 0.05, 12]} />
+                                <meshStandardMaterial color="#fbbf24" metalness={0.6} roughness={0.4} />
+                            </mesh>
+                        </group>
+                    );
+                });
+            })()}
         </group>
     );
 };

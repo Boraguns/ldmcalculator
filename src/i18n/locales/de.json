@@ -106,7 +106,9 @@
     "drawerAria": "Schritt-Panel öffnen/schließen",
     "editName": "Name bearbeiten",
     "color": "Farbe",
-    "colorTitle": "Kistenfarbe in der 3D-Vorschau"
+    "colorTitle": "Kistenfarbe in der 3D-Vorschau",
+    "stackable": "Stapelbar",
+    "unstackable": "Nicht stapelbar"
   },
   "step3": {
     "title": "Ergebnisbericht",
@@ -139,7 +141,8 @@
     "front": "Vorn",
     "rear": "Hinten",
     "balanceWarn": "Die Lastverteilung überschreitet die 60/40-Grenze. Gemäß EU-Richtlinie 96/53/EG und Straßenverkehrsvorschriften stellt eine ungleichmäßige Achslast ein Sicherheitsrisiko dar. Schwere Kisten näher an der Sattelkupplung (vorn) stapeln.",
-    "rebalance": "Ausgewogen neu stapeln"
+    "rebalance": "Ausgewogen neu stapeln",
+    "rebalanceNoOp": "Eine weitere Verbesserung der Balance ist für diese Ladung geometrisch nicht möglich (vermutlich Single-Produkt-Ladung mit asymmetrischem Rest in der Trailerlänge)."
   },
   "viewer": {
     "iso": "Isometrisch",
