@@ -1058,62 +1058,66 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck' }) => {
                 )
             })}
 
-            {/* ============= ŞTANGA / CARGO LOAD BARS =============
-                When two adjacent stack columns along the trailer length have
-                different top heights, place a horizontal bracing bar at the
-                lower of the two tops to keep the taller stack from tipping
-                over the shorter one. This mirrors real-world telescoping load
-                bars (a.k.a. shoring bars / "ştanga") used in EU/TR road
-                freight to brace mixed-height loads. */}
+            {/* ============= ŞTANGA / VERTICAL ANTI-TIP BARS =============
+                For every multi-row stack column (i.e. more than one row stacked
+                on top of each other), place a thin vertical metal bar on the
+                side faces of the extra rows. These mirror real-world vertical
+                bracing rods clamped against the side of tall cargo stacks to
+                stop them from tipping over sideways during transport. */}
             {(() => {
-                if (!packedItems || packedItems.length < 2) return null;
-                // 1) Build column tops: keyed by x-start (cm), stored as
-                //    { topZcm, x0cm, x1cm }.
-                const columnsByX = {};
+                if (!packedItems || packedItems.length < 1) return null;
+                // Group items into stack columns keyed by footprint position.
+                const columns = {};
                 for (const it of packedItems) {
-                    const x0 = it.position.x;
-                    const x1 = x0 + it.dimensions.length;
-                    const topZ = it.position.z + it.dimensions.height;
-                    const key = `${Math.round(x0)}_${Math.round(x1)}`;
-                    if (!columnsByX[key] || topZ > columnsByX[key].topZcm) {
-                        columnsByX[key] = { x0cm: x0, x1cm: x1, topZcm: topZ };
+                    const key = `${Math.round(it.position.x)}_${Math.round(it.position.y)}_${Math.round(it.dimensions.length)}_${Math.round(it.dimensions.width)}`;
+                    if (!columns[key]) {
+                        columns[key] = {
+                            x0: it.position.x, y0: it.position.y,
+                            l: it.dimensions.length, w: it.dimensions.width,
+                            firstRowTopZ: it.position.z + it.dimensions.height,
+                            topZ: it.position.z + it.dimensions.height,
+                            count: 0
+                        };
                     }
+                    const top = it.position.z + it.dimensions.height;
+                    if (top > columns[key].topZ) columns[key].topZ = top;
+                    if (it.position.z < (columns[key].firstRowTopZ - it.dimensions.height + 1)) {
+                        columns[key].firstRowTopZ = it.position.z + it.dimensions.height;
+                    }
+                    columns[key].count++;
                 }
-                const cols = Object.values(columnsByX).sort((a, b) => a.x0cm - b.x0cm);
-                if (cols.length < 2) return null;
+                const multiRowCols = Object.values(columns).filter(c => c.count > 1);
+                if (multiRowCols.length === 0) return null;
 
-                // 2) For each adjacent pair where tops differ, draw a bar.
                 const bars = [];
-                for (let i = 0; i < cols.length - 1; i++) {
-                    const a = cols[i];
-                    const b = cols[i + 1];
-                    if (Math.abs(a.topZcm - b.topZcm) < 5) continue; // same height ±5cm
-                    const lowerZ = Math.min(a.topZcm, b.topZcm);
-                    // Boundary X: between the two columns. Use a's right edge.
-                    const boundaryX = (a.x1cm + b.x0cm) / 2;
-                    bars.push({ boundaryX, lowerZ, key: `bar${i}` });
-                }
-                if (bars.length === 0) return null;
+                multiRowCols.forEach((c, ci) => {
+                    // Only brace the EXTRA rows above the first row → bar starts at firstRowTopZ.
+                    const z0cm = c.firstRowTopZ;
+                    const z1cm = c.topZ;
+                    if (z1cm - z0cm < 5) return;
+                    // Two vertical bars: one on the +x side face, one on the -x side face,
+                    // hugging the column's side at the y center.
+                    const cyCm = c.y0 + c.w / 2;
+                    bars.push({ key: `b${ci}A`, xCm: c.x0,           yCm: cyCm, z0cm, z1cm });
+                    bars.push({ key: `b${ci}B`, xCm: c.x0 + c.l,     yCm: cyCm, z0cm, z1cm });
+                });
 
-                return bars.map((bar) => {
-                    // Convert to scene coords. The bar spans the trailer width
-                    // (Y axis in world / Z visually) at z=lowerZ + small offset.
-                    const x = (bar.boundaryX * scaleFactor) - (tLen / 2);
-                    const y = (bar.lowerZ * scaleFactor) - (tHei / 2) + 0.3 + 0.04; // sit slightly above the lower stack top
-                    const barLen = (truckType?.width || 245) * scaleFactor * 0.95;
+                return bars.map((b) => {
+                    const x = (b.xCm * scaleFactor) - (tLen / 2);
+                    const z = (b.yCm * scaleFactor) - (tWid / 2);
+                    const barLen = (b.z1cm - b.z0cm) * scaleFactor;
+                    const yMid = ((b.z0cm + b.z1cm) / 2 * scaleFactor) - (tHei / 2) + 0.3;
                     return (
-                        <group key={bar.key} position={[x, y, 0]}>
-                            {/* Telescopic shoring bar (metallic cylinder across the trailer width) */}
-                            <mesh rotation={[Math.PI / 2, 0, 0]} castShadow>
+                        <group key={b.key} position={[x, yMid, z]}>
+                            <mesh castShadow>
                                 <cylinderGeometry args={[0.04, 0.04, barLen, 12]} />
                                 <meshStandardMaterial color="#9ca3af" metalness={0.85} roughness={0.25} />
                             </mesh>
-                            {/* End caps in a subtle yellow to read as a real load bar */}
-                            <mesh position={[0, 0,  barLen / 2]} rotation={[Math.PI / 2, 0, 0]}>
+                            <mesh position={[0,  barLen / 2, 0]}>
                                 <cylinderGeometry args={[0.06, 0.06, 0.05, 12]} />
                                 <meshStandardMaterial color="#fbbf24" metalness={0.6} roughness={0.4} />
                             </mesh>
-                            <mesh position={[0, 0, -barLen / 2]} rotation={[Math.PI / 2, 0, 0]}>
+                            <mesh position={[0, -barLen / 2, 0]}>
                                 <cylinderGeometry args={[0.06, 0.06, 0.05, 12]} />
                                 <meshStandardMaterial color="#fbbf24" metalness={0.6} roughness={0.4} />
                             </mesh>

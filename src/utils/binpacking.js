@@ -477,6 +477,30 @@ export class BinPacking3D {
 
             if (!bestPair) break;
             const [a, b] = bestPair;
+            // Don't allow a swap that would put an unstackable item on top of
+            // a different product, or vice versa. We only do such checks when
+            // either side has different id.
+            const wouldViolate = (newPos, mover) => {
+                if (newPos.z <= 0) return false;
+                if (mover.stackable === false) {
+                    // Look for any item directly below newPos with a different id.
+                    for (const p of this.placedItems) {
+                        if (p === a || p === b) continue;
+                        const ptop = p.position.z + p.dimensions.height;
+                        if (Math.abs(ptop - newPos.z) > 0.001) continue;
+                        const overlapX = !(newPos.x + mover.dimensions.length <= p.position.x ||
+                                            p.position.x + p.dimensions.length <= newPos.x);
+                        const overlapY = !(newPos.y + mover.dimensions.width <= p.position.y ||
+                                            p.position.y + p.dimensions.width <= newPos.y);
+                        if (overlapX && overlapY && p.id !== mover.id) return true;
+                    }
+                }
+                return false;
+            };
+            if (wouldViolate(b.position, a) || wouldViolate(a.position, b)) {
+                bestGain = 0;
+                continue;
+            }
             const tmp = a.position;
             a.position = b.position;
             b.position = tmp;
