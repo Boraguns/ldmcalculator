@@ -28,7 +28,7 @@ const InputWizard = ({ onCalculate, onFullReset, onClearPacked, mode = 'truck', 
 
     // Initial product state
     const [products, setProducts] = useState([
-        { id: 1, length: '', width: '', height: '', weight: '', quantity: '', maxStack: 1, allowRotation: false }
+        { id: 1, name: '', length: '', width: '', height: '', weight: '', quantity: '', maxStack: 1, allowRotation: false, color: '' }
     ]);
 
     const handleResetAll = () => {
@@ -39,7 +39,7 @@ const InputWizard = ({ onCalculate, onFullReset, onClearPacked, mode = 'truck', 
         setTotalTons('');
         setTonnageInfo(null);
         setResultData(null);
-        setProducts([{ id: 1, length: '', width: '', height: '', weight: '', quantity: '', maxStack: 1, allowRotation: false }]);
+        setProducts([{ id: 1, name: '', length: '', width: '', height: '', weight: '', quantity: '', maxStack: 1, allowRotation: false, color: '' }]);
         if (onFullReset) onFullReset();
     };
 
@@ -98,8 +98,9 @@ const InputWizard = ({ onCalculate, onFullReset, onClearPacked, mode = 'truck', 
         const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
         setProducts([...products, {
             id: newId,
+            name: '',
             length: '', width: '', height: '', weight: '', quantity: sameSize ? '' : '1',
-            maxStack: 1, allowRotation: false
+            maxStack: 1, allowRotation: false, color: ''
         }]);
     };
 
@@ -343,9 +344,41 @@ const InputWizard = ({ onCalculate, onFullReset, onClearPacked, mode = 'truck', 
                             borderRadius: '10px',
                             border: '1px solid rgba(255,255,255,0.05)'
                         }}>
-                            <div className="product-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <span className="product-number" style={{ fontWeight: 'bold', color: 'white', fontSize: '0.9rem' }}>{t('wizard.product')} #{index + 1}</span>
+                            <div className="product-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                                    {/* Editable product name with pencil icon. Empty falls back to "Product #N". */}
+                                    <label
+                                        className="product-name-edit"
+                                        style={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '6px',
+                                            background: 'rgba(255,255,255,0.05)',
+                                            border: '1px solid rgba(255,255,255,0.1)',
+                                            borderRadius: '8px',
+                                            padding: '4px 10px',
+                                            cursor: 'text'
+                                        }}
+                                        title={t('wizard.editName') || 'Edit name'}
+                                    >
+                                        <span style={{ fontSize: '0.85rem', opacity: 0.7 }} aria-hidden="true">✏️</span>
+                                        <input
+                                            type="text"
+                                            value={product.name}
+                                            placeholder={`${t('wizard.product')} #${index + 1}`}
+                                            onChange={(e) => updateProduct(product.id, 'name', e.target.value)}
+                                            style={{
+                                                background: 'transparent',
+                                                border: 'none',
+                                                outline: 'none',
+                                                color: 'white',
+                                                fontWeight: 'bold',
+                                                fontSize: '0.9rem',
+                                                width: `${Math.max((product.name?.length || 0) + 1, 14)}ch`,
+                                                maxWidth: '180px'
+                                            }}
+                                        />
+                                    </label>
                                     <div className="rotation-control">
                                         <label className="pulse-checkbox-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', width: 'auto', fontSize: '0.8rem' }}>
                                             <div className="pulse-checkbox-wrapper" style={{ fontSize: '0.8rem', width: '1.2em', height: '1.2em', minWidth: '1.2em' }}>
@@ -359,6 +392,35 @@ const InputWizard = ({ onCalculate, onFullReset, onClearPacked, mode = 'truck', 
                                             <span style={{ color: '#94a3b8' }}>{t('wizard.rotate')}</span>
                                         </label>
                                     </div>
+                                    {/* Color picker — overrides the auto-assigned palette color in the 3D scene. */}
+                                    <label
+                                        className="color-picker-control"
+                                        style={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '6px',
+                                            cursor: 'pointer',
+                                            fontSize: '0.8rem',
+                                            color: '#94a3b8'
+                                        }}
+                                        title={t('wizard.colorTitle') || 'Box color'}
+                                    >
+                                        <input
+                                            type="color"
+                                            value={product.color || '#3b82f6'}
+                                            onChange={(e) => updateProduct(product.id, 'color', e.target.value)}
+                                            style={{
+                                                width: '24px',
+                                                height: '24px',
+                                                border: '1px solid rgba(255,255,255,0.2)',
+                                                borderRadius: '6px',
+                                                background: 'transparent',
+                                                cursor: 'pointer',
+                                                padding: 0
+                                            }}
+                                        />
+                                        <span>{t('wizard.color') || 'Color'}</span>
+                                    </label>
                                 </div>
                                 {(!sameSize && products.length > 1) && (
                                     <button className="ai-btn ai-btn-danger ai-btn-icon" onClick={() => removeProduct(product.id)}>
@@ -546,6 +608,36 @@ const InputWizard = ({ onCalculate, onFullReset, onClearPacked, mode = 'truck', 
                         </div>
                     </div>
 
+                    {/* Axle balance — front/rear weight distribution. EU 96/53/EC
+                        and Turkish road regulations require even axle loading. */}
+                    {resultData.balance && !isPlane && (
+                        <div style={{
+                            marginTop: '1.2rem',
+                            padding: '12px 14px',
+                            borderRadius: '10px',
+                            background: resultData.balance.warning ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.08)',
+                            border: `1px solid ${resultData.balance.warning ? 'rgba(239, 68, 68, 0.4)' : 'rgba(16, 185, 129, 0.3)'}`
+                        }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#e2e8f0' }}>
+                                    {resultData.balance.warning ? '⚠️ ' : '✓ '}{t('step3.axleBalance') || 'Aks Yük Dengesi'}
+                                </span>
+                                <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                                    {t('step3.front') || 'Ön'}: {resultData.balance.frontPct.toFixed(0)}% / {t('step3.rear') || 'Arka'}: {resultData.balance.rearPct.toFixed(0)}%
+                                </span>
+                            </div>
+                            <div style={{ height: '8px', borderRadius: '4px', background: 'rgba(255,255,255,0.08)', overflow: 'hidden', display: 'flex' }}>
+                                <div style={{ width: `${resultData.balance.frontPct}%`, background: '#3b82f6', transition: 'width 0.3s' }} />
+                                <div style={{ width: `${resultData.balance.rearPct}%`, background: '#f59e0b', transition: 'width 0.3s' }} />
+                            </div>
+                            {resultData.balance.warning && (
+                                <div style={{ fontSize: '0.75rem', color: '#fca5a5', marginTop: '8px', lineHeight: 1.4 }}>
+                                    {t('step3.balanceWarn') || 'Yük dağılımı 60/40 sınırını aşıyor. EU 96/53/EC ve KGM yönetmeliğine göre aks yükü dengesizliği güvenlik riski oluşturur. Ağır kolileri kingpin (ön) tarafına yakın istifleyin.'}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     <div className="detailed-report" style={{ marginTop: '1.2rem' }}>
                         <h3 className="report-title" style={{ marginBottom: '0.8rem', fontSize: '1rem', color: '#94a3b8' }}>{t('step3.byProduct')}</h3>
                         <div className="report-grid" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -554,7 +646,12 @@ const InputWizard = ({ onCalculate, onFullReset, onClearPacked, mode = 'truck', 
                                 return (
                                     <div key={id} className="report-card" style={{ background: 'rgba(255,255,255,0.04)', padding: '10px', borderRadius: '8px' }}>
                                         <div className="report-card-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                                            <span className="report-id" style={{ fontWeight: 'bold', color: 'white', fontSize: '0.9rem' }}>{t('step3.product')} #{id}</span>
+                                            <span className="report-id" style={{ fontWeight: 'bold', color: 'white', fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                                                {data.color && (
+                                                    <span style={{ width: '10px', height: '10px', borderRadius: '2px', background: data.color, display: 'inline-block', border: '1px solid rgba(255,255,255,0.2)' }} />
+                                                )}
+                                                {data.name && !data.name.startsWith('#') ? data.name : `${t('step3.product')} #${id}`}
+                                            </span>
                                             <div style={{ textAlign: 'right' }}>
                                                 <div className="report-count" style={{ color: '#10b981', fontSize: '0.85rem' }}>
                                                     {data.count}{data.requestedQuantity ? ` / ${data.requestedQuantity}` : ''} {t('step3.loaded')}

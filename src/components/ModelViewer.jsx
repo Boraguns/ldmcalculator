@@ -956,7 +956,8 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck' }) => {
                 const z = (item.position.y * scaleFactor) - (tWid / 2) + (d / 2);
 
                 const colors = ['#3b82f6', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
-                const color = colors[item.id % colors.length];
+                // Prefer a user-chosen color (from InputWizard) when present.
+                const color = item.color || colors[item.id % colors.length];
 
                 return (
                     <mesh
