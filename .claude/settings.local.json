@@ -3,7 +3,8 @@
     "allow": [
       "Bash(npx vite *)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/)",
-      "mcp__Claude_Preview__preview_start"
+      "mcp__Claude_Preview__preview_start",
+      "Bash(node -e \"['en','tr','de','ru','fr'].forEach\\(l=>{const j=require\\('E:/calculator/src/i18n/locales/'+l+'.json'\\);console.log\\(l,'wizard.color=',j.wizard.color,'| step3.axleBalance=',j.step3.axleBalance\\)}\\)\")"
     ]
   }
 }

@@ -389,4 +389,72 @@ export class BinPacking3D {
             itemBreakdown
         };
     }
+
+    /**
+     * Rebalance the existing packing along the X-axis (front/rear of the
+     * trailer) by swapping the POSITIONS of pairs of placed items that share
+     * identical footprint dimensions. Because the swapped items have the same
+     * length/width/height, the swap is guaranteed to be collision-safe — each
+     * one simply takes the spot the other was occupying.
+     *
+     * The goal is to reduce |frontWeight - rearWeight|. Returns the new
+     * front/rear weight split. Mutates this.placedItems in place.
+     */
+    rebalance() {
+        const halfX = this.container.length / 2;
+        const sumWeight = (items, side) => items.reduce((acc, it) => {
+            const cx = it.position.x + it.dimensions.length / 2;
+            const isFront = cx < halfX;
+            if (side === 'front' && isFront) return acc + (it.weight || 0);
+            if (side === 'rear' && !isFront) return acc + (it.weight || 0);
+            return acc;
+        }, 0);
+
+        let frontW = sumWeight(this.placedItems, 'front');
+        let rearW = sumWeight(this.placedItems, 'rear');
+
+        // Iterative pair swap. Cap iterations to keep it bounded.
+        const MAX_ITER = 200;
+        for (let iter = 0; iter < MAX_ITER; iter++) {
+            const diff = frontW - rearW;
+            if (Math.abs(diff) / Math.max(1, frontW + rearW) <= 0.05) break; // <=5% gap is good enough
+
+            const heavySide = diff > 0 ? 'front' : 'rear';
+            const lightSide = diff > 0 ? 'rear'  : 'front';
+            const isOnSide = (it, side) => {
+                const cx = it.position.x + it.dimensions.length / 2;
+                return side === 'front' ? cx < halfX : cx >= halfX;
+            };
+            const dimsKey = (it) => `${it.dimensions.length}x${it.dimensions.width}x${it.dimensions.height}`;
+
+            // Find a heavier-than-partner item on heavy side that has a
+            // lighter same-shape partner on the light side.
+            let bestPair = null;
+            let bestGain = 0;
+            for (const a of this.placedItems) {
+                if (!isOnSide(a, heavySide)) continue;
+                for (const b of this.placedItems) {
+                    if (!isOnSide(b, lightSide)) continue;
+                    if (dimsKey(a) !== dimsKey(b)) continue;
+                    const w1 = a.weight || 0, w2 = b.weight || 0;
+                    if (w1 <= w2) continue; // swapping wouldn't help
+                    // After swap: heavy side loses (w1 - w2), light side gains (w1 - w2)
+                    const gain = (w1 - w2);
+                    if (gain > bestGain) { bestGain = gain; bestPair = [a, b]; }
+                }
+            }
+
+            if (!bestPair) break;
+            const [a, b] = bestPair;
+            const tmp = a.position;
+            a.position = b.position;
+            b.position = tmp;
+
+            // Recompute (cheap because we know the delta but recompute to be safe)
+            frontW = sumWeight(this.placedItems, 'front');
+            rearW  = sumWeight(this.placedItems, 'rear');
+        }
+
+        return { front: frontW, rear: rearW };
+    }
 }

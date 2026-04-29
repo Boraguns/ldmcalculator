@@ -3,10 +3,22 @@
     "title": "All the calculations you need for cargo planning",
     "comingSoon": "Coming Soon",
     "footer": "© {year} LDMCalculator.com - All rights reserved. | Designed by",
-    "truck": { "label": "Truck Trailer Load Calculator", "desc": "Optimized loading for road transport." },
-    "train": { "label": "Train Container Load Calculator", "desc": "Rail container placement and weight balance." },
-    "plane": { "label": "Air Cargo Load Calculator", "desc": "Air freight capacity and volume calculator." },
-    "ship": { "label": "Ship Container Load Calculator", "desc": "Sea logistics container stacking." },
+    "truck": {
+      "label": "Truck Trailer Load Calculator",
+      "desc": "Optimized loading for road transport."
+    },
+    "train": {
+      "label": "Train Container Load Calculator",
+      "desc": "Rail container placement and weight balance."
+    },
+    "plane": {
+      "label": "Air Cargo Load Calculator",
+      "desc": "Air freight capacity and volume calculator."
+    },
+    "ship": {
+      "label": "Ship Container Load Calculator",
+      "desc": "Sea logistics container stacking."
+    },
     "seo": {
       "heading": "Free 3D Cargo Loading Optimizer",
       "intro": "LDMCalculator helps logistics teams plan how cargo, pallets and boxes fit into trucks, containers, planes and ships. Visualize the load in 3D, find the optimal stacking pattern and reduce wasted space and trips.",
@@ -18,18 +30,42 @@
       "whyBody": "Built for shippers, freight forwarders and 3PLs. The 3D bin-packing engine accounts for stacking limits, rotation, weight distribution and trailer length so you stop guessing and start filling vehicles to their real capacity. No signup, no install, works in any modern browser.",
       "faqTitle": "Frequently asked questions",
       "faq": [
-        { "q": "What is LDM (loading meter) and how is it calculated?", "a": "Loading meter (LDM) represents one full meter of trailer length used at full width and stackable height. LDMCalculator computes it from the longest used position along your trailer divided by 100 cm — so 6.80m of cargo across a 13.60m trailer is 6.80 LDM." },
-        { "q": "How does the 3D bin-packing algorithm choose a layout?", "a": "It places larger and heavier items first, tries each rotation you allow, and fills gaps using a greedy guillotine strategy. Stack height is capped per SKU and total trailer weight is enforced." },
-        { "q": "Can I optimize loading by total tonnage instead of unit count?", "a": "Yes. On the product step, enable \"Calculate by total tonnage\" and enter the unit weight plus the total tons. The system derives quantity automatically and reports how many tons fit and how many are left over." },
-        { "q": "Does it consider weight distribution across the axles?", "a": "Yes. Heavy SKUs are placed lower and toward the front of the trailer, and the engine refuses to exceed the maximum payload of the selected trailer or container." },
-        { "q": "Which trailers and containers are supported?", "a": "Standard and Mega tilt trailers, closed box trailers, custom-sized trailers, 20ft / 40ft / 40HC sea containers, rail containers and the most common air ULDs (PMC/PLA and high cube)." },
-        { "q": "Is LDMCalculator free?", "a": "Yes — the core 3D loading calculator is free for unlimited use directly in your browser." }
+        {
+          "q": "What is LDM (loading meter) and how is it calculated?",
+          "a": "Loading meter (LDM) represents one full meter of trailer length used at full width and stackable height. LDMCalculator computes it from the longest used position along your trailer divided by 100 cm — so 6.80m of cargo across a 13.60m trailer is 6.80 LDM."
+        },
+        {
+          "q": "How does the 3D bin-packing algorithm choose a layout?",
+          "a": "It places larger and heavier items first, tries each rotation you allow, and fills gaps using a greedy guillotine strategy. Stack height is capped per SKU and total trailer weight is enforced."
+        },
+        {
+          "q": "Can I optimize loading by total tonnage instead of unit count?",
+          "a": "Yes. On the product step, enable \"Calculate by total tonnage\" and enter the unit weight plus the total tons. The system derives quantity automatically and reports how many tons fit and how many are left over."
+        },
+        {
+          "q": "Does it consider weight distribution across the axles?",
+          "a": "Yes. Heavy SKUs are placed lower and toward the front of the trailer, and the engine refuses to exceed the maximum payload of the selected trailer or container."
+        },
+        {
+          "q": "Which trailers and containers are supported?",
+          "a": "Standard and Mega tilt trailers, closed box trailers, custom-sized trailers, 20ft / 40ft / 40HC sea containers, rail containers and the most common air ULDs (PMC/PLA and high cube)."
+        },
+        {
+          "q": "Is LDMCalculator free?",
+          "a": "Yes — the core 3D loading calculator is free for unlimited use directly in your browser."
+        }
       ]
     }
   },
-  "lang": { "label": "Language" },
+  "lang": {
+    "label": "Language"
+  },
   "wizard": {
-    "stepTitles": { "1": "Select Type", "2": "Enter Items", "3": "Result" },
+    "stepTitles": {
+      "1": "Select Type",
+      "2": "Enter Items",
+      "3": "Result"
+    },
     "selectType": "Select {type} Type",
     "selectTypeDesc": "Choose the {typeLower} you will be transporting",
     "customDimsTitle": "Custom Trailer Dimensions (cm)",
@@ -66,7 +102,10 @@
     "maxProducts": "You can add at most 20 different products!",
     "notFitErr": "Items did not fit, or an error occurred.",
     "errorOccurred": "An error occurred",
-    "drawerAria": "Open/close step panel"
+    "drawerAria": "Open/close step panel",
+    "editName": "Edit name",
+    "color": "Color",
+    "colorTitle": "Box color in 3D preview"
   },
   "step3": {
     "title": "Result Report",
@@ -94,7 +133,12 @@
     "col": "Column",
     "layer": "Layer",
     "tonnageSummary": "Of your {total} tons, {fit} tons ({boxes} boxes) fit in the trailer; {remain} tons remain unfit.",
-    "tonnageOverWeight": "Note: derived quantity exceeds the trailer's maximum payload."
+    "tonnageOverWeight": "Note: derived quantity exceeds the trailer's maximum payload.",
+    "axleBalance": "Axle Load Balance",
+    "front": "Front",
+    "rear": "Rear",
+    "balanceWarn": "Load distribution exceeds the 60/40 limit. Per EU Directive 96/53/EC and road traffic regulations, uneven axle loading is a safety risk. Stack heavier boxes closer to the kingpin (front).",
+    "rebalance": "Restack Balanced"
   },
   "viewer": {
     "iso": "Isometric",
@@ -118,7 +162,11 @@
     "download": "Download Screenshot"
   },
   "truckTypes": {
-    "type": { "trailer": "Trailer", "container": "Container", "uld": "ULD" },
+    "type": {
+      "trailer": "Trailer",
+      "container": "Container",
+      "uld": "ULD"
+    },
     "standard": "Standard Trailer",
     "mega": "Mega Trailer",
     "closedBox": "Closed Box Trailer",

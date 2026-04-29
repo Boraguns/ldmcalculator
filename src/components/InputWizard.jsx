@@ -5,7 +5,7 @@ import '../input-style.css';
 import StepLoader from './StepLoader';
 import { useT, LanguageSwitcher } from '../i18n/LanguageContext';
 
-const InputWizard = ({ onCalculate, onFullReset, onClearPacked, mode = 'truck', customSpecs = null }) => {
+const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mode = 'truck', customSpecs = null }) => {
     const { t } = useT();
     const [step, setStep] = useState(1);
     const [truckType, setTruckType] = useState(null); // 'standard' or 'mega'
@@ -631,9 +631,25 @@ const InputWizard = ({ onCalculate, onFullReset, onClearPacked, mode = 'truck', 
                                 <div style={{ width: `${resultData.balance.rearPct}%`, background: '#f59e0b', transition: 'width 0.3s' }} />
                             </div>
                             {resultData.balance.warning && (
-                                <div style={{ fontSize: '0.75rem', color: '#fca5a5', marginTop: '8px', lineHeight: 1.4 }}>
-                                    {t('step3.balanceWarn') || 'Yük dağılımı 60/40 sınırını aşıyor. EU 96/53/EC ve KGM yönetmeliğine göre aks yükü dengesizliği güvenlik riski oluşturur. Ağır kolileri kingpin (ön) tarafına yakın istifleyin.'}
-                                </div>
+                                <>
+                                    <div style={{ fontSize: '0.75rem', color: '#fca5a5', marginTop: '8px', lineHeight: 1.4 }}>
+                                        {t('step3.balanceWarn')}
+                                    </div>
+                                    {onRebalance && (
+                                        <button
+                                            className="ai-btn"
+                                            onClick={() => {
+                                                const updated = onRebalance();
+                                                if (updated) setResultData(updated);
+                                            }}
+                                            style={{ marginTop: '10px', padding: '2px', height: '36px', width: '100%' }}
+                                        >
+                                            <div className="ai-btn-inner" style={{ padding: '0 14px', height: '100%', fontSize: '0.85rem', gap: '8px' }}>
+                                                ⚖️ {t('step3.rebalance')}
+                                            </div>
+                                        </button>
+                                    )}
+                                </>
                             )}
                         </div>
                     )}

@@ -3,10 +3,22 @@
     "title": "Yük planlaması için ihtiyaç duyacağınız tüm hesaplamalar",
     "comingSoon": "Çok Yakında",
     "footer": "© {year} LDMCalculator.com - Tüm hakları saklıdır. | Tasarım:",
-    "truck": { "label": "Tır Dorse Yükü Hesapla", "desc": "Kara yolu taşımacılığı için optimize edilmiş yükleme." },
-    "train": { "label": "Tren Konteyner Yükü Hesapla", "desc": "Demir yolu konteyner yerleşimi ve ağırlık dengesi." },
-    "plane": { "label": "Uçak Kargo Yükü Hesapla", "desc": "Hava yolu kargo kapasite ve hacim hesaplayıcı." },
-    "ship": { "label": "Gemi Konteyner Yükü Hesapla", "desc": "Deniz yolu lojistiği için konteyner istifleme." },
+    "truck": {
+      "label": "Tır Dorse Yükü Hesapla",
+      "desc": "Kara yolu taşımacılığı için optimize edilmiş yükleme."
+    },
+    "train": {
+      "label": "Tren Konteyner Yükü Hesapla",
+      "desc": "Demir yolu konteyner yerleşimi ve ağırlık dengesi."
+    },
+    "plane": {
+      "label": "Uçak Kargo Yükü Hesapla",
+      "desc": "Hava yolu kargo kapasite ve hacim hesaplayıcı."
+    },
+    "ship": {
+      "label": "Gemi Konteyner Yükü Hesapla",
+      "desc": "Deniz yolu lojistiği için konteyner istifleme."
+    },
     "seo": {
       "heading": "Ücretsiz 3D Yükleme Optimizasyon Aracı",
       "intro": "LDMCalculator; lojistik ekiplerinin kargo, palet ve kolilerin tır, konteyner, uçak ve gemilere nasıl yerleşeceğini planlamasına yardımcı olur. Yükü 3 boyutta görselleştirin, en iyi istif düzenini bulun ve boş alanı azaltın.",
@@ -18,18 +30,42 @@
       "whyBody": "Yükleyiciler, taşıma işleri organizatörleri ve 3PL şirketleri için tasarlandı. 3D bin-packing motoru istif sınırlarını, döndürmeyi, ağırlık dağılımını ve dorse boyunu hesaba katar; tahmin etmeyi bırakıp araçları gerçek kapasitelerine kadar doldurmanızı sağlar. Üyelik gerekmez, kurulum yoktur, modern tüm tarayıcılarda çalışır.",
       "faqTitle": "Sıkça Sorulan Sorular",
       "faq": [
-        { "q": "LDM (yükleme metresi) nedir, nasıl hesaplanır?", "a": "LDM, dorsenin tam genişliği boyunca kullanılan bir metre uzunluktur. LDMCalculator, dorsedeki kullanılan en uzak konumu 100 cm'ye bölerek hesaplar — örneğin 13.60m dorsede 6.80m kargo 6.80 LDM eder." },
-        { "q": "3D bin-packing algoritması düzeni nasıl belirler?", "a": "Önce büyük ve ağır ürünler yerleştirilir, izin verdiğiniz dönüşler denenir ve boşluklar açgözlü bir guillotine stratejisiyle doldurulur. İstif yüksekliği ürün başına sınırlandırılır ve toplam dorse ağırlığı korunur." },
-        { "q": "Tonaja göre hesaplama yapabilir miyim?", "a": "Evet. Ürün adımında \"Toplam tonaja göre hesapla\" seçeneğini etkinleştirin ve birim ağırlık ile toplam tonajı girin. Sistem adedi otomatik hesaplar; sığan ve sığmayan tonajı raporlar." },
-        { "q": "Aks bazlı ağırlık dağılımı dikkate alınıyor mu?", "a": "Evet. Ağır ürünler dorsenin tabanında ve önünde konumlandırılır; seçilen aracın maksimum yük kapasitesi aşılmaz." },
-        { "q": "Hangi dorse ve konteynerler destekleniyor?", "a": "Standart ve Mega tenteli dorseler, kapalı kasa dorseler, özel ölçü dorseler, 20ft / 40ft / 40HC deniz konteynerleri, demir yolu konteynerleri ve yaygın hava kargo ULD'leri (PMC/PLA ve yüksek hacimli)." },
-        { "q": "LDMCalculator ücretsiz mi?", "a": "Evet — temel 3D yükleme hesaplayıcısı, tarayıcınızda sınırsız kullanım için ücretsizdir." }
+        {
+          "q": "LDM (yükleme metresi) nedir, nasıl hesaplanır?",
+          "a": "LDM, dorsenin tam genişliği boyunca kullanılan bir metre uzunluktur. LDMCalculator, dorsedeki kullanılan en uzak konumu 100 cm'ye bölerek hesaplar — örneğin 13.60m dorsede 6.80m kargo 6.80 LDM eder."
+        },
+        {
+          "q": "3D bin-packing algoritması düzeni nasıl belirler?",
+          "a": "Önce büyük ve ağır ürünler yerleştirilir, izin verdiğiniz dönüşler denenir ve boşluklar açgözlü bir guillotine stratejisiyle doldurulur. İstif yüksekliği ürün başına sınırlandırılır ve toplam dorse ağırlığı korunur."
+        },
+        {
+          "q": "Tonaja göre hesaplama yapabilir miyim?",
+          "a": "Evet. Ürün adımında \"Toplam tonaja göre hesapla\" seçeneğini etkinleştirin ve birim ağırlık ile toplam tonajı girin. Sistem adedi otomatik hesaplar; sığan ve sığmayan tonajı raporlar."
+        },
+        {
+          "q": "Aks bazlı ağırlık dağılımı dikkate alınıyor mu?",
+          "a": "Evet. Ağır ürünler dorsenin tabanında ve önünde konumlandırılır; seçilen aracın maksimum yük kapasitesi aşılmaz."
+        },
+        {
+          "q": "Hangi dorse ve konteynerler destekleniyor?",
+          "a": "Standart ve Mega tenteli dorseler, kapalı kasa dorseler, özel ölçü dorseler, 20ft / 40ft / 40HC deniz konteynerleri, demir yolu konteynerleri ve yaygın hava kargo ULD'leri (PMC/PLA ve yüksek hacimli)."
+        },
+        {
+          "q": "LDMCalculator ücretsiz mi?",
+          "a": "Evet — temel 3D yükleme hesaplayıcısı, tarayıcınızda sınırsız kullanım için ücretsizdir."
+        }
       ]
     }
   },
-  "lang": { "label": "Dil" },
+  "lang": {
+    "label": "Dil"
+  },
   "wizard": {
-    "stepTitles": { "1": "Tip Seçimi", "2": "Ürün Girişi", "3": "Sonuç" },
+    "stepTitles": {
+      "1": "Tip Seçimi",
+      "2": "Ürün Girişi",
+      "3": "Sonuç"
+    },
     "selectType": "{type} Tipini Seçin",
     "selectTypeDesc": "Kargo taşıyacağınız {typeLower} belirleyin",
     "customDimsTitle": "Özel Dorse Ölçüleri (cm)",
@@ -66,7 +102,10 @@
     "maxProducts": "En fazla 20 farklı ürün ekleyebilirsiniz!",
     "notFitErr": "Ürünler sığmadı veya bir hata oluştu.",
     "errorOccurred": "Hata oluştu",
-    "drawerAria": "Adım panelini aç/kapat"
+    "drawerAria": "Adım panelini aç/kapat",
+    "editName": "İsim düzenle",
+    "color": "Renk",
+    "colorTitle": "3D önizlemede koli rengi"
   },
   "step3": {
     "title": "Sonuç Raporu",
@@ -94,7 +133,12 @@
     "col": "Sütun",
     "layer": "Kat",
     "tonnageSummary": "{total} tonun {fit} tonu ({boxes} kutu) dorseye sığdı; {remain} ton sığmadı.",
-    "tonnageOverWeight": "Not: hesaplanan miktar dorsenin maksimum yük kapasitesini aşıyor."
+    "tonnageOverWeight": "Not: hesaplanan miktar dorsenin maksimum yük kapasitesini aşıyor.",
+    "axleBalance": "Aks Yük Dengesi",
+    "front": "Ön",
+    "rear": "Arka",
+    "balanceWarn": "Yük dağılımı 60/40 sınırını aşıyor. EU 96/53/EC ve KGM yönetmeliğine göre aks yükü dengesizliği güvenlik riski oluşturur. Ağır kolileri kingpin (ön) tarafına yakın istifleyin.",
+    "rebalance": "Dengeli Yeniden İstifle"
   },
   "viewer": {
     "iso": "İzometrik",
@@ -118,7 +162,11 @@
     "download": "Ekran Görüntüsünü İndir"
   },
   "truckTypes": {
-    "type": { "trailer": "Dorse", "container": "Konteyner", "uld": "ULD" },
+    "type": {
+      "trailer": "Dorse",
+      "container": "Konteyner",
+      "uld": "ULD"
+    },
     "standard": "Standart Dorse",
     "mega": "Mega Dorse",
     "closedBox": "Kapalı Kasa Dorse",

@@ -15,6 +15,7 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
     const [hoveredItem, setHoveredItem] = useState(null);
     const [showScreenshotModal, setShowScreenshotModal] = useState(false);
     const [companyName, setCompanyName] = useState('');
+    const [lastInput, setLastInput] = useState(null); // {truck, products} for rebalance
     const navigate = useNavigate();
 
     const isTrain = mode === 'train';
@@ -26,6 +27,79 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
             : mode === 'ship'
                 ? { length: 590, width: 235, height: 239 }
                 : { length: 1360, width: 245, height: 270 };
+
+    // Post-pack pipeline: enrich placedItems with name/color, attach axle balance
+    // analytics. Extracted so it runs identically for both initial pack and
+    // the user-triggered "balanced restack" flow.
+    const finalizePackResult = (result, products, actualTruck) => {
+        const fallback = ['#3b82f6', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
+        const productMeta = {};
+        products.forEach(p => {
+            productMeta[p.id] = {
+                name: (p.name && p.name.trim()) || `#${p.id}`,
+                color: (p.color && /^#[0-9a-fA-F]{6}$/.test(p.color))
+                    ? p.color
+                    : fallback[p.id % fallback.length]
+            };
+        });
+        result.placedItems = result.placedItems.map(it => ({
+            ...it,
+            color: productMeta[it.id]?.color,
+            name: productMeta[it.id]?.name
+        }));
+        if (result.itemBreakdown) {
+            Object.keys(result.itemBreakdown).forEach(id => {
+                const meta = productMeta[id];
+                if (meta) {
+                    result.itemBreakdown[id].name = meta.name;
+                    result.itemBreakdown[id].color = meta.color;
+                }
+            });
+        }
+
+        const halfX = actualTruck.length / 2;
+        let frontW = 0, rearW = 0;
+        result.placedItems.forEach(it => {
+            const cx = (it.position?.x || 0) + (it.dimensions?.length || 0) / 2;
+            const w = (it.weight || 0) * (it.quantity || 1);
+            if (cx < halfX) frontW += w; else rearW += w;
+        });
+        const totalDistW = frontW + rearW;
+        if (totalDistW > 0) {
+            result.balance = {
+                front: frontW,
+                rear: rearW,
+                frontPct: (frontW / totalDistW) * 100,
+                rearPct: (rearW / totalDistW) * 100,
+                warning: Math.abs(frontW - rearW) / totalDistW > 0.20
+            };
+        }
+        return result;
+    };
+
+    const handleRebalance = () => {
+        if (!lastInput) return null;
+        const { truck, products } = lastInput;
+        try {
+            const packer = new BinPacking3D(truck, products);
+            const result = packer.pack();
+            if (!result.success) return null;
+            packer.rebalance();
+            // Reflect the swapped positions back into the result object.
+            result.placedItems = packer.placedItems;
+            const requestedTotal = products.reduce((sum, p) => sum + (parseInt(p.quantity) || 0), 0);
+            if (result.totalItems < requestedTotal) {
+                result.isOverloaded = true;
+                result.missingCount = requestedTotal - result.totalItems;
+            }
+            const finalized = finalizePackResult(result, products, truck);
+            setPackedItems(finalized.placedItems);
+            return finalized;
+        } catch (e) {
+            console.error('Rebalance error:', e);
+            return null;
+        }
+    };
 
     const handleCalculate = (truck, products) => {
         let actualTruck = { ...truck };
@@ -59,63 +133,10 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
                     result.isOverloaded = true;
                     result.missingCount = requestedTotal - result.totalItems;
                 }
-
-                // Attach user-chosen color + name (if any) onto each packed item
-                // and into the breakdown so ModelViewer + legend + per-product
-                // report can display them without extra plumbing.
-                const fallback = ['#3b82f6', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
-                const productMeta = {};
-                products.forEach(p => {
-                    productMeta[p.id] = {
-                        name: (p.name && p.name.trim()) || `#${p.id}`,
-                        color: (p.color && /^#[0-9a-fA-F]{6}$/.test(p.color))
-                            ? p.color
-                            : fallback[p.id % fallback.length]
-                    };
-                });
-                result.placedItems = result.placedItems.map(it => ({
-                    ...it,
-                    color: productMeta[it.id]?.color,
-                    name: productMeta[it.id]?.name
-                }));
-                if (result.itemBreakdown) {
-                    Object.keys(result.itemBreakdown).forEach(id => {
-                        const meta = productMeta[id];
-                        if (meta) {
-                            result.itemBreakdown[id].name = meta.name;
-                            result.itemBreakdown[id].color = meta.color;
-                        }
-                    });
-                }
-
-                // ===== Front/Back axle balance analysis =====
-                // EU Directive 96/53/EC and Turkish road-traffic regulations require
-                // even axle distribution. Industry rule of thumb: heavy load should
-                // sit toward the kingpin (front of trailer); ideally <55%/45% split,
-                // never more than 60%/40%. We compute the front-half vs back-half
-                // weight along the trailer length and surface a warning.
-                const halfX = actualTruck.length / 2;
-                let frontW = 0, rearW = 0;
-                result.placedItems.forEach(it => {
-                    const cx = (it.position?.x || 0) + (it.dimensions?.length || 0) / 2;
-                    // Convert per-unit weight; binpacking groups stack quantities
-                    // into single mesh records, so multiply by .quantity if present.
-                    const w = (it.weight || 0) * (it.quantity || 1);
-                    if (cx < halfX) frontW += w; else rearW += w;
-                });
-                const totalDistW = frontW + rearW;
-                if (totalDistW > 0) {
-                    result.balance = {
-                        front: frontW,
-                        rear: rearW,
-                        frontPct: (frontW / totalDistW) * 100,
-                        rearPct: (rearW / totalDistW) * 100,
-                        warning: Math.abs(frontW - rearW) / totalDistW > 0.20 // >60/40 split
-                    };
-                }
-
-                setPackedItems(result.placedItems);
-                return result;
+                const finalized = finalizePackResult(result, products, actualTruck);
+                setLastInput({ truck: actualTruck, products });
+                setPackedItems(finalized.placedItems);
+                return finalized;
             } else {
                 alert(t('wizard.notFitErr'));
                 setPackedItems([]);
@@ -353,7 +374,7 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
             </div>
 
             {/* RIGHT: WIZARD */}
-            <InputWizard onCalculate={handleCalculate} onFullReset={handleFullReset} onClearPacked={handleClearPacked} mode={mode} />
+            <InputWizard onCalculate={handleCalculate} onRebalance={handleRebalance} onFullReset={handleFullReset} onClearPacked={handleClearPacked} mode={mode} />
 
             {/* SCREENSHOT MODAL */}
             {showScreenshotModal && (
