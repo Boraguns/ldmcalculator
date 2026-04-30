@@ -5,6 +5,12 @@ import InputWizard from './components/InputWizard';
 import { BinPacking3D } from './utils/binpacking';
 import Home from './pages/Home';
 import PlaceholderPage from './pages/PlaceholderPage';
+import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
+import About from './pages/About';
+import Contact from './pages/Contact';
+import Advertise from './pages/Advertise';
+import Admin from './pages/Admin';
 import { useT } from './i18n/LanguageContext';
 
 const GeneralCalculator = ({ mode = 'truck' }) => {
@@ -428,6 +434,12 @@ function App() {
                 <Route path="/train" element={<GeneralCalculator mode="train" />} />
                 <Route path="/plane" element={<GeneralCalculator mode="plane" />} />
                 <Route path="/ship" element={<GeneralCalculator mode="ship" />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/advertise" element={<Advertise />} />
+                <Route path="/admin" element={<Admin />} />
             </Routes>
         </Router>
     );

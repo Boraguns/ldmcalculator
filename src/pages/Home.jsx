@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useT, LanguageSwitcher } from '../i18n/LanguageContext';
 
 const Home = () => {
@@ -339,9 +339,64 @@ const Home = () => {
                 </article>
             </section>
 
-            {/* COPYRIGHT FOOTER — placed at the end of the document flow so it
-                doesn't cover the SEO section content. */}
+            {/* SITE FOOTER with legal/about/contact links */}
+            <footer style={{
+                position: 'relative',
+                zIndex: 100,
+                width: '100%',
+                background: 'rgba(15, 23, 42, 0.92)',
+                borderTop: '1px solid rgba(255,255,255,0.08)',
+                padding: isDesktop ? '40px 32px 24px' : '28px 18px 16px',
+                color: '#cbd5e1',
+                marginTop: 'auto'
+            }}>
+                <div style={{
+                    maxWidth: '1200px', margin: '0 auto',
+                    display: 'grid',
+                    gridTemplateColumns: isDesktop ? 'repeat(4, 1fr)' : '1fr 1fr',
+                    gap: '20px',
+                    fontSize: '0.88rem'
+                }}>
+                    <div>
+                        <h4 style={{ color: '#f8fafc', margin: '0 0 10px', fontSize: '0.95rem' }}>LDMCalculator</h4>
+                        <p style={{ margin: 0, lineHeight: 1.5, color: '#94a3b8' }}>{t('home.seo.intro')?.toString().slice(0, 120)}…</p>
+                    </div>
+                    <div>
+                        <h4 style={{ color: '#f8fafc', margin: '0 0 10px', fontSize: '0.95rem' }}>{t('footer.company')}</h4>
+                        <ul style={{ listStyle: 'none', padding: 0, margin: 0, lineHeight: 2 }}>
+                            <li><Link to="/about" style={{ color: '#cbd5e1', textDecoration: 'none' }}>{t('footer.about')}</Link></li>
+                            <li><Link to="/contact" style={{ color: '#cbd5e1', textDecoration: 'none' }}>{t('footer.contact')}</Link></li>
+                            <li><Link to="/advertise" style={{ color: '#cbd5e1', textDecoration: 'none' }}>{t('footer.advertise')}</Link></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 style={{ color: '#f8fafc', margin: '0 0 10px', fontSize: '0.95rem' }}>{t('footer.legal')}</h4>
+                        <ul style={{ listStyle: 'none', padding: 0, margin: 0, lineHeight: 2 }}>
+                            <li><Link to="/terms"   style={{ color: '#cbd5e1', textDecoration: 'none' }}>{t('footer.terms')}</Link></li>
+                            <li><Link to="/privacy" style={{ color: '#cbd5e1', textDecoration: 'none' }}>{t('footer.privacy')}</Link></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 style={{ color: '#f8fafc', margin: '0 0 10px', fontSize: '0.95rem' }}>{t('footer.reach')}</h4>
+                        <p style={{ margin: 0, lineHeight: 1.6 }}>
+                            <a href="mailto:info@ldmcalculator.com" style={{ color: '#60a5fa', textDecoration: 'none' }}>info@ldmcalculator.com</a>
+                        </p>
+                    </div>
+                </div>
+                <div style={{
+                    maxWidth: '1200px', margin: '20px auto 0',
+                    paddingTop: '14px',
+                    borderTop: '1px solid rgba(255,255,255,0.06)',
+                    fontSize: '0.75rem', color: '#64748b',
+                    display: 'flex', flexWrap: 'wrap', gap: '8px',
+                    justifyContent: 'space-between'
+                }}>
+                    <span>{t('home.footer', { year: new Date().getFullYear() })} <a style={{ color: '#64748b' }} href="https://fosil.io/" target="_blank" rel="noreferrer">fosil.io</a></span>
+                    <Link to="/admin" style={{ color: '#475569', textDecoration: 'none' }}>{t('footer.admin')}</Link>
+                </div>
+            </footer>
             <div className="home-footer" style={{
+                display: 'none', // legacy overlay no longer used; kept hidden to avoid layout shift
                 position: 'relative',
                 width: '100%',
                 textAlign: 'center',

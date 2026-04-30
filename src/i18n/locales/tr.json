@@ -179,5 +179,46 @@
     "megaCnt": "Mega Konteyner",
     "standardUld": "Standart ULD (PMC/PLA)",
     "megaUld": "Yüksek Hacimli ULD"
+  },
+  "footer": {
+    "company": "Şirket",
+    "about": "Hakkımızda",
+    "contact": "İletişim",
+    "advertise": "Reklam Ver",
+    "legal": "Yasal",
+    "terms": "Kullanım Koşulları",
+    "privacy": "Gizlilik Politikası",
+    "reach": "Bize ulaşın",
+    "admin": "Yönetim"
+  },
+  "legal": {
+    "termsTitle": "Kullanım Koşulları",
+    "termsBody": "LDMCalculator'ı kullanarak hizmeti yalnızca yasal amaçlarla kullanmayı kabul edersiniz. 3D yükleme planları tahminîdir ve karayolu, demiryolu, deniz veya havayolu mevzuatına yönelik profesyonel sertifikasyonun yerini tutmaz.",
+    "privacyTitle": "Gizlilik Politikası",
+    "privacyBody": "Yalnızca gönderdiğiniz verileri (iletişim, reklam ve ekran görüntüsü kayıtları) ve hizmeti çalıştırıp korumak için gereken minimum tarayıcı verilerini toplarız. Kişisel verileri satmayız. Silme talebi için info@ldmcalculator.com.",
+    "aboutTitle": "LDMCalculator Hakkında",
+    "aboutBody": "LDMCalculator; ihracatçılar, taşıma organizatörleri ve 3PL'ler için ücretsiz, tarayıcı tabanlı 3D yük optimizasyon aracıdır. Yük planlamayı daha hızlı ve güvenli hale getirmek için lojistik odaklı mühendisler tarafından geliştirildi."
+  },
+  "contact": {
+    "title": "İletişim",
+    "intro": "Projenizi, iş birliğinizi veya geri bildiriminizi bize iletin.",
+    "name": "Adınız",
+    "email": "E-posta",
+    "subject": "Konu",
+    "message": "Mesaj",
+    "send": "Gönder",
+    "sent": "Teşekkürler — mesajınız iletildi.",
+    "error": "Gönderilemedi. Lütfen info@ldmcalculator.com adresine doğrudan yazın."
+  },
+  "advertise": {
+    "title": "Reklam Verin",
+    "intro": "Dünya genelindeki lojistik karar vericilerine ulaşın. Kampanyanızı anlatın, dönüş yapalım.",
+    "company": "Firma adı",
+    "contact": "İlgili kişi",
+    "email": "E-posta",
+    "phone": "Telefon",
+    "budget": "Tahmini bütçe",
+    "message": "Mesaj",
+    "send": "Gönder"
   }
 }

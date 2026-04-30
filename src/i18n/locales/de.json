@@ -180,5 +180,46 @@
     "megaCnt": "Mega-Container",
     "standardUld": "Standard ULD (PMC/PLA)",
     "megaUld": "ULD mit hohem Volumen"
+  },
+  "footer": {
+    "company": "Unternehmen",
+    "about": "Über uns",
+    "contact": "Kontakt",
+    "advertise": "Werben",
+    "legal": "Rechtliches",
+    "terms": "Nutzungsbedingungen",
+    "privacy": "Datenschutz",
+    "reach": "Kontaktieren Sie uns",
+    "admin": "Admin"
+  },
+  "legal": {
+    "termsTitle": "Nutzungsbedingungen",
+    "termsBody": "Mit der Nutzung von LDMCalculator stimmen Sie zu, den Dienst nur für rechtmäßige Zwecke zu verwenden. Die 3D-Ladepläne sind Schätzungen und ersetzen keine professionelle Zertifizierung oder Einhaltung von Straßen-, Schienen-, See- oder Luftfrachtvorschriften.",
+    "privacyTitle": "Datenschutz",
+    "privacyBody": "Wir erfassen nur die von Ihnen übermittelten Daten (Kontakt, Werbung und Screenshot-Protokolle) sowie minimale Browser-Metadaten zum Betrieb und Schutz des Dienstes. Wir verkaufen keine personenbezogenen Daten. Löschanfragen an info@ldmcalculator.com.",
+    "aboutTitle": "Über LDMCalculator",
+    "aboutBody": "LDMCalculator ist ein kostenloser, browserbasierter 3D-Ladeoptimierer für Verlader, Spediteure und 3PLs. Entwickelt von logistikorientierten Ingenieuren, um die Ladeplanung schneller und sicherer zu machen."
+  },
+  "contact": {
+    "title": "Kontakt",
+    "intro": "Erzählen Sie uns von Ihrem Projekt, Ihrer Partnerschaft oder Ihrem Feedback.",
+    "name": "Ihr Name",
+    "email": "E-Mail",
+    "subject": "Betreff",
+    "message": "Nachricht",
+    "send": "Senden",
+    "sent": "Danke — Ihre Nachricht wurde gesendet.",
+    "error": "Senden fehlgeschlagen. Bitte schreiben Sie direkt an info@ldmcalculator.com."
+  },
+  "advertise": {
+    "title": "Werben Sie bei uns",
+    "intro": "Erreichen Sie weltweit Entscheidungsträger in der Logistik. Erzählen Sie uns von Ihrer Kampagne — wir melden uns.",
+    "company": "Firmenname",
+    "contact": "Ansprechpartner",
+    "email": "E-Mail",
+    "phone": "Telefon",
+    "budget": "Geschätztes Budget",
+    "message": "Nachricht",
+    "send": "Absenden"
   }
 }

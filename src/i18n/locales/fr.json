@@ -179,5 +179,46 @@
     "megaCnt": "Conteneur Mega",
     "standardUld": "ULD standard (PMC/PLA)",
     "megaUld": "ULD haut volume"
+  },
+  "footer": {
+    "company": "Entreprise",
+    "about": "À propos",
+    "contact": "Contact",
+    "advertise": "Publicité",
+    "legal": "Mentions légales",
+    "terms": "Conditions d'utilisation",
+    "privacy": "Politique de confidentialité",
+    "reach": "Nous contacter",
+    "admin": "Admin"
+  },
+  "legal": {
+    "termsTitle": "Conditions d'utilisation",
+    "termsBody": "En utilisant LDMCalculator, vous acceptez d'utiliser le service uniquement à des fins légales. Les plans de chargement 3D sont des estimations et ne remplacent pas la certification professionnelle ni la conformité aux réglementations routière, ferroviaire, maritime et aérienne.",
+    "privacyTitle": "Politique de confidentialité",
+    "privacyBody": "Nous collectons uniquement les données que vous soumettez (contact, publicité et journaux de captures d'écran) et des métadonnées de navigateur minimales pour exploiter et protéger le service. Nous ne vendons pas de données personnelles. Demandes de suppression: info@ldmcalculator.com.",
+    "aboutTitle": "À propos de LDMCalculator",
+    "aboutBody": "LDMCalculator est un optimiseur 3D de chargement gratuit basé sur navigateur pour les chargeurs, transitaires et 3PL. Conçu par des ingénieurs logistique pour rendre la planification plus rapide et plus sûre."
+  },
+  "contact": {
+    "title": "Contact",
+    "intro": "Parlez-nous de votre projet, partenariat ou retour.",
+    "name": "Votre nom",
+    "email": "E-mail",
+    "subject": "Sujet",
+    "message": "Message",
+    "send": "Envoyer",
+    "sent": "Merci — votre message a été envoyé.",
+    "error": "Envoi impossible. Veuillez écrire directement à info@ldmcalculator.com."
+  },
+  "advertise": {
+    "title": "Annoncez chez nous",
+    "intro": "Atteignez les décideurs logistiques dans le monde entier. Parlez-nous de votre campagne — nous reviendrons vers vous.",
+    "company": "Nom de l'entreprise",
+    "contact": "Personne de contact",
+    "email": "E-mail",
+    "phone": "Téléphone",
+    "budget": "Budget estimé",
+    "message": "Message",
+    "send": "Envoyer"
   }
 }
