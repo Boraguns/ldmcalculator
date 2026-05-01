@@ -87,7 +87,7 @@
     "allSameSize": "Tous mes produits ont la même taille",
     "product": "Produit",
     "rotate": "Rotation",
-    "weight": "Poids",
+    "weight": "Poids par unité",
     "maxStack": "Empil. max",
     "unlimited": "Illimité",
     "quantity": "Quantité",
@@ -141,7 +141,9 @@
     "rear": "Arrière",
     "balanceWarn": "La répartition de la charge dépasse la limite 60/40. Selon la directive UE 96/53/CE et le code de la route, un déséquilibre des essieux constitue un risque de sécurité. Empilez les caisses lourdes près du pivot d'attelage (avant).",
     "rebalance": "Réempiler équilibré",
-    "rebalanceNoOp": "Aucune amélioration supplémentaire de l'équilibre n'est géométriquement possible pour cette charge (charge mono-produit avec reste asymétrique de la longueur de la remorque)."
+    "rebalanceNoOp": "Aucune amélioration supplémentaire de l'équilibre n'est géométriquement possible pour cette charge (charge mono-produit avec reste asymétrique de la longueur de la remorque).",
+    "addStanga": "Ajouter une barre",
+    "stangaModeActive": "Cliquer sur la charge"
   },
   "viewer": {
     "iso": "Isométrique",

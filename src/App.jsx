@@ -22,6 +22,8 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
     const [showScreenshotModal, setShowScreenshotModal] = useState(false);
     const [companyName, setCompanyName] = useState('');
     const [lastInput, setLastInput] = useState(null); // {truck, products} for rebalance
+    const [addStangaMode, setAddStangaMode] = useState(false);
+    const [stangas, setStangas] = useState([]); // [{itemIndex}]
     const navigate = useNavigate();
 
     const isTrain = mode === 'train';
@@ -143,6 +145,8 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
                 const finalized = finalizePackResult(result, products, actualTruck);
                 setLastInput({ truck: actualTruck, products });
                 setPackedItems(finalized.placedItems);
+                setStangas([]); // reset manual ştangas on new pack
+                setAddStangaMode(false);
                 return finalized;
             } else {
                 alert(t('wizard.notFitErr'));
@@ -185,6 +189,72 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
 
             // Draw the 3D scene
             ctx.drawImage(actualCanvas, 0, 0);
+
+            // ===== Legend overlay (top-left) =====
+            // Mirrors the on-screen "Loaded products" legend so the screenshot
+            // is self-explanatory: name + colored swatch + count per product.
+            if (legendItems.length > 0) {
+                const padX = 24;
+                const padY = 24;
+                const lineH = 26;
+                const sw = 16; // swatch
+                const titleH = 28;
+                const itemFont = '500 15px Inter, system-ui, sans-serif';
+                const titleFont = '600 17px Inter, system-ui, sans-serif';
+                ctx.font = itemFont;
+                let widest = 0;
+                legendItems.forEach(l => {
+                    const label = `${l.name && !String(l.name).startsWith('#') ? l.name : '#' + l.id} — ${l.count} ${t('viewer.qty')}`;
+                    const w = ctx.measureText(label).width;
+                    if (w > widest) widest = w;
+                });
+                ctx.font = titleFont;
+                const title = t('viewer.loadedProducts');
+                const tw = ctx.measureText(title).width;
+                const boxW = Math.max(tw, widest + sw + 12) + 28;
+                const boxH = titleH + lineH * legendItems.length + 14;
+
+                // Backplate
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.78)';
+                ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+                ctx.lineWidth = 1;
+                const x0 = padX, y0 = padY;
+                const r = 10;
+                ctx.beginPath();
+                ctx.moveTo(x0 + r, y0);
+                ctx.lineTo(x0 + boxW - r, y0);
+                ctx.quadraticCurveTo(x0 + boxW, y0, x0 + boxW, y0 + r);
+                ctx.lineTo(x0 + boxW, y0 + boxH - r);
+                ctx.quadraticCurveTo(x0 + boxW, y0 + boxH, x0 + boxW - r, y0 + boxH);
+                ctx.lineTo(x0 + r, y0 + boxH);
+                ctx.quadraticCurveTo(x0, y0 + boxH, x0, y0 + boxH - r);
+                ctx.lineTo(x0, y0 + r);
+                ctx.quadraticCurveTo(x0, y0, x0 + r, y0);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // Title
+                ctx.fillStyle = '#fff';
+                ctx.font = titleFont;
+                ctx.textAlign = 'left';
+                ctx.fillText(title, x0 + 14, y0 + 22);
+
+                // Items
+                ctx.font = itemFont;
+                legendItems.forEach((l, i) => {
+                    const cy = y0 + titleH + 6 + i * lineH;
+                    // Swatch
+                    ctx.fillStyle = l.color || colors[l.colorId % colors.length];
+                    ctx.fillRect(x0 + 14, cy, sw, sw);
+                    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+                    ctx.strokeRect(x0 + 14, cy, sw, sw);
+                    // Label
+                    ctx.fillStyle = '#fff';
+                    const label = `${l.name && !String(l.name).startsWith('#') ? l.name : '#' + l.id} — ${l.count} ${t('viewer.qty')}`;
+                    ctx.fillText(label, x0 + 14 + sw + 10, cy + 13);
+                });
+            }
 
             if (withLogo) {
                 const padding = 30;
@@ -270,6 +340,17 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
                         onHoverItem={handleHover}
                         onUserInteraction={() => setViewMode(null)}
                         mode={mode}
+                        addStangaMode={addStangaMode}
+                        stangas={stangas}
+                        onAddStanga={(idx) => {
+                            // Toggle: if a stanga already exists for this item, remove it; else add.
+                            setStangas(prev => {
+                                const exists = prev.findIndex(s => s.itemIndex === idx);
+                                if (exists >= 0) return prev.filter((_, i) => i !== exists);
+                                return [...prev, { itemIndex: idx }];
+                            });
+                        }}
+                        onRemoveStanga={(si) => setStangas(prev => prev.filter((_, i) => i !== si))}
                     />
 
                     {/* SCREENSHOT BUTTON */}
@@ -371,17 +452,32 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
                             fontSize: '0.85rem',
                             fontWeight: '500'
                         }}>
-                            <div>{t('viewer.product')} #{hoveredItem.item.id}</div>
-                            <div style={{ fontSize: '0.75rem', color: '#666' }}>
-                                {hoveredItem.item.dimensions.length}x{hoveredItem.item.dimensions.width}x{hoveredItem.item.dimensions.height}
-                            </div>
+                            {hoveredItem.item.__stanga ? (
+                                <div style={{ fontWeight: 600 }}>🔧 Ştanga</div>
+                            ) : (
+                                <>
+                                    <div>{hoveredItem.item.name && !String(hoveredItem.item.name).startsWith('#') ? hoveredItem.item.name : `${t('viewer.product')} #${hoveredItem.item.id}`}</div>
+                                    <div style={{ fontSize: '0.75rem', color: '#666' }}>
+                                        {hoveredItem.item.dimensions.length}x{hoveredItem.item.dimensions.width}x{hoveredItem.item.dimensions.height}
+                                    </div>
+                                </>
+                            )}
                         </div>
                     )}
                 </div>
             </div>
 
             {/* RIGHT: WIZARD */}
-            <InputWizard onCalculate={handleCalculate} onRebalance={handleRebalance} onFullReset={handleFullReset} onClearPacked={handleClearPacked} mode={mode} />
+            <InputWizard
+                onCalculate={handleCalculate}
+                onRebalance={handleRebalance}
+                onFullReset={handleFullReset}
+                onClearPacked={handleClearPacked}
+                mode={mode}
+                addStangaMode={addStangaMode}
+                onToggleStangaMode={() => setAddStangaMode(v => !v)}
+                stangaCount={stangas.length}
+            />
 
             {/* SCREENSHOT MODAL */}
             {showScreenshotModal && (

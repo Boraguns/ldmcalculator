@@ -917,7 +917,7 @@ const WarehouseEnvironment = ({ floorY, showFlags = true, onFlagClick }) => {
 };
 
 
-const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck' }) => {
+const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck', addStangaMode = false, stangas = [], onAddStanga, onRemoveStanga }) => {
     const scaleFactor = 0.01;
     const isTrain = mode === 'train';
     const isPlane = mode === 'plane';
@@ -1047,9 +1047,20 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck' }) => {
                             e.stopPropagation();
                             onHover(null);
                         }}
+                        onClick={(e) => {
+                            if (!addStangaMode || !onAddStanga) return;
+                            e.stopPropagation();
+                            onAddStanga(i, item);
+                        }}
                     >
                         <boxGeometry args={[w, h, d]} />
-                        <meshStandardMaterial color={color} roughness={0.3} metalness={0.1} />
+                        <meshStandardMaterial
+                            color={color}
+                            roughness={0.3}
+                            metalness={0.1}
+                            emissive={addStangaMode ? '#fbbf24' : '#000'}
+                            emissiveIntensity={addStangaMode ? 0.15 : 0}
+                        />
                         <lineSegments>
                             <edgesGeometry args={[new THREE.BoxGeometry(w, h, d)]} />
                             <lineBasicMaterial color="rgba(0,0,0,0.5)" />
@@ -1058,13 +1069,54 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck' }) => {
                 )
             })}
 
-            {/* ============= ŞTANGA / VERTICAL ANTI-TIP BARS =============
-                For every multi-row stack column (i.e. more than one row stacked
-                on top of each other), place a thin vertical metal bar on the
-                side faces of the extra rows. These mirror real-world vertical
-                bracing rods clamped against the side of tall cargo stacks to
-                stop them from tipping over sideways during transport. */}
-            {(() => {
+            {/* ===== Manually-placed horizontal ştanga bars =====
+                Each entry refers to a placedItems index. The bar lies horizontally
+                across the trailer width on the +X face (rear edge) of the chosen
+                item, at the item's vertical mid-height. Hovering shows a "Ştanga"
+                tooltip. Clicking again removes it. */}
+            {stangas && stangas.map((s, si) => {
+                const item = packedItems[s.itemIndex];
+                if (!item) return null;
+                const w = item.dimensions.length * scaleFactor;
+                const h = item.dimensions.height * scaleFactor;
+                const d = item.dimensions.width * scaleFactor;
+                // Item center in scene coords:
+                const ix = (item.position.x * scaleFactor) - (tLen / 2) + (w / 2);
+                const iy = (item.position.z * scaleFactor) - (tHei / 2) + (h / 2) + 0.3;
+                const iz = (item.position.y * scaleFactor) - (tWid / 2) + (d / 2);
+                // Bar length spans trailer width (slightly inset).
+                const barLen = (truckType?.width || 245) * scaleFactor * 0.95;
+                // Sit on the +X side face of the item (its rear face), at mid-height.
+                const barX = ix + w / 2 + 0.04;
+                return (
+                    <group key={`stanga${si}`} position={[barX, iy, 0]}>
+                        <mesh
+                            castShadow
+                            rotation={[Math.PI / 2, 0, 0]}
+                            onPointerOver={(e) => { e.stopPropagation(); onHover && onHover({ __stanga: true, name: 'Ştanga' }, e.clientX, e.clientY); }}
+                            onPointerOut={(e) => { e.stopPropagation(); onHover && onHover(null); }}
+                            onClick={(e) => { e.stopPropagation(); onRemoveStanga && onRemoveStanga(si); }}
+                        >
+                            <cylinderGeometry args={[0.05, 0.05, barLen, 14]} />
+                            <meshStandardMaterial color="#9ca3af" metalness={0.85} roughness={0.25} />
+                        </mesh>
+                        <mesh position={[0, 0,  barLen / 2]} rotation={[Math.PI / 2, 0, 0]}>
+                            <cylinderGeometry args={[0.075, 0.075, 0.05, 14]} />
+                            <meshStandardMaterial color="#fbbf24" metalness={0.6} roughness={0.4} />
+                        </mesh>
+                        <mesh position={[0, 0, -barLen / 2]} rotation={[Math.PI / 2, 0, 0]}>
+                            <cylinderGeometry args={[0.075, 0.075, 0.05, 14]} />
+                            <meshStandardMaterial color="#fbbf24" metalness={0.6} roughness={0.4} />
+                        </mesh>
+                    </group>
+                );
+            })}
+
+            {/* ============= ŞTANGA / HORIZONTAL ANTI-TIP BARS =============
+                Manually placed by the user via the "Add Štanga" button: clicking
+                a placed cargo item attaches a horizontal bar across the trailer
+                width on the +X side of that item. */}
+            {false && (() => {
                 if (!packedItems || packedItems.length < 1) return null;
                 // Group items into stack columns keyed by footprint position.
                 const columns = {};
@@ -1135,7 +1187,11 @@ const ModelViewer = ({
     viewMode = 'iso',
     onHoverItem,
     onUserInteraction,
-    mode = 'truck'
+    mode = 'truck',
+    addStangaMode = false,
+    stangas = [],
+    onAddStanga,
+    onRemoveStanga
 }) => {
     const [selectedCountry, setSelectedCountry] = useState(null);
     const { t } = useT();
@@ -1169,6 +1225,10 @@ const ModelViewer = ({
                         packedItems={packedItems}
                         onHover={onHoverItem}
                         mode={mode}
+                        addStangaMode={addStangaMode}
+                        stangas={stangas}
+                        onAddStanga={onAddStanga}
+                        onRemoveStanga={onRemoveStanga}
                     />
                 </Suspense>
 

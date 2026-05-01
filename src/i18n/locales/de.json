@@ -88,7 +88,7 @@
     "allSameSize": "Alle Produkte haben die gleiche Größe",
     "product": "Produkt",
     "rotate": "Drehen",
-    "weight": "Gewicht",
+    "weight": "Gewicht pro Stück",
     "maxStack": "Max Reihe",
     "unlimited": "Unbegrenzt",
     "quantity": "Menge",
@@ -142,7 +142,9 @@
     "rear": "Hinten",
     "balanceWarn": "Die Lastverteilung überschreitet die 60/40-Grenze. Gemäß EU-Richtlinie 96/53/EG und Straßenverkehrsvorschriften stellt eine ungleichmäßige Achslast ein Sicherheitsrisiko dar. Schwere Kisten näher an der Sattelkupplung (vorn) stapeln.",
     "rebalance": "Ausgewogen neu stapeln",
-    "rebalanceNoOp": "Eine weitere Verbesserung der Balance ist für diese Ladung geometrisch nicht möglich (vermutlich Single-Produkt-Ladung mit asymmetrischem Rest in der Trailerlänge)."
+    "rebalanceNoOp": "Eine weitere Verbesserung der Balance ist für diese Ladung geometrisch nicht möglich (vermutlich Single-Produkt-Ladung mit asymmetrischem Rest in der Trailerlänge).",
+    "addStanga": "Ladebalken hinzufügen",
+    "stangaModeActive": "Klick auf Ladung"
   },
   "viewer": {
     "iso": "Isometrisch",

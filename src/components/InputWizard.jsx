@@ -5,7 +5,7 @@ import '../input-style.css';
 import StepLoader from './StepLoader';
 import { useT, LanguageSwitcher } from '../i18n/LanguageContext';
 
-const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mode = 'truck', customSpecs = null }) => {
+const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mode = 'truck', customSpecs = null, addStangaMode = false, onToggleStangaMode, stangaCount = 0 }) => {
     const { t } = useT();
     const [step, setStep] = useState(1);
     const [truckType, setTruckType] = useState(null); // 'standard' or 'mega'
@@ -671,6 +671,29 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                                 </>
                             )}
                         </div>
+                    )}
+
+                    {/* Manual Štanga add toggle — when active, clicking on any
+                        cargo item in the 3D scene attaches a horizontal load
+                        bar to its rear face. */}
+                    {onToggleStangaMode && (
+                        <button
+                            className="ai-btn"
+                            onClick={onToggleStangaMode}
+                            style={{
+                                marginTop: '1.2rem',
+                                padding: '2px',
+                                height: '40px',
+                                width: '100%',
+                                background: addStangaMode
+                                    ? 'linear-gradient(to top, #f59e0b, #fbbf24, #f59e0b)'
+                                    : undefined
+                            }}
+                        >
+                            <div className="ai-btn-inner" style={{ padding: '0 14px', height: '100%', fontSize: '0.85rem', gap: '8px', justifyContent: 'center' }}>
+                                {addStangaMode ? `✓ ${t('step3.stangaModeActive')} (${stangaCount})` : `🔧 ${t('step3.addStanga')}`}
+                            </div>
+                        </button>
                     )}
 
                     <div className="detailed-report" style={{ marginTop: '1.2rem' }}>

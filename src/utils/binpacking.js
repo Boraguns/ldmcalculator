@@ -527,6 +527,91 @@ export class BinPacking3D {
             rearW  = sumWeight(this.placedItems, 'rear');
         }
 
+        // ---- Relocation pass (handles mono-product / asymmetric loads) ----
+        // When pair-swaps can't improve further (e.g. all items same weight),
+        // try MOVING items from the heavy side into empty space on the light
+        // side. We only move bottom-row items (z=0) so we don't have to worry
+        // about toppling their stacks above. We use the same canPlaceAt logic
+        // that the original packer used, so collision-correctness is free.
+        const isOnSide = (it, side) => {
+            const cx = it.position.x + it.dimensions.length / 2;
+            return side === 'front' ? cx < halfX : cx >= halfX;
+        };
+        const sumW = () => {
+            frontW = sumWeight(this.placedItems, 'front');
+            rearW  = sumWeight(this.placedItems, 'rear');
+        };
+        for (let r = 0; r < 200; r++) {
+            const diff = frontW - rearW;
+            if (Math.abs(diff) / Math.max(1, frontW + rearW) <= 0.05) break;
+            const heavySide = diff > 0 ? 'front' : 'rear';
+            const lightSide = diff > 0 ? 'rear' : 'front';
+
+            // Pick a heavy-side bottom-row item that, if moved, has the largest
+            // |weight| → biggest balance shift per move.
+            const candidates = this.placedItems
+                .filter(it => isOnSide(it, heavySide) && it.position.z === 0)
+                .sort((a, b) => (b.weight || 0) - (a.weight || 0));
+
+            let moved = false;
+            for (const cand of candidates) {
+                // Temporarily remove cand from placedItems so canPlaceAt
+                // doesn't see it as a self-collision.
+                const idx = this.placedItems.indexOf(cand);
+                if (idx < 0) continue;
+                this.placedItems.splice(idx, 1);
+
+                // Search positions in the light side along x. Reuse corner
+                // points but constrained to lightSide x range.
+                const xMin = lightSide === 'front' ? 0 : halfX;
+                const xMax = lightSide === 'front' ? halfX : this.container.length;
+                const dims = cand.dimensions;
+                const xPoints = new Set([xMin]);
+                const yPoints = new Set([0]);
+                const zPoints = new Set([0]);
+                for (const p of this.placedItems) {
+                    const px = p.position.x + p.dimensions.length;
+                    if (px >= xMin && px <= xMax) xPoints.add(px);
+                    yPoints.add(p.position.y + p.dimensions.width);
+                    zPoints.add(p.position.z + p.dimensions.height);
+                }
+                const sortedX = [...xPoints].sort((a, b) => a - b);
+                const sortedY = [...yPoints].sort((a, b) => a - b);
+                const sortedZ = [...zPoints].sort((a, b) => a - b);
+
+                let placed = null;
+                outer: for (const z of sortedZ) {
+                    if (z + dims.height > this.container.height) break;
+                    for (const x of sortedX) {
+                        if (x < xMin || x + dims.length > xMax) continue;
+                        // Center of new position must be on the light side.
+                        if (lightSide === 'front' && (x + dims.length / 2) >= halfX) continue;
+                        if (lightSide === 'rear'  && (x + dims.length / 2) <  halfX) continue;
+                        for (const y of sortedY) {
+                            if (y + dims.width > this.container.width) break;
+                            const newPos = { x, y, z };
+                            if (this.canPlaceAt(newPos, dims, cand)) {
+                                placed = newPos;
+                                break outer;
+                            }
+                        }
+                    }
+                }
+
+                if (placed) {
+                    cand.position = placed;
+                    this.placedItems.push(cand);
+                    moved = true;
+                    sumW();
+                    break;
+                } else {
+                    // Put it back where it was.
+                    this.placedItems.push(cand);
+                }
+            }
+            if (!moved) break;
+        }
+
         // Rebuild the array reference so React state updates detect the change
         // even if individual item positions were mutated in place.
         this.placedItems = this.placedItems.map(it => ({ ...it, position: { ...it.position } }));

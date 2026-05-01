@@ -87,7 +87,7 @@
     "allSameSize": "All my products are the same size",
     "product": "Product",
     "rotate": "Rotate",
-    "weight": "Weight",
+    "weight": "Per-Item Weight",
     "maxStack": "Max Row",
     "unlimited": "Unlimited",
     "quantity": "Quantity",
@@ -141,7 +141,9 @@
     "rear": "Rear",
     "balanceWarn": "Load distribution exceeds the 60/40 limit. Per EU Directive 96/53/EC and road traffic regulations, uneven axle loading is a safety risk. Stack heavier boxes closer to the kingpin (front).",
     "rebalance": "Restack Balanced",
-    "rebalanceNoOp": "No further balance improvement is geometrically possible for this load (likely a single-product cargo where the trailer length leaves an asymmetric remainder)."
+    "rebalanceNoOp": "No further balance improvement is geometrically possible for this load (likely a single-product cargo where the trailer length leaves an asymmetric remainder).",
+    "addStanga": "Add Štanga (Load Bar)",
+    "stangaModeActive": "Click cargo to add/remove"
   },
   "viewer": {
     "iso": "Isometric",

@@ -87,7 +87,7 @@
     "allSameSize": "Tüm ürünlerim aynı boyda",
     "product": "Ürün",
     "rotate": "Döndür",
-    "weight": "Ağırlık",
+    "weight": "Bir Ürün Ağırlığı",
     "maxStack": "Max Sıra",
     "unlimited": "Sınırsız",
     "quantity": "Adet",
@@ -141,7 +141,9 @@
     "rear": "Arka",
     "balanceWarn": "Yük dağılımı 60/40 sınırını aşıyor. EU 96/53/EC ve KGM yönetmeliğine göre aks yükü dengesizliği güvenlik riski oluşturur. Ağır kolileri kingpin (ön) tarafına yakın istifleyin.",
     "rebalance": "Dengeli Yeniden İstifle",
-    "rebalanceNoOp": "Bu yük için daha fazla denge iyileştirmesi geometrik olarak mümkün değil (büyük ihtimalle tek tip ürün ve dorse uzunluğunun asimetrik artığı sebebiyle)."
+    "rebalanceNoOp": "Bu yük için daha fazla denge iyileştirmesi geometrik olarak mümkün değil (büyük ihtimalle tek tip ürün ve dorse uzunluğunun asimetrik artığı sebebiyle).",
+    "addStanga": "Ştanga Ekle",
+    "stangaModeActive": "Eklemek için yüke tıkla"
   },
   "viewer": {
     "iso": "İzometrik",
