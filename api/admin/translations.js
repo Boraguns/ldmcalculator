@@ -4,7 +4,7 @@
 //   DELETE /api/admin/translations?lang=tr&key=foo     → drop one override
 import { sql, json, requireAdmin, readJsonBody } from '../_lib/db.js';
 
-const SUPPORTED = new Set(['en', 'tr', 'de', 'ru', 'fr']);
+const SUPPORTED = new Set(['en', 'tr', 'de', 'ru', 'fr', 'ar']);
 
 export default async function handler(req, res) {
     if (!requireAdmin(req)) return json(res, 401, { error: 'unauthorized' });

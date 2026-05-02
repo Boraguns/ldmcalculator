@@ -14,18 +14,18 @@ export default async function handler(req, res) {
         }
         if (req.method === 'POST') {
             const b = await readJsonBody(req);
-            const { country_code, name, description = '', logo_url = '', website = '', is_featured = false, sort_order = 0 } = b;
+            const { country_code, name, description = '', logo_url = '', website = '', phone = '', email = '', is_featured = false, sort_order = 0 } = b;
             if (!country_code || !name) return json(res, 400, { error: 'country_code and name required' });
             const rows = await sql`
-                INSERT INTO flag_companies (country_code, name, description, logo_url, website, is_featured, sort_order)
-                VALUES (${country_code}, ${name}, ${description}, ${logo_url}, ${website}, ${is_featured}, ${sort_order})
+                INSERT INTO flag_companies (country_code, name, description, logo_url, website, phone, email, is_featured, sort_order)
+                VALUES (${country_code}, ${name}, ${description}, ${logo_url}, ${website}, ${phone}, ${email}, ${is_featured}, ${sort_order})
                 RETURNING *
             `;
             return json(res, 200, { item: rows[0] });
         }
         if (req.method === 'PATCH') {
             const b = await readJsonBody(req);
-            const { id, country_code, name, description, logo_url, website, is_featured, sort_order } = b;
+            const { id, country_code, name, description, logo_url, website, phone, email, is_featured, sort_order } = b;
             if (!id) return json(res, 400, { error: 'id required' });
             await sql`
                 UPDATE flag_companies SET
@@ -34,6 +34,8 @@ export default async function handler(req, res) {
                     description  = COALESCE(${description}, description),
                     logo_url     = COALESCE(${logo_url}, logo_url),
                     website      = COALESCE(${website}, website),
+                    phone        = COALESCE(${phone}, phone),
+                    email        = COALESCE(${email}, email),
                     is_featured  = COALESCE(${is_featured}, is_featured),
                     sort_order   = COALESCE(${sort_order}, sort_order),
                     updated_at   = NOW()

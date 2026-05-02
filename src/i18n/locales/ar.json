@@ -1,0 +1,228 @@
+{
+  "home": {
+    "title": "كل الحسابات التي تحتاجها لتخطيط الشحن",
+    "comingSoon": "قريباً",
+    "footer": "© {year} LDMCalculator.com - جميع الحقوق محفوظة. | تصميم بواسطة",
+    "truck": {
+      "label": "حساب حمولة المقطورة",
+      "desc": "تحميل محسّن للنقل البري."
+    },
+    "train": {
+      "label": "حساب حاويات القطار",
+      "desc": "موضع الحاويات وتوازن الوزن للسكك الحديدية."
+    },
+    "plane": {
+      "label": "حساب شحن الطائرات",
+      "desc": "حاسبة سعة وحجم الشحن الجوي."
+    },
+    "ship": {
+      "label": "حساب حاويات السفن",
+      "desc": "تكديس الحاويات للنقل البحري."
+    },
+    "seo": {
+      "heading": "محسّن تحميل الشحن ثلاثي الأبعاد المجاني",
+      "intro": "يساعد LDMCalculator فرق الخدمات اللوجستية على تخطيط كيفية احتواء الشحنات والمنصات والصناديق في الشاحنات والحاويات والطائرات والسفن. تصور الحمولة في 3D واعثر على نمط التكديس الأمثل وقلل من الفاقد.",
+      "howTitle": "كيف يعمل",
+      "how1": "اختر نوع المركبة وحجم المقطورة أو الحاوية المناسب لشحنتك.",
+      "how2": "أدخل طول وعرض وارتفاع ووزن وكمية وقابلية تكديس كل منتج — أو انتقل إلى وضع الحمولة الإجمالية.",
+      "how3": "احصل على خطة 3D فورية مع أمتار التحميل (LDM) وكفاءة الحجم وتفصيل لكل عنصر.",
+      "whyTitle": "لماذا تستخدم LDMCalculator",
+      "whyBody": "مصمم للشاحنين ومنفذي الشحن وشركات اللوجستيات. محرك التعبئة ثلاثي الأبعاد يقلل من الرحلات والوقود والوقت.",
+      "faqTitle": "الأسئلة الشائعة",
+      "faq": [
+        {
+          "q": "What is LDM (loading meter) and how is it calculated?",
+          "a": "Loading meter (LDM) represents one full meter of trailer length used at full width and stackable height. LDMCalculator computes it from the longest used position along your trailer divided by 100 cm — so 6.80m of cargo across a 13.60m trailer is 6.80 LDM."
+        },
+        {
+          "q": "How does the 3D bin-packing algorithm choose a layout?",
+          "a": "It places larger and heavier items first, tries each rotation you allow, and fills gaps using a greedy guillotine strategy. Stack height is capped per SKU and total trailer weight is enforced."
+        },
+        {
+          "q": "Can I optimize loading by total tonnage instead of unit count?",
+          "a": "Yes. On the product step, enable \"Calculate by total tonnage\" and enter the unit weight plus the total tons. The system derives quantity automatically and reports how many tons fit and how many are left over."
+        },
+        {
+          "q": "Does it consider weight distribution across the axles?",
+          "a": "Yes. Heavy SKUs are placed lower and toward the front of the trailer, and the engine refuses to exceed the maximum payload of the selected trailer or container."
+        },
+        {
+          "q": "Which trailers and containers are supported?",
+          "a": "Standard and Mega tilt trailers, closed box trailers, custom-sized trailers, 20ft / 40ft / 40HC sea containers, rail containers and the most common air ULDs (PMC/PLA and high cube)."
+        },
+        {
+          "q": "Is LDMCalculator free?",
+          "a": "Yes — the core 3D loading calculator is free for unlimited use directly in your browser."
+        }
+      ]
+    }
+  },
+  "lang": {
+    "label": "Language"
+  },
+  "wizard": {
+    "stepTitles": {
+      "1": "النوع",
+      "2": "المنتجات",
+      "3": "النتائج"
+    },
+    "selectType": "اختر {type}",
+    "selectTypeDesc": "حدد {typeLower} المستخدم للنقل",
+    "customDimsTitle": "حدد الأبعاد المخصصة",
+    "length": "الطول",
+    "width": "العرض",
+    "height": "الارتفاع",
+    "lengthCm": "الطول (سم)",
+    "widthCm": "العرض (سم)",
+    "heightCm": "الارتفاع (سم)",
+    "continue": "متابعة",
+    "fillAll": "يرجى ملء جميع الحقول",
+    "step2Title": "أدخل تفاصيل المنتج",
+    "step2DescPlane": "تفاصيل البضائع لتخطيط ULD",
+    "step2DescShip": "تفاصيل البضائع لتعبئة الحاوية",
+    "step2DescTruck": "تفاصيل البضائع لتعبئة المقطورة",
+    "uldSelected": "ULD مختار",
+    "uldDims": "الأبعاد",
+    "closedBoxWarn": "تحميل الصندوق المغلق فقط من الخلف",
+    "allSameSize": "كل المنتجات بنفس الحجم",
+    "product": "المنتج",
+    "rotate": "تدوير",
+    "weight": "وزن الوحدة",
+    "maxStack": "الصف",
+    "unlimited": "غير محدود",
+    "quantity": "الكمية",
+    "byTonnage": "حسب الوزن الإجمالي",
+    "totalWeightTons": "الوزن الإجمالي (طن)",
+    "addProduct": "إضافة منتج",
+    "back": "رجوع",
+    "calc": "حساب التكديس الأمثل",
+    "editRecalc": "تعديل وإعادة حساب",
+    "resetAll": "حساب من الصفر",
+    "invalid": "يرجى إدخال قيم صالحة",
+    "maxProducts": "20 منتج كحد أقصى",
+    "notFitErr": "لا يمكن احتواء أي عنصر",
+    "errorOccurred": "حدث خطأ",
+    "drawerAria": "افتح/أغلق نموذج الإدخال",
+    "editName": "تعديل الاسم",
+    "color": "اللون",
+    "colorTitle": "لون الصندوق في 3D",
+    "stackable": "قابل للتكديس",
+    "unstackable": "غير قابل للتكديس"
+  },
+  "step3": {
+    "title": "النتائج",
+    "overloaded": "حمولة زائدة",
+    "overloadedDescPlane": "يحتاج إلى عدة ULDs",
+    "overloadedDescTruck": "لم تتسع جميع العناصر",
+    "dorseUsage": "استخدام المقطورة",
+    "customDorse": "مقطورة مخصصة",
+    "usage": "الاستخدام",
+    "full": "ممتلئ",
+    "usedM": "متر مستخدم",
+    "emptyM": "متر فارغ",
+    "totalLoaded": "إجمالي المحمّل",
+    "totalWeight": "الوزن الإجمالي",
+    "efficiency": "كفاءة الحجم",
+    "uldNeeded": "إجمالي ULDs المطلوبة",
+    "units": "وحدة",
+    "byProduct": "تفصيل لكل منتج",
+    "product": "المنتج",
+    "loaded": "محمّل",
+    "notFit": "لم يتسع",
+    "spaceLeft": "مساحة متبقية",
+    "rotateHint": "تلميح: تمكين التدوير قد يضيف {n}",
+    "row": "صف",
+    "col": "عمود",
+    "layer": "طبقة",
+    "tonnageSummary": "حسب الوزن الإجمالي",
+    "tonnageOverWeight": "الوزن الإجمالي يتجاوز الحد الأقصى",
+    "axleBalance": "توازن حمل المحور",
+    "front": "أمام",
+    "rear": "خلف",
+    "balanceWarn": "توزيع الحمولة يتجاوز حد 60/40. ضع الصناديق الثقيلة بالقرب من البن المركزي (الأمام).",
+    "rebalance": "إعادة تكديس متوازن",
+    "rebalanceNoOp": "لا يمكن تحسين التوازن أكثر من ذلك هندسياً.",
+    "addStanga": "إضافة شطنغة",
+    "stangaModeActive": "انقر على الشحنة للإضافة/الإزالة",
+    "addSpanzet": "إضافة شريط ربط",
+    "spanzetModeActive": "انقر على الشحنة للإضافة/الإزالة"
+  },
+  "viewer": {
+    "iso": "Isometric",
+    "top": "Top View",
+    "side": "Side View",
+    "front": "Front View",
+    "back": "Back View",
+    "backHome": "الصفحة الرئيسية",
+    "loadedProducts": "المنتجات المحمّلة",
+    "qty": "وحدة",
+    "product": "المنتج",
+    "shippers": "الناقلون الموصى بهم لـ {country}",
+    "featured": "مميّز",
+    "etnalogDesc": "حلول النقل البري إلى {country}.",
+    "moreShippers": "Want to list more carriers? Get in touch.",
+    "screenshot": "لقطة شاشة",
+    "saveScreenshot": "حفظ لقطة الشاشة",
+    "companyName": "اسم الشركة",
+    "companyPlaceholder": "Company Name (optional)",
+    "cancel": "Cancel",
+    "download": "Download Screenshot"
+  },
+  "truckTypes": {
+    "type": {
+      "trailer": "Trailer",
+      "container": "Container",
+      "uld": "ULD"
+    },
+    "standard": "Standard Trailer",
+    "mega": "Mega Trailer",
+    "closedBox": "Closed Box Trailer",
+    "custom": "Custom Size Trailer",
+    "customDims": "Set your own dimensions",
+    "standardCnt": "Standard Container",
+    "megaCnt": "Mega Container",
+    "standardUld": "Standard ULD (PMC/PLA)",
+    "megaUld": "High Volume ULD"
+  },
+  "footer": {
+    "company": "Company",
+    "about": "About",
+    "contact": "Contact",
+    "advertise": "Advertise",
+    "legal": "Legal",
+    "terms": "Terms of Use",
+    "privacy": "Privacy Policy",
+    "reach": "Reach us",
+    "admin": "Admin"
+  },
+  "legal": {
+    "termsTitle": "Terms of Use",
+    "termsBody": "By using LDMCalculator you agree to use the service for lawful purposes only. The 3D loading plans are estimates and do not replace professional certification or legal compliance with road, rail, sea or air freight regulations.",
+    "privacyTitle": "Privacy Policy",
+    "privacyBody": "We collect only the data you submit (contact, advertise and screenshot logs) plus minimal browser metadata to operate and protect the service. We do not sell personal data. Email info@ldmcalculator.com to request deletion.",
+    "aboutTitle": "About LDMCalculator",
+    "aboutBody": "LDMCalculator is a free, browser-based 3D cargo loading optimizer for shippers, freight forwarders and 3PLs. Built by logistics-minded engineers to make load planning faster and safer."
+  },
+  "contact": {
+    "title": "Contact",
+    "intro": "Tell us about your project, partnership or feedback.",
+    "name": "Your name",
+    "email": "Email",
+    "subject": "Subject",
+    "message": "Message",
+    "send": "Send",
+    "sent": "Thanks — your message has been sent.",
+    "error": "Could not send. Please email info@ldmcalculator.com directly."
+  },
+  "advertise": {
+    "title": "Advertise with us",
+    "intro": "Reach logistics decision-makers worldwide. Tell us about your campaign and we will get back to you.",
+    "company": "Company name",
+    "contact": "Contact name",
+    "email": "Email",
+    "phone": "Phone",
+    "budget": "Estimated budget",
+    "message": "Message",
+    "send": "Submit"
+  }
+}

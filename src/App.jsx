@@ -12,9 +12,11 @@ import Contact from './pages/Contact';
 import Advertise from './pages/Advertise';
 import Admin from './pages/Admin';
 import { useT } from './i18n/LanguageContext';
+import { useSiteAsset } from './hooks/useSiteAssets';
 
 const GeneralCalculator = ({ mode = 'truck' }) => {
     const { t } = useT();
+    const viewerLogo = useSiteAsset('viewer_logo', '/src/ldm-calculator-beyaz-logo.png');
     const [specs, setSpecs] = useState(null);
     const [packedItems, setPackedItems] = useState([]);
     const [viewMode, setViewMode] = useState('iso');
@@ -199,7 +201,7 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
 
         const logo = new Image();
         logo.crossOrigin = "anonymous";
-        logo.src = "/src/ldm-calculator-beyaz-logo.png";
+        logo.src = viewerLogo;
 
         const finalizeDownload = (withLogo = false) => {
             const tempCanvas = document.createElement('canvas');
@@ -367,7 +369,7 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
                 flexDirection: 'column'
             }}>
                 <img
-                    src="/src/ldm-calculator-beyaz-logo.png"
+                    src={viewerLogo}
                     alt="LDM Logo"
                     onClick={() => navigate('/')}
                     style={{

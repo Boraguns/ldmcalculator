@@ -1393,7 +1393,20 @@ const ModelViewer = ({
                                                 )}
                                             </div>
                                             {c.description && (
-                                                <div style={{ color: '#cbd5e1', fontSize: '0.88rem', lineHeight: 1.5 }}>{c.description}</div>
+                                                <div style={{ color: '#cbd5e1', fontSize: '0.88rem', lineHeight: 1.5, marginBottom: 8 }}>{c.description}</div>
+                                            )}
+                                            {(c.phone || c.email || c.website) && (
+                                                <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', fontSize: '0.82rem', color: '#94a3b8' }}>
+                                                    {c.phone && (
+                                                        <a href={`tel:${c.phone}`} onClick={(e) => e.stopPropagation()} style={{ color: '#93c5fd', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>📞 {c.phone}</a>
+                                                    )}
+                                                    {c.email && (
+                                                        <a href={`mailto:${c.email}`} onClick={(e) => e.stopPropagation()} style={{ color: '#93c5fd', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}>✉️ {c.email}</a>
+                                                    )}
+                                                    {c.website && (
+                                                        <span style={{ color: '#93c5fd', display: 'inline-flex', alignItems: 'center', gap: 4 }}>🌐 {c.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}</span>
+                                                    )}
+                                                </div>
                                             )}
                                         </a>
                                     );

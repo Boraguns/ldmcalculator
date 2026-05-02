@@ -4,15 +4,17 @@ import tr from './locales/tr.json';
 import de from './locales/de.json';
 import ru from './locales/ru.json';
 import fr from './locales/fr.json';
+import ar from './locales/ar.json';
 
-const dictionaries = { en, tr, de, ru, fr };
-// Flag emojis (regional indicator pairs). Country mapping: en→GB, tr→TR, de→DE, ru→RU, fr→FR.
+const dictionaries = { en, tr, de, ru, fr, ar };
+// Flag emojis (regional indicator pairs). Country mapping: en→GB, tr→TR, de→DE, ru→RU, fr→FR, ar→SA.
 export const SUPPORTED_LANGS = [
     { code: 'en', label: 'English', flag: '🇬🇧' },
     { code: 'tr', label: 'Türkçe', flag: '🇹🇷' },
     { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
     { code: 'ru', label: 'Русский', flag: '🇷🇺' },
-    { code: 'fr', label: 'Français', flag: '🇫🇷' }
+    { code: 'fr', label: 'Français', flag: '🇫🇷' },
+    { code: 'ar', label: 'العربية', flag: '🇸🇦' }
 ];
 
 const LanguageContext = createContext({ lang: 'en', setLang: () => {}, t: (k) => k });
@@ -52,7 +54,11 @@ export const LanguageProvider = ({ children }) => {
     }, []);
 
     useEffect(() => {
-        try { document.documentElement.setAttribute('lang', lang); } catch (e) { /* noop */ }
+        try {
+            document.documentElement.setAttribute('lang', lang);
+            // Right-to-left scripts: Arabic flips the page direction.
+            document.documentElement.setAttribute('dir', lang === 'ar' ? 'rtl' : 'ltr');
+        } catch (e) { /* noop */ }
     }, [lang]);
 
     // Pull admin overrides on mount. Failure is silent — falls back to JSON.

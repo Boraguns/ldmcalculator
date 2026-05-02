@@ -6,7 +6,8 @@ import trDict from '../i18n/locales/tr.json';
 import deDict from '../i18n/locales/de.json';
 import ruDict from '../i18n/locales/ru.json';
 import frDict from '../i18n/locales/fr.json';
-const DICTS = { en: enDict, tr: trDict, de: deDict, ru: ruDict, fr: frDict };
+import arDict from '../i18n/locales/ar.json';
+const DICTS = { en: enDict, tr: trDict, de: deDict, ru: ruDict, fr: frDict, ar: arDict };
 
 // Single-file admin console. Login form on top; once authenticated, four tabs:
 // flag-companies CRUD, banner image URLs, contact + advertise + screenshot logs.
@@ -72,7 +73,7 @@ const FLAG_CODES = [
 
 const FlagCompanies = () => {
     const [rows, setRows] = useState([]);
-    const [draft, setDraft] = useState({ country_code: 'tr', name: '', description: '', logo_url: '', website: '', is_featured: false, sort_order: 0 });
+    const [draft, setDraft] = useState({ country_code: 'tr', name: '', description: '', logo_url: '', website: '', phone: '', email: '', is_featured: false, sort_order: 0 });
     const [busy, setBusy] = useState(false);
     const [feedback, setFeedback] = useState(null); // { type: 'ok'|'err', text }
     const load = async () => {
@@ -99,7 +100,7 @@ const FlagCompanies = () => {
                 setFeedback({ type: 'err', text: j.error || `Hata: HTTP ${r.status}` });
                 return;
             }
-            setDraft({ country_code: 'tr', name: '', description: '', logo_url: '', website: '', is_featured: false, sort_order: 0 });
+            setDraft({ country_code: 'tr', name: '', description: '', logo_url: '', website: '', phone: '', email: '', is_featured: false, sort_order: 0 });
             await load();
             setFeedback({ type: 'ok', text: `Eklendi: ${j.item?.country_code?.toUpperCase()} — ${j.item?.name}` });
             setTimeout(() => setFeedback(null), 3000);
@@ -122,7 +123,7 @@ const FlagCompanies = () => {
         <div>
             <div style={cardS}>
                 <h3 style={{ color: '#f1f5f9', marginTop: 0 }}>Add new</h3>
-                <div style={{ display: 'grid', gap: 8, gridTemplateColumns: '120px 1fr 1fr 1fr 1fr 80px 80px auto' }}>
+                <div style={{ display: 'grid', gap: 8, gridTemplateColumns: '120px 1fr 1fr 1fr 1fr 1fr 1fr 80px 80px auto' }}>
                     <select style={inputS} value={draft.country_code} onChange={e => setDraft({ ...draft, country_code: e.target.value })}>
                         {FLAG_CODES.map(f => <option key={f.code} value={f.code}>{f.code.toUpperCase()} — {f.label}</option>)}
                     </select>
@@ -130,6 +131,8 @@ const FlagCompanies = () => {
                     <input style={inputS} placeholder="Description" value={draft.description} onChange={e => setDraft({ ...draft, description: e.target.value })} />
                     <input style={inputS} placeholder="Logo URL" value={draft.logo_url} onChange={e => setDraft({ ...draft, logo_url: e.target.value })} />
                     <input style={inputS} placeholder="Website" value={draft.website} onChange={e => setDraft({ ...draft, website: e.target.value })} />
+                    <input style={inputS} placeholder="Phone" value={draft.phone} onChange={e => setDraft({ ...draft, phone: e.target.value })} />
+                    <input style={inputS} placeholder="Email" value={draft.email} onChange={e => setDraft({ ...draft, email: e.target.value })} />
                     <label style={{ color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 6 }}>
                         <input type="checkbox" checked={draft.is_featured} onChange={e => setDraft({ ...draft, is_featured: e.target.checked })} /> Feat
                     </label>
@@ -156,7 +159,7 @@ const FlagCompanies = () => {
                 </div>
             </div>
             {rows.map(r => (
-                <div key={r.id} style={{ ...cardS, display: 'grid', gap: 8, gridTemplateColumns: '120px 1fr 1fr 1fr 1fr 80px 80px auto auto' }}>
+                <div key={r.id} style={{ ...cardS, display: 'grid', gap: 8, gridTemplateColumns: '120px 1fr 1fr 1fr 1fr 1fr 1fr 80px 80px auto auto' }}>
                     <select style={inputS} value={r.country_code} onChange={e => setRows(rs => rs.map(x => x.id === r.id ? { ...x, country_code: e.target.value } : x))}>
                         {FLAG_CODES.map(f => <option key={f.code} value={f.code}>{f.code.toUpperCase()} — {f.label}</option>)}
                     </select>
@@ -164,6 +167,8 @@ const FlagCompanies = () => {
                     <input style={inputS} value={r.description || ''} onChange={e => setRows(rs => rs.map(x => x.id === r.id ? { ...x, description: e.target.value } : x))} />
                     <input style={inputS} value={r.logo_url || ''} onChange={e => setRows(rs => rs.map(x => x.id === r.id ? { ...x, logo_url: e.target.value } : x))} />
                     <input style={inputS} value={r.website || ''} onChange={e => setRows(rs => rs.map(x => x.id === r.id ? { ...x, website: e.target.value } : x))} />
+                    <input style={inputS} value={r.phone || ''} onChange={e => setRows(rs => rs.map(x => x.id === r.id ? { ...x, phone: e.target.value } : x))} />
+                    <input style={inputS} value={r.email || ''} onChange={e => setRows(rs => rs.map(x => x.id === r.id ? { ...x, email: e.target.value } : x))} />
                     <label style={{ color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 6 }}>
                         <input type="checkbox" checked={!!r.is_featured} onChange={e => setRows(rs => rs.map(x => x.id === r.id ? { ...x, is_featured: e.target.checked } : x))} /> Feat
                     </label>
@@ -406,7 +411,7 @@ const SiteContent = () => {
         <div>
             <div style={{ ...cardS, display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
                 <strong style={{ color: '#f1f5f9' }}>Dil:</strong>
-                {['tr', 'en', 'de', 'ru', 'fr'].map(l => (
+                {['tr', 'en', 'de', 'ru', 'fr', 'ar'].map(l => (
                     <button key={l} onClick={() => setLang(l)} className="ai-btn" style={{ height: 32 }}>
                         <div className="ai-btn-inner" style={{
                             padding: '0 14px',
@@ -477,6 +482,120 @@ const SiteContent = () => {
                     );
                 })}
             </div>
+        </div>
+    );
+};
+
+// Catalog of replaceable site images. Each entry pairs an asset_key (used by
+// the front-end useSiteAsset hook) with a label, a recommended pixel size,
+// and the bundled fallback path. Adding a new entry here surfaces a new
+// upload card in the admin tab.
+const SITE_ASSETS = [
+    { key: 'home_logo',         label: 'Anasayfa Logo',         w: 640,  h: 200, fallback: '/src/ldm-calculator-logo.png' },
+    { key: 'viewer_logo',       label: 'Viewer Logo (beyaz)',   w: 640,  h: 200, fallback: '/src/ldm-calculator-beyaz-logo.png' },
+    { key: 'home_bg',           label: 'Anasayfa Arka Plan',    w: 1920, h: 1080, fallback: '/src/bg.jpg' },
+    { key: 'home_bg_mobile',    label: 'Mobil Arka Plan',        w: 768,  h: 1366, fallback: '/src/mobil-bg.jpg' },
+    { key: 'home_bg_truck',     label: 'Hover BG: Truck',        w: 1920, h: 1080, fallback: '/src/bg1.jpg' },
+    { key: 'home_bg_train',     label: 'Hover BG: Train',        w: 1920, h: 1080, fallback: '/src/bg2.jpg' },
+    { key: 'home_bg_plane',     label: 'Hover BG: Plane',        w: 1920, h: 1080, fallback: '/src/bg3.jpg' },
+    { key: 'home_bg_ship',      label: 'Hover BG: Ship',         w: 1920, h: 1080, fallback: '/src/bg4.jpg' },
+    { key: 'home_thumb_truck',  label: 'Thumb: Truck',           w: 256,  h: 256, fallback: '/src/tir.png' },
+    { key: 'home_thumb_train',  label: 'Thumb: Train',           w: 256,  h: 256, fallback: '/src/tren.png' },
+    { key: 'home_thumb_plane',  label: 'Thumb: Plane',           w: 256,  h: 256, fallback: '/src/ucak.png' },
+    { key: 'home_thumb_ship',   label: 'Thumb: Ship',            w: 256,  h: 256, fallback: '/src/gemi.png' }
+];
+
+const SiteAssets = () => {
+    const [rows, setRows] = useState({});
+    const [busy, setBusy] = useState({});
+    const [feedback, setFeedback] = useState({});
+    const load = async () => {
+        const r = await fetch('/api/admin/site-assets', { headers: auth() });
+        if (!r.ok) return;
+        const j = await r.json();
+        const next = {};
+        for (const x of (j.items || [])) next[x.asset_key] = x.image_url;
+        setRows(next);
+    };
+    useEffect(() => { load(); }, []);
+
+    const upload = async (asset, file) => {
+        if (!file) return;
+        setBusy(b => ({ ...b, [asset.key]: true }));
+        setFeedback(f => ({ ...f, [asset.key]: null }));
+        try {
+            const dataUrl = await resizeImage(file, asset.w, asset.h);
+            const sizeKB = Math.round((dataUrl.length * 3 / 4) / 1024);
+            if (sizeKB > 4096) throw new Error(`Too large: ${sizeKB} KB`);
+            const r = await fetch('/api/admin/site-assets', {
+                method: 'PUT',
+                headers: { ...auth(), 'Content-Type': 'application/json' },
+                body: JSON.stringify({ asset_key: asset.key, image_url: dataUrl })
+            });
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
+            setFeedback(f => ({ ...f, [asset.key]: { type: 'ok', text: `Yüklendi (${sizeKB} KB)` } }));
+            await load();
+            setTimeout(() => setFeedback(f => ({ ...f, [asset.key]: null })), 3000);
+        } catch (e) {
+            setFeedback(f => ({ ...f, [asset.key]: { type: 'err', text: e.message } }));
+        } finally {
+            setBusy(b => ({ ...b, [asset.key]: false }));
+        }
+    };
+
+    const clear = async (key) => {
+        if (!confirm('Bu görseli kaldırıp default\'a döndür?')) return;
+        await fetch('/api/admin/site-assets', { method: 'PUT', headers: { ...auth(), 'Content-Type': 'application/json' }, body: JSON.stringify({ asset_key: key, image_url: '' }) });
+        load();
+    };
+
+    return (
+        <div>
+            {SITE_ASSETS.map(asset => {
+                const current = rows[asset.key];
+                const fb = feedback[asset.key];
+                return (
+                    <div key={asset.key} style={cardS}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8, flexWrap: 'wrap', gap: 8 }}>
+                            <h3 style={{ color: '#f1f5f9', margin: 0 }}>{asset.label}</h3>
+                            <span style={{ color: '#fbbf24', fontSize: '0.8rem', fontWeight: 600 }}>
+                                Önerilen: {asset.w} × {asset.h} px
+                            </span>
+                        </div>
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                            <label className="ai-btn" style={{ height: 36, padding: 2, cursor: busy[asset.key] ? 'wait' : 'pointer', opacity: busy[asset.key] ? 0.5 : 1 }}>
+                                <div className="ai-btn-inner" style={{ padding: '0 14px', height: '100%', fontSize: '0.85rem' }}>
+                                    {busy[asset.key] ? 'Yükleniyor…' : '📤 Görsel Yükle'}
+                                </div>
+                                <input type="file" accept="image/png,image/jpeg,image/webp" style={{ display: 'none' }} disabled={busy[asset.key]}
+                                    onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if (f) upload(asset, f); }}
+                                />
+                            </label>
+                            {current && (
+                                <button onClick={() => clear(asset.key)} className="ai-btn ai-btn-danger" style={{ height: 36 }}>
+                                    <div className="ai-btn-inner">Default\'a Döndür</div>
+                                </button>
+                            )}
+                            <span style={{ color: '#64748b', fontSize: '0.78rem' }}>
+                                {current ? '✓ Override aktif' : `Default: ${asset.fallback}`}
+                            </span>
+                        </div>
+                        {fb && (
+                            <div style={{
+                                marginTop: 8, padding: '6px 10px', borderRadius: 6, fontSize: '0.85rem',
+                                background: fb.type === 'ok' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                                color: fb.type === 'ok' ? '#10b981' : '#ef4444',
+                                border: `1px solid ${fb.type === 'ok' ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)'}`
+                            }}>{fb.type === 'ok' ? '✓ ' : '⚠ '}{fb.text}</div>
+                        )}
+                        {(current || asset.fallback) && (
+                            <img src={current || asset.fallback} alt={asset.key}
+                                style={{ marginTop: 10, maxHeight: 90, maxWidth: '100%', borderRadius: 6, background: '#0f172a', border: '1px solid rgba(255,255,255,0.08)' }}
+                            />
+                        )}
+                    </div>
+                );
+            })}
         </div>
     );
 };
@@ -648,6 +767,7 @@ const Admin = () => {
                 {[
                     ['flags',     'Flag companies'],
                     ['banners',   'Banners'],
+                    ['assets',    'Site Görselleri'],
                     ['site',      'Site Yönetimi'],
                     ['names',     'Ürün İsim Logları'],
                     ['contact',   'Contact'],
@@ -662,6 +782,7 @@ const Admin = () => {
             <main>
                 {tab === 'flags'   && <FlagCompanies />}
                 {tab === 'banners' && <Banners />}
+                {tab === 'assets'  && <SiteAssets />}
                 {tab === 'site'    && <SiteContent />}
                 {tab === 'names'   && <ProductNameLogs />}
                 {tab === 'contact' && <MessageList type="contact" columns={{

@@ -1,18 +1,30 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useT, LanguageSwitcher } from '../i18n/LanguageContext';
+import { useSiteAsset } from '../hooks/useSiteAssets';
 
 const Home = () => {
     const navigate = useNavigate();
     const { t, lang } = useT();
+    const homeLogo  = useSiteAsset('home_logo',  '/src/ldm-calculator-logo.png');
+    const homeBg    = useSiteAsset('home_bg',    '/src/bg.jpg');
+    const mobileBg  = useSiteAsset('home_bg_mobile', '/src/mobil-bg.jpg');
+    const bgTruck   = useSiteAsset('home_bg_truck', '/src/bg1.jpg');
+    const bgTrain   = useSiteAsset('home_bg_train', '/src/bg2.jpg');
+    const bgPlane   = useSiteAsset('home_bg_plane', '/src/bg3.jpg');
+    const bgShip    = useSiteAsset('home_bg_ship',  '/src/bg4.jpg');
+    const thumbTruck = useSiteAsset('home_thumb_truck', '/src/tir.png');
+    const thumbTrain = useSiteAsset('home_thumb_train', '/src/tren.png');
+    const thumbPlane = useSiteAsset('home_thumb_plane', '/src/ucak.png');
+    const thumbShip  = useSiteAsset('home_thumb_ship',  '/src/gemi.png');
     const [hoveredSection, setHoveredSection] = useState(null);
     const [isDesktop, setIsDesktop] = useState(true);
 
     const sections = [
-        { id: 'truck', path: '/truck', img: '/src/tir.png', bg: '/src/bg1.jpg' },
-        { id: 'train', path: '/train', img: '/src/tren.png', bg: '/src/bg2.jpg' },
-        { id: 'plane', path: '/plane', img: '/src/ucak.png', bg: '/src/bg3.jpg' },
-        { id: 'ship', path: '/ship', img: '/src/gemi.png', bg: '/src/bg4.jpg' }
+        { id: 'truck', path: '/truck', img: thumbTruck, bg: bgTruck },
+        { id: 'train', path: '/train', img: thumbTrain, bg: bgTrain },
+        { id: 'plane', path: '/plane', img: thumbPlane, bg: bgPlane },
+        { id: 'ship',  path: '/ship',  img: thumbShip,  bg: bgShip  }
     ];
 
     // Allow native body scroll on the Home route only — global CSS pins body
@@ -132,7 +144,7 @@ const Home = () => {
                         left: 0,
                         width: '100%',
                         height: '100%',
-                        backgroundImage: 'url(/src/bg.jpg)',
+                        backgroundImage: `url(${homeBg})`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                         zIndex: hoveredSection ? 1 : 10,
@@ -166,7 +178,7 @@ const Home = () => {
                     left: 0,
                     width: '100%',
                     height: '100%',
-                    backgroundImage: 'url(/src/mobil-bg.jpg)',
+                    backgroundImage: `url(${mobileBg})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     zIndex: 1
@@ -186,7 +198,7 @@ const Home = () => {
                 margin: '0 auto'
             }}>
                 <img
-                    src="/src/ldm-calculator-logo.png"
+                    src={homeLogo}
                     alt="LDM Logo"
                     className="home-logo"
                     style={{
