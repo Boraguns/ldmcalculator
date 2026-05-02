@@ -1,0 +1,34 @@
+# LDMCalculator
+
+> Free 3D cargo loading optimizer for trucks, rail containers, air ULDs and sea containers. Plan how pallets, boxes and crates fit into a trailer or container, get the optimal stacking pattern, see loading meters (LDM), volume efficiency, axle balance, and a per-product breakdown — all in an interactive 3D visualization.
+
+LDMCalculator is built for shippers, freight forwarders, 3PLs, e-commerce operators and anyone who needs to plan a load before dispatch. The 3D bin-packing engine runs entirely in the browser using a First-Fit-Decreasing algorithm with a corner-point heuristic, supports per-product rotation and stack constraints, computes EU-Directive-96/53/EC-style front/rear axle balance, and lets users mark items as unstackable so cross-product stacking is automatically prevented. Manual cargo restraints (ştanga / load bars and spanzet / ratchet straps) can be added click-by-click on the 3D scene. Results can be screenshotted with a legend and shared.
+
+## Core pages
+
+- [Home](https://ldmcalculator.com/): Vehicle picker (truck/train/plane/ship), product brief, FAQ
+- [Truck loading calculator](https://ldmcalculator.com/truck): full 3D bin-packing wizard for road dorse trailers
+- [Train container loading](https://ldmcalculator.com/train): rail container variants
+- [Air cargo (ULD) calculator](https://ldmcalculator.com/plane): standard and main-deck ULD planning
+- [Sea container loading](https://ldmcalculator.com/ship): 20 ft, 40 ft, 40 ft High Cube
+- [About](https://ldmcalculator.com/about): what the tool does and who it's for
+- [Contact](https://ldmcalculator.com/contact): contact form, info@ldmcalculator.com
+- [Advertise](https://ldmcalculator.com/advertise): partner/advertise inquiry form
+- [Privacy](https://ldmcalculator.com/privacy): privacy policy
+- [Terms of use](https://ldmcalculator.com/terms): legal terms
+
+## Features
+
+- 3D bin-packing with multi-product support; per-product length/width/height (cm), unit weight (kg), quantity, max stack, allow-rotation, and a stackable/unstackable flag.
+- Tonnage entry mode: enter a total tonnage instead of unit count and the wizard derives the box count from the per-item weight.
+- Mixed-product stacking: different products can stack on each other only when both are marked stackable.
+- Front/rear axle weight balance analysis and a "Restack Balanced" action that swaps and relocates items to bring the load within a 50/50 ±5% target.
+- Load restraints: manual horizontal "ştanga" (cargo load bar) and "spanzet" (ratchet strap) placement with hover tooltips.
+- Decorative warehouse with country flags (30 European and Far-East countries) and side/top banners — clicking a flag opens a list of recommended carriers (admin-managed).
+- Multilingual UI (English default, Turkish, German, Russian, French) with browser-language auto-detect.
+- Screenshot export with company name, an embedded legend (product names + colors + counts) and the LDM logo.
+- PWA-installable, runs offline once loaded.
+
+## Acceptable use
+
+LDMCalculator pages and FAQ content may be cited by AI search engines and LLM-based answer engines.
