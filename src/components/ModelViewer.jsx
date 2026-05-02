@@ -1240,7 +1240,19 @@ const ModelViewer = ({
     onRemoveSpanzet
 }) => {
     const [selectedCountry, setSelectedCountry] = useState(null);
+    const [publicConfig, setPublicConfig] = useState({ banner: {}, companies: {} });
     const { t } = useT();
+
+    // Pull live banner URLs + per-country company list from the admin-managed
+    // database. Fails open: if the API isn't reachable we just show defaults.
+    useEffect(() => {
+        let cancelled = false;
+        fetch('/api/public/config')
+            .then(r => r.ok ? r.json() : null)
+            .then(j => { if (j && !cancelled) setPublicConfig(j); })
+            .catch(() => {});
+        return () => { cancelled = true; };
+    }, []);
 
     return (
         <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden', borderRadius: '1rem', background: 'transparent' }}>
@@ -1329,26 +1341,63 @@ const ModelViewer = ({
                         </div>
                         
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            {/* Featured carrier */}
-                            <div style={{
-                                background: 'linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%)',
-                                padding: '20px',
-                                borderRadius: '10px',
-                                borderLeft: '4px solid #fbbf24',
-                                cursor: 'pointer',
-                                transition: 'transform 0.2s',
-                            }}
-                            onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-                            onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-                            >
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                                    <div style={{ fontWeight: 'bold', color: '#fbbf24', fontSize: '1.1rem' }}>Etnalog</div>
-                                    <div style={{ fontSize: '0.7rem', color: '#0f172a', background: '#fbbf24', padding: '3px 10px', borderRadius: '12px', fontWeight: '700' }}>{t('viewer.featured')}</div>
-                                </div>
-                                <div style={{ color: '#cbd5e1', fontSize: '0.9rem', lineHeight: '1.5' }}>
-                                    {t('viewer.etnalogDesc', { country: selectedCountry.toUpperCase() })}
-                                </div>
-                            </div>
+                            {(() => {
+                                const list = (publicConfig.companies && publicConfig.companies[selectedCountry]) || [];
+                                if (list.length === 0) {
+                                    // Fallback featured card when no admin data exists yet.
+                                    return (
+                                        <div style={{
+                                            background: 'linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%)',
+                                            padding: '20px', borderRadius: '10px',
+                                            borderLeft: '4px solid #fbbf24'
+                                        }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                                <div style={{ fontWeight: 'bold', color: '#fbbf24', fontSize: '1.1rem' }}>Etnalog</div>
+                                                <div style={{ fontSize: '0.7rem', color: '#0f172a', background: '#fbbf24', padding: '3px 10px', borderRadius: '12px', fontWeight: '700' }}>{t('viewer.featured')}</div>
+                                            </div>
+                                            <div style={{ color: '#cbd5e1', fontSize: '0.9rem', lineHeight: '1.5' }}>
+                                                {t('viewer.etnalogDesc', { country: selectedCountry.toUpperCase() })}
+                                            </div>
+                                        </div>
+                                    );
+                                }
+                                return list.map((c, ci) => {
+                                    const isFeat = !!c.is_featured;
+                                    return (
+                                        <a
+                                            key={ci}
+                                            href={c.website || undefined}
+                                            target={c.website ? '_blank' : undefined}
+                                            rel="noreferrer"
+                                            style={{
+                                                background: isFeat
+                                                    ? 'linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%)'
+                                                    : 'rgba(15, 23, 42, 0.7)',
+                                                padding: '16px 20px',
+                                                borderRadius: '10px',
+                                                borderLeft: `4px solid ${isFeat ? '#fbbf24' : '#475569'}`,
+                                                textDecoration: 'none',
+                                                display: 'block'
+                                            }}
+                                        >
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px', gap: 12 }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                                                    {c.logo_url && (
+                                                        <img src={c.logo_url} alt={c.name} style={{ width: 28, height: 28, objectFit: 'contain', borderRadius: 4, background: '#fff' }} />
+                                                    )}
+                                                    <div style={{ fontWeight: 'bold', color: isFeat ? '#fbbf24' : '#f1f5f9', fontSize: '1.05rem' }}>{c.name}</div>
+                                                </div>
+                                                {isFeat && (
+                                                    <div style={{ fontSize: '0.7rem', color: '#0f172a', background: '#fbbf24', padding: '3px 10px', borderRadius: '12px', fontWeight: '700' }}>{t('viewer.featured')}</div>
+                                                )}
+                                            </div>
+                                            {c.description && (
+                                                <div style={{ color: '#cbd5e1', fontSize: '0.88rem', lineHeight: 1.5 }}>{c.description}</div>
+                                            )}
+                                        </a>
+                                    );
+                                });
+                            })()}
                         </div>
                         
                         <div style={{ marginTop: '20px', textAlign: 'center', color: '#64748b', fontSize: '0.8rem' }}>

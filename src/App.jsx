@@ -305,6 +305,29 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
             link.href = tempCanvas.toDataURL('image/png');
             link.click();
 
+            // Fire-and-forget log to admin panel. Failures are silent so a
+            // network hiccup never blocks the screenshot download.
+            try {
+                fetch('/api/screenshot-log', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        company_name: companyName || '',
+                        plate: '',
+                        driver: '',
+                        note: '',
+                        truck_type: specs?.label || mode,
+                        payload: {
+                            mode,
+                            total_items: packedItems.length,
+                            total_weight: packedItems.reduce((s, it) => s + (it.weight || 0), 0),
+                            legend: legendItems.map(l => ({ id: l.id, name: l.name, count: l.count, color: l.color })),
+                            specs
+                        }
+                    })
+                }).catch(() => {});
+            } catch (_) { /* noop */ }
+
             setShowScreenshotModal(false);
             setCompanyName(''); // Reset for next time
         };
