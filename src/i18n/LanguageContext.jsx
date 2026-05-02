@@ -41,6 +41,9 @@ const lookup = (dict, key) => {
 
 export const LanguageProvider = ({ children }) => {
     const [lang, setLangState] = useState(detectInitialLang);
+    // Admin-managed overrides keyed by lang then dot-notation key.
+    // e.g. { tr: { 'wizard.weight': 'Birim Ağırlık' }, en: { ... } }
+    const [overrides, setOverrides] = useState({});
 
     const setLang = useCallback((next) => {
         if (!dictionaries[next]) return;
@@ -52,15 +55,30 @@ export const LanguageProvider = ({ children }) => {
         try { document.documentElement.setAttribute('lang', lang); } catch (e) { /* noop */ }
     }, [lang]);
 
+    // Pull admin overrides on mount. Failure is silent — falls back to JSON.
+    useEffect(() => {
+        let cancelled = false;
+        fetch('/api/public/translations')
+            .then(r => r.ok ? r.json() : null)
+            .then(j => { if (j?.overrides && !cancelled) setOverrides(j.overrides); })
+            .catch(() => {});
+        return () => { cancelled = true; };
+    }, []);
+
     const t = useCallback((key, vars) => {
-        let val = lookup(dictionaries[lang], key);
+        // 1) Admin override for current lang
+        let val = overrides[lang]?.[key];
+        // 2) Bundled JSON for current lang
+        if (val === undefined) val = lookup(dictionaries[lang], key);
+        // 3) English fallback (admin override then JSON)
+        if (val === undefined) val = overrides.en?.[key];
         if (val === undefined) val = lookup(dictionaries.en, key);
         if (val === undefined) return key;
         if (vars && typeof val === 'string') {
             return val.replace(/\{(\w+)\}/g, (_, k) => (vars[k] !== undefined ? String(vars[k]) : `{${k}}`));
         }
         return val;
-    }, [lang]);
+    }, [lang, overrides]);
 
     const value = useMemo(() => ({ lang, setLang, t }), [lang, setLang, t]);
     return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;

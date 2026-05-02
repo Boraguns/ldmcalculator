@@ -185,6 +185,29 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
 
         const result = onCalculate(truck, validProducts);
         if (result) {
+            // Fire-and-forget log of any user-entered product names so the
+            // admin can review what visitors actually called their cargo. We
+            // group by a per-tab session id (sessionStorage) so all the
+            // calculations from one visit show up together.
+            try {
+                const names = validProducts
+                    .map(p => (p.name || '').trim())
+                    .filter(Boolean);
+                if (names.length > 0) {
+                    let sid = sessionStorage.getItem('ldm_session_id');
+                    if (!sid) {
+                        sid = (crypto.randomUUID && crypto.randomUUID()) ||
+                              (Date.now().toString(36) + Math.random().toString(36).slice(2));
+                        sessionStorage.setItem('ldm_session_id', sid);
+                    }
+                    fetch('/api/product-names-log', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ session_id: sid, names })
+                    }).catch(() => {});
+                }
+            } catch (_) { /* noop */ }
+
             if (tonnageInfoLocal) {
                 const fitBoxes = result.totalItems;
                 const fitKg = fitBoxes * tonnageInfoLocal.unitKg;

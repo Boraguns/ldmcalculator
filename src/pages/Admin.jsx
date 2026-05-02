@@ -1,4 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
+// Bundled JSON dictionaries — used as the "default" column in the site
+// content editor so admins can see what they're overriding.
+import enDict from '../i18n/locales/en.json';
+import trDict from '../i18n/locales/tr.json';
+import deDict from '../i18n/locales/de.json';
+import ruDict from '../i18n/locales/ru.json';
+import frDict from '../i18n/locales/fr.json';
+const DICTS = { en: enDict, tr: trDict, de: deDict, ru: ruDict, fr: frDict };
 
 // Single-file admin console. Login form on top; once authenticated, four tabs:
 // flag-companies CRUD, banner image URLs, contact + advertise + screenshot logs.
@@ -334,6 +342,248 @@ const Banners = () => {
     );
 };
 
+// Flatten a nested object into dot-notation key/value pairs. Skips arrays
+// (the FAQ list etc.) — we only want plain string overrides for now.
+const flattenDict = (obj, prefix = '', acc = []) => {
+    for (const k of Object.keys(obj)) {
+        const v = obj[k];
+        const path = prefix ? `${prefix}.${k}` : k;
+        if (typeof v === 'string') acc.push([path, v]);
+        else if (v && typeof v === 'object' && !Array.isArray(v)) flattenDict(v, path, acc);
+    }
+    return acc;
+};
+
+const SiteContent = () => {
+    const [lang, setLang] = useState('tr');
+    const [overrides, setOverrides] = useState({});
+    const [filter, setFilter] = useState('');
+    const [drafts, setDrafts] = useState({}); // unsaved per-key edits
+    const [busy, setBusy] = useState({});
+    const [savedAt, setSavedAt] = useState({}); // ts per key for "✓ Saved" flash
+
+    const flatDefaults = useMemo(() => flattenDict(DICTS[lang] || {}), [lang]);
+
+    const load = async (l) => {
+        const r = await fetch(`/api/admin/translations?lang=${l}`, { headers: auth() });
+        if (!r.ok) { setOverrides({}); return; }
+        const j = await r.json();
+        setOverrides(j.overrides || {});
+        setDrafts({});
+    };
+    useEffect(() => { load(lang); }, [lang]);
+
+    const save = async (key) => {
+        const value = drafts[key] ?? overrides[key] ?? '';
+        setBusy(b => ({ ...b, [key]: true }));
+        try {
+            const r = await fetch('/api/admin/translations', {
+                method: 'PUT',
+                headers: { ...auth(), 'Content-Type': 'application/json' },
+                body: JSON.stringify({ lang, key, value })
+            });
+            if (!r.ok) throw new Error('save failed');
+            const next = { ...overrides };
+            if (value === '') delete next[key]; else next[key] = value;
+            setOverrides(next);
+            setDrafts(d => { const c = { ...d }; delete c[key]; return c; });
+            setSavedAt(s => ({ ...s, [key]: Date.now() }));
+        } catch (e) {
+            alert(e.message);
+        } finally {
+            setBusy(b => ({ ...b, [key]: false }));
+        }
+    };
+
+    const visible = flatDefaults.filter(([k, v]) =>
+        !filter ||
+        k.toLowerCase().includes(filter.toLowerCase()) ||
+        v.toLowerCase().includes(filter.toLowerCase()) ||
+        (overrides[k] || '').toLowerCase().includes(filter.toLowerCase())
+    );
+
+    return (
+        <div>
+            <div style={{ ...cardS, display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                <strong style={{ color: '#f1f5f9' }}>Dil:</strong>
+                {['tr', 'en', 'de', 'ru', 'fr'].map(l => (
+                    <button key={l} onClick={() => setLang(l)} className="ai-btn" style={{ height: 32 }}>
+                        <div className="ai-btn-inner" style={{
+                            padding: '0 14px',
+                            background: lang === l ? '#3b82f6' : 'transparent',
+                            color: 'white',
+                            fontSize: '0.85rem',
+                            textTransform: 'uppercase'
+                        }}>{l}</div>
+                    </button>
+                ))}
+                <input
+                    style={{ ...inputS, flex: 1, minWidth: 220 }}
+                    placeholder="Filtrele (anahtar veya metin)…"
+                    value={filter}
+                    onChange={e => setFilter(e.target.value)}
+                />
+                <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>
+                    {visible.length} / {flatDefaults.length} anahtar
+                </span>
+            </div>
+            <div style={{ ...cardS, padding: 0 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr 1fr 130px', gap: 0, padding: '10px 14px', background: 'rgba(15,23,42,0.6)', color: '#94a3b8', fontSize: '0.8rem', fontWeight: 600, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div>Anahtar</div>
+                    <div>Default ({lang.toUpperCase()})</div>
+                    <div>Override</div>
+                    <div></div>
+                </div>
+                {visible.map(([k, defVal]) => {
+                    const draft = drafts[k];
+                    const ov = overrides[k] || '';
+                    const current = draft !== undefined ? draft : ov;
+                    const isOverridden = ov !== '' && ov !== defVal;
+                    const justSaved = savedAt[k] && Date.now() - savedAt[k] < 2500;
+                    return (
+                        <div key={k} style={{ display: 'grid', gridTemplateColumns: '260px 1fr 1fr 130px', gap: 8, padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.04)', alignItems: 'start' }}>
+                            <div style={{ color: isOverridden ? '#fbbf24' : '#cbd5e1', fontSize: '0.78rem', fontFamily: 'monospace', wordBreak: 'break-all' }}>
+                                {isOverridden && '● '}{k}
+                            </div>
+                            <div style={{ color: '#94a3b8', fontSize: '0.85rem', whiteSpace: 'pre-wrap' }}>{defVal}</div>
+                            <textarea
+                                style={{ ...inputS, fontSize: '0.85rem', resize: 'vertical', minHeight: 36 }}
+                                value={current}
+                                placeholder={defVal}
+                                onChange={e => setDrafts(d => ({ ...d, [k]: e.target.value }))}
+                            />
+                            <div style={{ display: 'flex', gap: 6 }}>
+                                <button
+                                    onClick={() => save(k)}
+                                    disabled={busy[k] || (draft === undefined && !ov && !current)}
+                                    className="ai-btn"
+                                    style={{ height: 30, opacity: busy[k] ? 0.5 : 1 }}
+                                >
+                                    <div className="ai-btn-inner" style={{ background: justSaved ? '#10b981' : '#3b82f6', color: 'white', padding: '0 10px', fontSize: '0.78rem' }}>
+                                        {busy[k] ? '...' : justSaved ? '✓' : 'Kaydet'}
+                                    </div>
+                                </button>
+                                {ov && (
+                                    <button
+                                        onClick={async () => { setDrafts(d => ({ ...d, [k]: '' })); save(k); }}
+                                        className="ai-btn ai-btn-danger"
+                                        style={{ height: 30 }}
+                                    >
+                                        <div className="ai-btn-inner" style={{ padding: '0 10px', fontSize: '0.78rem' }}>×</div>
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+};
+
+const ProductNameLogs = () => {
+    const [rows, setRows] = useState([]);
+    const [filter, setFilter] = useState('');
+    const [expanded, setExpanded] = useState({});
+    const load = async () => {
+        const r = await fetch('/api/admin/product-names', { headers: auth() });
+        if (!r.ok) return;
+        const j = await r.json();
+        setRows(j.items || []);
+    };
+    useEffect(() => { load(); }, []);
+
+    // Group events by session_id while preserving recency order.
+    const grouped = useMemo(() => {
+        const map = new Map();
+        for (const r of rows) {
+            const key = r.session_id;
+            if (!map.has(key)) map.set(key, { session_id: key, events: [], firstAt: r.created_at, lastAt: r.created_at, allNames: new Set(), userAgent: r.user_agent });
+            const g = map.get(key);
+            g.events.push(r);
+            if (r.created_at < g.firstAt) g.firstAt = r.created_at;
+            if (r.created_at > g.lastAt) g.lastAt = r.created_at;
+            for (const n of (r.names || [])) g.allNames.add(n);
+        }
+        return Array.from(map.values()).sort((a, b) => new Date(b.lastAt) - new Date(a.lastAt));
+    }, [rows]);
+
+    const filtered = grouped.filter(g => {
+        if (!filter) return true;
+        const f = filter.toLowerCase();
+        if (g.session_id.toLowerCase().includes(f)) return true;
+        for (const n of g.allNames) if (n.toLowerCase().includes(f)) return true;
+        return false;
+    });
+
+    return (
+        <div>
+            <div style={{ ...cardS, display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                <input
+                    style={{ ...inputS, flex: 1, minWidth: 220 }}
+                    placeholder="Filtrele (oturum id veya ürün ismi)…"
+                    value={filter}
+                    onChange={e => setFilter(e.target.value)}
+                />
+                <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>
+                    {filtered.length} oturum, toplam {rows.length} hesaplama
+                </span>
+                <button onClick={load} className="ai-btn" style={{ height: 32 }}>
+                    <div className="ai-btn-inner" style={{ padding: '0 14px', fontSize: '0.8rem' }}>↻ Yenile</div>
+                </button>
+            </div>
+            {filtered.length === 0 && (
+                <div style={{ ...cardS, color: '#64748b', textAlign: 'center' }}>Henüz kayıt yok.</div>
+            )}
+            {filtered.map(g => {
+                const isOpen = !!expanded[g.session_id];
+                return (
+                    <div key={g.session_id} style={cardS}>
+                        <div
+                            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', gap: 12 }}
+                            onClick={() => setExpanded(s => ({ ...s, [g.session_id]: !isOpen }))}
+                        >
+                            <div style={{ minWidth: 0, flex: 1 }}>
+                                <div style={{ color: '#f1f5f9', fontWeight: 600, fontFamily: 'monospace', fontSize: '0.82rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {isOpen ? '▼' : '▶'} {g.session_id}
+                                </div>
+                                <div style={{ color: '#94a3b8', fontSize: '0.78rem', marginTop: 4 }}>
+                                    {g.events.length} hesaplama • {g.allNames.size} farklı isim • son: {new Date(g.lastAt).toLocaleString()}
+                                </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: '60%' }}>
+                                {Array.from(g.allNames).slice(0, 8).map(n => (
+                                    <span key={n} style={{ background: 'rgba(59, 130, 246, 0.18)', color: '#93c5fd', padding: '3px 8px', borderRadius: 6, fontSize: '0.78rem' }}>{n}</span>
+                                ))}
+                                {g.allNames.size > 8 && <span style={{ color: '#64748b', fontSize: '0.78rem' }}>+{g.allNames.size - 8}</span>}
+                            </div>
+                        </div>
+                        {isOpen && (
+                            <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                                {g.events.map(ev => (
+                                    <div key={ev.id} style={{ marginBottom: 8, fontSize: '0.85rem' }}>
+                                        <div style={{ color: '#64748b', fontSize: '0.75rem' }}>{new Date(ev.created_at).toLocaleString()}</div>
+                                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
+                                            {(ev.names || []).map((n, i) => (
+                                                <span key={i} style={{ background: 'rgba(255,255,255,0.05)', color: '#e2e8f0', padding: '3px 8px', borderRadius: 6 }}>{n}</span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                                {g.userAgent && (
+                                    <div style={{ color: '#475569', fontSize: '0.7rem', marginTop: 8, fontFamily: 'monospace' }}>
+                                        UA: {g.userAgent}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                );
+            })}
+        </div>
+    );
+};
+
 const MessageList = ({ type, columns, allowMarkRead = true }) => {
     const [rows, setRows] = useState([]);
     const load = async () => {
@@ -398,6 +648,8 @@ const Admin = () => {
                 {[
                     ['flags',     'Flag companies'],
                     ['banners',   'Banners'],
+                    ['site',      'Site Yönetimi'],
+                    ['names',     'Ürün İsim Logları'],
                     ['contact',   'Contact'],
                     ['advertise', 'Advertise'],
                     ['screenshot','Screenshot logs']
@@ -410,6 +662,8 @@ const Admin = () => {
             <main>
                 {tab === 'flags'   && <FlagCompanies />}
                 {tab === 'banners' && <Banners />}
+                {tab === 'site'    && <SiteContent />}
+                {tab === 'names'   && <ProductNameLogs />}
                 {tab === 'contact' && <MessageList type="contact" columns={{
                     title: r => `${r.name} <${r.email}>${r.subject ? ' — ' + r.subject : ''}`,
                     body: r => r.message
