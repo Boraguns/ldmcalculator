@@ -65,6 +65,8 @@ const FLAG_CODES = [
 const FlagCompanies = () => {
     const [rows, setRows] = useState([]);
     const [draft, setDraft] = useState({ country_code: 'tr', name: '', description: '', logo_url: '', website: '', is_featured: false, sort_order: 0 });
+    const [busy, setBusy] = useState(false);
+    const [feedback, setFeedback] = useState(null); // { type: 'ok'|'err', text }
     const load = async () => {
         const r = await fetch('/api/admin/flag-companies', { headers: auth() });
         const j = await r.json();
@@ -72,9 +74,32 @@ const FlagCompanies = () => {
     };
     useEffect(() => { load(); }, []);
     const create = async () => {
-        await fetch('/api/admin/flag-companies', { method: 'POST', headers: { ...auth(), 'Content-Type': 'application/json' }, body: JSON.stringify(draft) });
-        setDraft({ country_code: 'tr', name: '', description: '', logo_url: '', website: '', is_featured: false, sort_order: 0 });
-        load();
+        if (!draft.name.trim()) {
+            setFeedback({ type: 'err', text: 'Firma adı zorunlu' });
+            return;
+        }
+        setBusy(true);
+        setFeedback(null);
+        try {
+            const r = await fetch('/api/admin/flag-companies', {
+                method: 'POST',
+                headers: { ...auth(), 'Content-Type': 'application/json' },
+                body: JSON.stringify(draft)
+            });
+            const j = await r.json().catch(() => ({}));
+            if (!r.ok) {
+                setFeedback({ type: 'err', text: j.error || `Hata: HTTP ${r.status}` });
+                return;
+            }
+            setDraft({ country_code: 'tr', name: '', description: '', logo_url: '', website: '', is_featured: false, sort_order: 0 });
+            await load();
+            setFeedback({ type: 'ok', text: `Eklendi: ${j.item?.country_code?.toUpperCase()} — ${j.item?.name}` });
+            setTimeout(() => setFeedback(null), 3000);
+        } catch (e) {
+            setFeedback({ type: 'err', text: e.message || 'Network error' });
+        } finally {
+            setBusy(false);
+        }
     };
     const update = async (item) => {
         await fetch('/api/admin/flag-companies', { method: 'PATCH', headers: { ...auth(), 'Content-Type': 'application/json' }, body: JSON.stringify(item) });
@@ -101,7 +126,25 @@ const FlagCompanies = () => {
                         <input type="checkbox" checked={draft.is_featured} onChange={e => setDraft({ ...draft, is_featured: e.target.checked })} /> Feat
                     </label>
                     <input style={inputS} type="number" value={draft.sort_order} onChange={e => setDraft({ ...draft, sort_order: parseInt(e.target.value) || 0 })} />
-                    <button onClick={create} className="ai-btn ai-btn-primary" style={{ height: 36 }}><div className="ai-btn-inner" style={{ background: '#10b981', color: 'white' }}>Add</div></button>
+                    <button onClick={create} disabled={busy} className="ai-btn ai-btn-primary" style={{ height: 36, opacity: busy ? 0.5 : 1 }}>
+                        <div className="ai-btn-inner" style={{ background: '#10b981', color: 'white' }}>{busy ? '...' : 'Add'}</div>
+                    </button>
+                </div>
+                {feedback && (
+                    <div style={{
+                        marginTop: 10,
+                        padding: '8px 12px',
+                        borderRadius: 6,
+                        fontSize: '0.85rem',
+                        background: feedback.type === 'ok' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                        color: feedback.type === 'ok' ? '#10b981' : '#ef4444',
+                        border: `1px solid ${feedback.type === 'ok' ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)'}`
+                    }}>
+                        {feedback.type === 'ok' ? '✓ ' : '⚠ '}{feedback.text}
+                    </div>
+                )}
+                <div style={{ marginTop: 10, fontSize: '0.8rem', color: '#94a3b8' }}>
+                    Toplam kayıt: <b style={{ color: '#f1f5f9' }}>{rows.length}</b>
                 </div>
             </div>
             {rows.map(r => (
