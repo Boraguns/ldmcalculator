@@ -17,7 +17,13 @@ export default async function handler(req, res) {
         if (req.method === 'PUT') {
             const { slot, image_url } = await readJsonBody(req);
             if (!VALID_SLOTS.has(slot)) return json(res, 400, { error: 'slot must be left|right|top' });
-            if (!image_url) return json(res, 400, { error: 'image_url required' });
+            if (typeof image_url !== 'string') return json(res, 400, { error: 'image_url required' });
+            // Empty string means "clear this slot" — delete the row so the
+            // public config falls back to the bundled default banner asset.
+            if (image_url === '') {
+                await sql`DELETE FROM banners WHERE slot = ${slot}`;
+                return json(res, 200, { ok: true, cleared: true });
+            }
             await sql`
                 INSERT INTO banners (slot, image_url, updated_at)
                 VALUES (${slot}, ${image_url}, NOW())

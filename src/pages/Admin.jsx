@@ -168,8 +168,58 @@ const FlagCompanies = () => {
     );
 };
 
+// Recommended banner pixel sizes — must roughly match the 3D plane aspect.
+//   side banners: scene plane is 2.0 × 8.5 → ~1:4.25 portrait
+//   top banner:   scene plane is 24 × 1.8 → ~13.3:1 landscape
+const BANNER_SPECS = {
+    left:  { w: 512,  h: 2176, label: 'Sol Branda',   aspect: '1:4.25 (portrait)' },
+    top:   { w: 1920, h: 144,  label: 'Üst Branda',   aspect: '13.3:1 (landscape)' },
+    right: { w: 512,  h: 2176, label: 'Sağ Branda',   aspect: '1:4.25 (portrait)' }
+};
+
+// Resize an image File to fit within target dimensions while preserving its
+// aspect ratio, then return a JPEG/PNG data URL. Avoids huge base64 blobs.
+const resizeImage = (file, targetW, targetH) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error);
+    reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('Image decode failed'));
+        img.onload = () => {
+            // Cover-fit: scale so that the smaller axis matches, then crop to
+            // exact target dimensions (centered).
+            const sRatio = img.width / img.height;
+            const tRatio = targetW / targetH;
+            let sx, sy, sw, sh;
+            if (sRatio > tRatio) { // source wider → crop sides
+                sh = img.height;
+                sw = sh * tRatio;
+                sx = (img.width - sw) / 2;
+                sy = 0;
+            } else { // source taller → crop top/bottom
+                sw = img.width;
+                sh = sw / tRatio;
+                sx = 0;
+                sy = (img.height - sh) / 2;
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = targetW;
+            canvas.height = targetH;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
+            // PNG keeps colors crisp for printed banners; jpeg saves bytes.
+            // Use jpeg at 0.9 for sane file sizes.
+            resolve(canvas.toDataURL('image/jpeg', 0.9));
+        };
+        img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+});
+
 const Banners = () => {
     const [rows, setRows] = useState({ left: '', right: '', top: '' });
+    const [busy, setBusy] = useState({});
+    const [feedback, setFeedback] = useState({});
     const load = async () => {
         const r = await fetch('/api/admin/banners', { headers: auth() });
         const j = await r.json();
@@ -178,22 +228,108 @@ const Banners = () => {
         setRows(next);
     };
     useEffect(() => { load(); }, []);
-    const save = async (slot) => {
-        await fetch('/api/admin/banners', { method: 'PUT', headers: { ...auth(), 'Content-Type': 'application/json' }, body: JSON.stringify({ slot, image_url: rows[slot] }) });
-        load();
+
+    const upload = async (slot, file) => {
+        if (!file) return;
+        setBusy(b => ({ ...b, [slot]: true }));
+        setFeedback(f => ({ ...f, [slot]: null }));
+        try {
+            const spec = BANNER_SPECS[slot];
+            const dataUrl = await resizeImage(file, spec.w, spec.h);
+            // Quick size guard: anything > 4MB after compression is suspicious.
+            const sizeKB = Math.round((dataUrl.length * 3 / 4) / 1024);
+            if (sizeKB > 4096) throw new Error(`Image too large after compression (${sizeKB} KB)`);
+            const r = await fetch('/api/admin/banners', {
+                method: 'PUT',
+                headers: { ...auth(), 'Content-Type': 'application/json' },
+                body: JSON.stringify({ slot, image_url: dataUrl })
+            });
+            const j = await r.json().catch(() => ({}));
+            if (!r.ok) throw new Error(j.error || `HTTP ${r.status}`);
+            setFeedback(f => ({ ...f, [slot]: { type: 'ok', text: `Yüklendi (${sizeKB} KB)` } }));
+            await load();
+            setTimeout(() => setFeedback(f => ({ ...f, [slot]: null })), 3000);
+        } catch (e) {
+            setFeedback(f => ({ ...f, [slot]: { type: 'err', text: e.message || 'Upload failed' } }));
+        } finally {
+            setBusy(b => ({ ...b, [slot]: false }));
+        }
     };
+
     return (
         <div>
-            {['left', 'top', 'right'].map(slot => (
-                <div key={slot} style={cardS}>
-                    <h3 style={{ color: '#f1f5f9', margin: '0 0 8px', textTransform: 'capitalize' }}>{slot} banner</h3>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                        <input style={inputS} placeholder="https://...image.jpg or /banners/x.jpg" value={rows[slot]} onChange={e => setRows({ ...rows, [slot]: e.target.value })} />
-                        <button onClick={() => save(slot)} className="ai-btn" style={{ height: 36 }}><div className="ai-btn-inner">Save</div></button>
+            {['left', 'top', 'right'].map(slot => {
+                const spec = BANNER_SPECS[slot];
+                const fb = feedback[slot];
+                return (
+                    <div key={slot} style={cardS}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
+                            <h3 style={{ color: '#f1f5f9', margin: 0 }}>{spec.label}</h3>
+                            <span style={{ color: '#fbbf24', fontSize: '0.8rem', fontWeight: 600 }}>
+                                Önerilen: {spec.w} × {spec.h} px ({spec.aspect})
+                            </span>
+                        </div>
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                            <label
+                                className="ai-btn"
+                                style={{ height: 40, padding: 2, cursor: busy[slot] ? 'wait' : 'pointer', opacity: busy[slot] ? 0.5 : 1 }}
+                            >
+                                <div className="ai-btn-inner" style={{ padding: '0 16px', height: '100%', fontSize: '0.85rem' }}>
+                                    {busy[slot] ? 'Yükleniyor…' : '📤 Görsel Yükle'}
+                                </div>
+                                <input
+                                    type="file"
+                                    accept="image/png,image/jpeg,image/webp"
+                                    style={{ display: 'none' }}
+                                    disabled={busy[slot]}
+                                    onChange={(e) => {
+                                        const f = e.target.files && e.target.files[0];
+                                        e.target.value = '';
+                                        if (f) upload(slot, f);
+                                    }}
+                                />
+                            </label>
+                            {rows[slot] && (
+                                <button
+                                    onClick={async () => {
+                                        if (!confirm('Bu brandayı kaldırmak istediğinize emin misiniz?')) return;
+                                        await fetch('/api/admin/banners', { method: 'PUT', headers: { ...auth(), 'Content-Type': 'application/json' }, body: JSON.stringify({ slot, image_url: '' }) });
+                                        load();
+                                    }}
+                                    className="ai-btn ai-btn-danger"
+                                    style={{ height: 40 }}
+                                >
+                                    <div className="ai-btn-inner">Kaldır</div>
+                                </button>
+                            )}
+                            <span style={{ color: '#64748b', fontSize: '0.8rem' }}>
+                                Görsel otomatik olarak {spec.w}×{spec.h} px boyutuna ölçeklenir (kenar kırpılır).
+                            </span>
+                        </div>
+                        {fb && (
+                            <div style={{
+                                marginTop: 10, padding: '6px 10px', borderRadius: 6,
+                                fontSize: '0.85rem',
+                                background: fb.type === 'ok' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                                color: fb.type === 'ok' ? '#10b981' : '#ef4444',
+                                border: `1px solid ${fb.type === 'ok' ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)'}`
+                            }}>
+                                {fb.type === 'ok' ? '✓ ' : '⚠ '}{fb.text}
+                            </div>
+                        )}
+                        {rows[slot] && (
+                            <img
+                                src={rows[slot]}
+                                alt={slot}
+                                style={{
+                                    marginTop: 10, maxHeight: 120, maxWidth: '100%',
+                                    borderRadius: 6, background: '#0f172a', border: '1px solid rgba(255,255,255,0.08)'
+                                }}
+                            />
+                        )}
                     </div>
-                    {rows[slot] && <img src={rows[slot]} alt="" style={{ marginTop: 8, maxHeight: 90, borderRadius: 6 }} />}
-                </div>
-            ))}
+                );
+            })}
         </div>
     );
 };

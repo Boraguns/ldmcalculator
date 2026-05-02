@@ -574,7 +574,7 @@ const SteelBeam = ({ position, size = [0.3, 0.3, 30], color = '#374151' }) => (
     </mesh>
 );
 
-const WarehouseEnvironment = ({ floorY, showFlags = true, onFlagClick }) => {
+const WarehouseEnvironment = ({ floorY, showFlags = true, onFlagClick, bannerUrls = {} }) => {
     const containerColors = ['#1e40af', '#15803d', '#b91c1c', '#854d0e', '#4338ca', '#0f766e', '#9f1239', '#1d4ed8'];
     const boxColors = ['#c2884a', '#a3855a', '#d4a574', '#b8956a', '#8B7355', '#c49a6c'];
 
@@ -712,13 +712,13 @@ const WarehouseEnvironment = ({ floorY, showFlags = true, onFlagClick }) => {
                             const topCenterY = gridHalfH + topGap + topBannerH / 2;
                             return (
                                 <Suspense fallback={null}>
-                                    <Banner url="/banners/left.jpg"
+                                    <Banner url={bannerUrls.left  || '/banners/left.jpg'}
                                             position={[-sideX, sideCenterY, 0]}
                                             size={[sideBannerW, sideBannerH]} />
-                                    <Banner url="/banners/right.jpg"
+                                    <Banner url={bannerUrls.right || '/banners/right.jpg'}
                                             position={[ sideX, sideCenterY, 0]}
                                             size={[sideBannerW, sideBannerH]} />
-                                    <Banner url="/banners/top.jpg"
+                                    <Banner url={bannerUrls.top   || '/banners/top.jpg'}
                                             position={[0, topCenterY, 0]}
                                             size={[topBannerW, topBannerH]} />
                                 </Suspense>
@@ -1273,10 +1273,11 @@ const ModelViewer = ({
                 <fog attach="fog" args={['#0b1220', 8, 80]} />
 
                 <Suspense fallback={<Loader />}>
-                    <WarehouseEnvironment 
-                        floorY={(-((truckType?.height || 275) * 0.01) / 2) - 0.85} 
-                        showFlags={true} 
+                    <WarehouseEnvironment
+                        floorY={(-((truckType?.height || 275) * 0.01) / 2) - 0.85}
+                        showFlags={true}
                         onFlagClick={(code) => setSelectedCountry(code)}
+                        bannerUrls={publicConfig.banner || {}}
                     />
                     <TruckContent
                         truckType={truckType}
