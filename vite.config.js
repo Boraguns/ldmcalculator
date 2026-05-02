@@ -8,7 +8,7 @@ export default defineConfig({
         react(),
         VitePWA({
             registerType: 'autoUpdate',
-            includeAssets: ['favicon.png', 'ldm-logo.png'],
+            includeAssets: ['src/favicon.png'],
             manifest: {
                 name: 'LDM Calculator',
                 short_name: 'LDM Calc',
@@ -20,13 +20,13 @@ export default defineConfig({
                 start_url: '/',
                 icons: [
                     {
-                        src: '/src/ldm-logo.png', // Note: Ideally move to public/pwa-192x192.png
+                        src: '/src/favicon.png',
                         sizes: '192x192',
                         type: 'image/png',
                         purpose: 'any maskable'
                     },
                     {
-                        src: '/src/ldm-logo.png', // Note: Ideally move to public/pwa-512x512.png
+                        src: '/src/favicon.png',
                         sizes: '512x512',
                         type: 'image/png',
                         purpose: 'any maskable'
