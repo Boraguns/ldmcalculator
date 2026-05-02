@@ -143,7 +143,9 @@
     "rebalance": "Réempiler équilibré",
     "rebalanceNoOp": "Aucune amélioration supplémentaire de l'équilibre n'est géométriquement possible pour cette charge (charge mono-produit avec reste asymétrique de la longueur de la remorque).",
     "addStanga": "Ajouter une barre",
-    "stangaModeActive": "Cliquer sur la charge"
+    "stangaModeActive": "Cliquer sur la charge",
+    "addSpanzet": "Ajouter une sangle",
+    "spanzetModeActive": "Cliquer sur la charge"
   },
   "viewer": {
     "iso": "Isométrique",

@@ -5,7 +5,7 @@ import '../input-style.css';
 import StepLoader from './StepLoader';
 import { useT, LanguageSwitcher } from '../i18n/LanguageContext';
 
-const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mode = 'truck', customSpecs = null, addStangaMode = false, onToggleStangaMode, stangaCount = 0 }) => {
+const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mode = 'truck', customSpecs = null, addStangaMode = false, onToggleStangaMode, stangaCount = 0, addSpanzetMode = false, onToggleSpanzetMode, spanzetCount = 0 }) => {
     const { t } = useT();
     const [step, setStep] = useState(1);
     const [truckType, setTruckType] = useState(null); // 'standard' or 'mega'
@@ -673,27 +673,48 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                         </div>
                     )}
 
-                    {/* Manual Štanga add toggle — when active, clicking on any
-                        cargo item in the 3D scene attaches a horizontal load
-                        bar to its rear face. */}
-                    {onToggleStangaMode && (
-                        <button
-                            className="ai-btn"
-                            onClick={onToggleStangaMode}
-                            style={{
-                                marginTop: '1.2rem',
-                                padding: '2px',
-                                height: '40px',
-                                width: '100%',
-                                background: addStangaMode
-                                    ? 'linear-gradient(to top, #f59e0b, #fbbf24, #f59e0b)'
-                                    : undefined
-                            }}
-                        >
-                            <div className="ai-btn-inner" style={{ padding: '0 14px', height: '100%', fontSize: '0.85rem', gap: '8px', justifyContent: 'center' }}>
-                                {addStangaMode ? `✓ ${t('step3.stangaModeActive')} (${stangaCount})` : `🔧 ${t('step3.addStanga')}`}
-                            </div>
-                        </button>
+                    {/* Manual Štanga + Spanzet add toggles — when active,
+                        clicking a cargo item attaches the chosen restraint.
+                        Modes are mutually exclusive at the App level. */}
+                    {(onToggleStangaMode || onToggleSpanzetMode) && (
+                        <div style={{ display: 'flex', gap: '8px', marginTop: '1.2rem' }}>
+                            {onToggleStangaMode && (
+                                <button
+                                    className="ai-btn"
+                                    onClick={onToggleStangaMode}
+                                    style={{
+                                        padding: '2px',
+                                        height: '40px',
+                                        flex: 1,
+                                        background: addStangaMode
+                                            ? 'linear-gradient(to top, #f59e0b, #fbbf24, #f59e0b)'
+                                            : undefined
+                                    }}
+                                >
+                                    <div className="ai-btn-inner" style={{ padding: '0 12px', height: '100%', fontSize: '0.8rem', gap: '6px', justifyContent: 'center' }}>
+                                        {addStangaMode ? `✓ ${t('step3.stangaModeActive')} (${stangaCount})` : `🔧 ${t('step3.addStanga')}`}
+                                    </div>
+                                </button>
+                            )}
+                            {onToggleSpanzetMode && (
+                                <button
+                                    className="ai-btn"
+                                    onClick={onToggleSpanzetMode}
+                                    style={{
+                                        padding: '2px',
+                                        height: '40px',
+                                        flex: 1,
+                                        background: addSpanzetMode
+                                            ? 'linear-gradient(to top, #7e22ce, #a855f7, #7e22ce)'
+                                            : undefined
+                                    }}
+                                >
+                                    <div className="ai-btn-inner" style={{ padding: '0 12px', height: '100%', fontSize: '0.8rem', gap: '6px', justifyContent: 'center' }}>
+                                        {addSpanzetMode ? `✓ ${t('step3.spanzetModeActive')} (${spanzetCount})` : `🪢 ${t('step3.addSpanzet')}`}
+                                    </div>
+                                </button>
+                            )}
+                        </div>
                     )}
 
                     <div className="detailed-report" style={{ marginTop: '1.2rem' }}>

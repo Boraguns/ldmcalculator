@@ -143,7 +143,9 @@
     "rebalance": "Dengeli Yeniden İstifle",
     "rebalanceNoOp": "Bu yük için daha fazla denge iyileştirmesi geometrik olarak mümkün değil (büyük ihtimalle tek tip ürün ve dorse uzunluğunun asimetrik artığı sebebiyle).",
     "addStanga": "Ştanga Ekle",
-    "stangaModeActive": "Eklemek için yüke tıkla"
+    "stangaModeActive": "Eklemek için yüke tıkla",
+    "addSpanzet": "Spanzet Ekle",
+    "spanzetModeActive": "Eklemek için yüke tıkla"
   },
   "viewer": {
     "iso": "İzometrik",

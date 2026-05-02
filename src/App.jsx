@@ -24,6 +24,8 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
     const [lastInput, setLastInput] = useState(null); // {truck, products} for rebalance
     const [addStangaMode, setAddStangaMode] = useState(false);
     const [stangas, setStangas] = useState([]); // [{itemIndex}]
+    const [addSpanzetMode, setAddSpanzetMode] = useState(false);
+    const [spanzets, setSpanzets] = useState([]); // [{itemIndex}]
     const navigate = useNavigate();
 
     const isTrain = mode === 'train';
@@ -146,7 +148,9 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
                 setLastInput({ truck: actualTruck, products });
                 setPackedItems(finalized.placedItems);
                 setStangas([]); // reset manual ştangas on new pack
+                setSpanzets([]);
                 setAddStangaMode(false);
+                setAddSpanzetMode(false);
                 return finalized;
             } else {
                 alert(t('wizard.notFitErr'));
@@ -158,6 +162,26 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
             alert(t('wizard.errorOccurred'));
         }
         return null;
+    };
+
+    // Find the topmost item in the same column as packedItems[i] (same x,y footprint).
+    const topmostInColumn = (items, i) => {
+        const it = items[i];
+        if (!it) return i;
+        let bestIdx = i;
+        let bestZ = it.position.z;
+        for (let k = 0; k < items.length; k++) {
+            const p = items[k];
+            if (p.position.x === it.position.x &&
+                p.position.y === it.position.y &&
+                p.dimensions.length === it.dimensions.length &&
+                p.dimensions.width === it.dimensions.width &&
+                p.position.z > bestZ) {
+                bestZ = p.position.z;
+                bestIdx = k;
+            }
+        }
+        return bestIdx;
     };
 
     const handleHover = (item, x, y) => {
@@ -343,14 +367,27 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
                         addStangaMode={addStangaMode}
                         stangas={stangas}
                         onAddStanga={(idx) => {
-                            // Toggle: if a stanga already exists for this item, remove it; else add.
+                            // Find the topmost item in this column so the bar
+                            // attaches at the top of the stack, not in between.
+                            const topIdx = topmostInColumn(packedItems, idx);
                             setStangas(prev => {
-                                const exists = prev.findIndex(s => s.itemIndex === idx);
+                                const exists = prev.findIndex(s => s.itemIndex === topIdx);
                                 if (exists >= 0) return prev.filter((_, i) => i !== exists);
-                                return [...prev, { itemIndex: idx }];
+                                return [...prev, { itemIndex: topIdx }];
                             });
                         }}
                         onRemoveStanga={(si) => setStangas(prev => prev.filter((_, i) => i !== si))}
+                        addSpanzetMode={addSpanzetMode}
+                        spanzets={spanzets}
+                        onAddSpanzet={(idx) => {
+                            const topIdx = topmostInColumn(packedItems, idx);
+                            setSpanzets(prev => {
+                                const exists = prev.findIndex(s => s.itemIndex === topIdx);
+                                if (exists >= 0) return prev.filter((_, i) => i !== exists);
+                                return [...prev, { itemIndex: topIdx }];
+                            });
+                        }}
+                        onRemoveSpanzet={(si) => setSpanzets(prev => prev.filter((_, i) => i !== si))}
                     />
 
                     {/* SCREENSHOT BUTTON */}
@@ -454,6 +491,8 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
                         }}>
                             {hoveredItem.item.__stanga ? (
                                 <div style={{ fontWeight: 600 }}>🔧 Ştanga</div>
+                            ) : hoveredItem.item.__spanzet ? (
+                                <div style={{ fontWeight: 600 }}>🪢 Spanzet</div>
                             ) : (
                                 <>
                                     <div>{hoveredItem.item.name && !String(hoveredItem.item.name).startsWith('#') ? hoveredItem.item.name : `${t('viewer.product')} #${hoveredItem.item.id}`}</div>
@@ -475,8 +514,11 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
                 onClearPacked={handleClearPacked}
                 mode={mode}
                 addStangaMode={addStangaMode}
-                onToggleStangaMode={() => setAddStangaMode(v => !v)}
+                onToggleStangaMode={() => { setAddStangaMode(v => !v); setAddSpanzetMode(false); }}
                 stangaCount={stangas.length}
+                addSpanzetMode={addSpanzetMode}
+                onToggleSpanzetMode={() => { setAddSpanzetMode(v => !v); setAddStangaMode(false); }}
+                spanzetCount={spanzets.length}
             />
 
             {/* SCREENSHOT MODAL */}

@@ -144,7 +144,9 @@
     "rebalance": "Ausgewogen neu stapeln",
     "rebalanceNoOp": "Eine weitere Verbesserung der Balance ist für diese Ladung geometrisch nicht möglich (vermutlich Single-Produkt-Ladung mit asymmetrischem Rest in der Trailerlänge).",
     "addStanga": "Ladebalken hinzufügen",
-    "stangaModeActive": "Klick auf Ladung"
+    "stangaModeActive": "Klick auf Ladung",
+    "addSpanzet": "Zurrgurt hinzufügen",
+    "spanzetModeActive": "Klick auf Ladung"
   },
   "viewer": {
     "iso": "Isometrisch",

@@ -917,7 +917,7 @@ const WarehouseEnvironment = ({ floorY, showFlags = true, onFlagClick }) => {
 };
 
 
-const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck', addStangaMode = false, stangas = [], onAddStanga, onRemoveStanga }) => {
+const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck', addStangaMode = false, stangas = [], onAddStanga, onRemoveStanga, addSpanzetMode = false, spanzets = [], onAddSpanzet, onRemoveSpanzet }) => {
     const scaleFactor = 0.01;
     const isTrain = mode === 'train';
     const isPlane = mode === 'plane';
@@ -1048,9 +1048,8 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck', addStan
                             onHover(null);
                         }}
                         onClick={(e) => {
-                            if (!addStangaMode || !onAddStanga) return;
-                            e.stopPropagation();
-                            onAddStanga(i, item);
+                            if (addStangaMode && onAddStanga) { e.stopPropagation(); onAddStanga(i, item); return; }
+                            if (addSpanzetMode && onAddSpanzet) { e.stopPropagation(); onAddSpanzet(i, item); return; }
                         }}
                     >
                         <boxGeometry args={[w, h, d]} />
@@ -1058,8 +1057,8 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck', addStan
                             color={color}
                             roughness={0.3}
                             metalness={0.1}
-                            emissive={addStangaMode ? '#fbbf24' : '#000'}
-                            emissiveIntensity={addStangaMode ? 0.15 : 0}
+                            emissive={addStangaMode ? '#fbbf24' : (addSpanzetMode ? '#a855f7' : '#000')}
+                            emissiveIntensity={(addStangaMode || addSpanzetMode) ? 0.15 : 0}
                         />
                         <lineSegments>
                             <edgesGeometry args={[new THREE.BoxGeometry(w, h, d)]} />
@@ -1074,6 +1073,49 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck', addStan
                 across the trailer width on the +X face (rear edge) of the chosen
                 item, at the item's vertical mid-height. Hovering shows a "Ştanga"
                 tooltip. Clicking again removes it. */}
+            {/* Spanzet (cargo strap / ratchet strap) — flat dark rubber band
+                wrapped over the top of the cargo, hanging slightly down each
+                side. Different look from the metal ştanga: low metalness,
+                high roughness, dark color. */}
+            {spanzets && spanzets.map((s, si) => {
+                const item = packedItems[s.itemIndex];
+                if (!item) return null;
+                const w = item.dimensions.length * scaleFactor;
+                const h = item.dimensions.height * scaleFactor;
+                const d = item.dimensions.width * scaleFactor;
+                const ix = (item.position.x * scaleFactor) - (tLen / 2) + (w / 2);
+                const iy = (item.position.z * scaleFactor) - (tHei / 2) + (h / 2) + 0.3;
+                const iz = (item.position.y * scaleFactor) - (tWid / 2) + (d / 2);
+                const strapW = 0.16; // visual band width
+                const overhang = 0.12; // hangs over each side
+                const totalLen = d + overhang * 2; // spans across item depth + a bit on each side
+                const hover = {
+                    onPointerOver: (e) => { e.stopPropagation(); onHover && onHover({ __spanzet: true, name: 'Spanzet' }, e.clientX, e.clientY); },
+                    onPointerOut:  (e) => { e.stopPropagation(); onHover && onHover(null); },
+                    onClick:       (e) => { e.stopPropagation(); onRemoveSpanzet && onRemoveSpanzet(si); }
+                };
+                return (
+                    <group key={`spanzet${si}`} position={[ix, iy + h / 2 + 0.005, iz]}>
+                        <mesh castShadow {...hover}>
+                            <boxGeometry args={[strapW, 0.02, totalLen]} />
+                            <meshStandardMaterial color="#1f2937" roughness={0.95} metalness={0.0} />
+                        </mesh>
+                        <mesh position={[0, -h / 2 - overhang / 2,  d / 2 + 0.001]} {...hover}>
+                            <boxGeometry args={[strapW, h + overhang, 0.02]} />
+                            <meshStandardMaterial color="#1f2937" roughness={0.95} metalness={0.0} />
+                        </mesh>
+                        <mesh position={[0, -h / 2 - overhang / 2, -d / 2 - 0.001]} {...hover}>
+                            <boxGeometry args={[strapW, h + overhang, 0.02]} />
+                            <meshStandardMaterial color="#1f2937" roughness={0.95} metalness={0.0} />
+                        </mesh>
+                        <mesh position={[0, 0.02, 0]} {...hover}>
+                            <boxGeometry args={[strapW * 1.25, 0.04, strapW * 1.6]} />
+                            <meshStandardMaterial color="#475569" roughness={0.5} metalness={0.4} />
+                        </mesh>
+                    </group>
+                );
+            })}
+
             {stangas && stangas.map((s, si) => {
                 const item = packedItems[s.itemIndex];
                 if (!item) return null;
@@ -1191,7 +1233,11 @@ const ModelViewer = ({
     addStangaMode = false,
     stangas = [],
     onAddStanga,
-    onRemoveStanga
+    onRemoveStanga,
+    addSpanzetMode = false,
+    spanzets = [],
+    onAddSpanzet,
+    onRemoveSpanzet
 }) => {
     const [selectedCountry, setSelectedCountry] = useState(null);
     const { t } = useT();
@@ -1229,6 +1275,10 @@ const ModelViewer = ({
                         stangas={stangas}
                         onAddStanga={onAddStanga}
                         onRemoveStanga={onRemoveStanga}
+                        addSpanzetMode={addSpanzetMode}
+                        spanzets={spanzets}
+                        onAddSpanzet={onAddSpanzet}
+                        onRemoveSpanzet={onRemoveSpanzet}
                     />
                 </Suspense>
 

@@ -143,7 +143,9 @@
     "rebalance": "Restack Balanced",
     "rebalanceNoOp": "No further balance improvement is geometrically possible for this load (likely a single-product cargo where the trailer length leaves an asymmetric remainder).",
     "addStanga": "Add Štanga (Load Bar)",
-    "stangaModeActive": "Click cargo to add/remove"
+    "stangaModeActive": "Click cargo to add/remove",
+    "addSpanzet": "Add Spanzet (Strap)",
+    "spanzetModeActive": "Click cargo to add/remove"
   },
   "viewer": {
     "iso": "Isometric",

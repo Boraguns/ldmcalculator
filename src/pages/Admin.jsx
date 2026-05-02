@@ -42,9 +42,29 @@ const Login = ({ onAuthed }) => {
     );
 };
 
+// All flag codes that the 3D scene currently displays. Source of truth is
+// ModelViewer.jsx → keep in sync if the wall grid changes.
+const FLAG_CODES = [
+    { code: 'tr', label: 'Türkiye' },           { code: 'de', label: 'Germany' },
+    { code: 'fr', label: 'France' },            { code: 'nl', label: 'Netherlands' },
+    { code: 'it', label: 'Italy' },             { code: 'be', label: 'Belgium' },
+    { code: 'es', label: 'Spain' },             { code: 'gb', label: 'United Kingdom' },
+    { code: 'at', label: 'Austria' },           { code: 'ch', label: 'Switzerland' },
+    { code: 'pl', label: 'Poland' },            { code: 'ro', label: 'Romania' },
+    { code: 'cz', label: 'Czech Republic' },    { code: 'se', label: 'Sweden' },
+    { code: 'no', label: 'Norway' },            { code: 'dk', label: 'Denmark' },
+    { code: 'gr', label: 'Greece' },            { code: 'pt', label: 'Portugal' },
+    { code: 'hu', label: 'Hungary' },           { code: 'bg', label: 'Bulgaria' },
+    { code: 'cn', label: 'China' },             { code: 'kz', label: 'Kazakhstan' },
+    { code: 'tm', label: 'Turkmenistan' },      { code: 'uz', label: 'Uzbekistan' },
+    { code: 'jp', label: 'Japan' },             { code: 'kr', label: 'South Korea' },
+    { code: 'in', label: 'India' },             { code: 'id', label: 'Indonesia' },
+    { code: 'vn', label: 'Vietnam' },           { code: 'th', label: 'Thailand' }
+];
+
 const FlagCompanies = () => {
     const [rows, setRows] = useState([]);
-    const [draft, setDraft] = useState({ country_code: '', name: '', description: '', logo_url: '', website: '', is_featured: false, sort_order: 0 });
+    const [draft, setDraft] = useState({ country_code: 'tr', name: '', description: '', logo_url: '', website: '', is_featured: false, sort_order: 0 });
     const load = async () => {
         const r = await fetch('/api/admin/flag-companies', { headers: auth() });
         const j = await r.json();
@@ -53,7 +73,7 @@ const FlagCompanies = () => {
     useEffect(() => { load(); }, []);
     const create = async () => {
         await fetch('/api/admin/flag-companies', { method: 'POST', headers: { ...auth(), 'Content-Type': 'application/json' }, body: JSON.stringify(draft) });
-        setDraft({ country_code: '', name: '', description: '', logo_url: '', website: '', is_featured: false, sort_order: 0 });
+        setDraft({ country_code: 'tr', name: '', description: '', logo_url: '', website: '', is_featured: false, sort_order: 0 });
         load();
     };
     const update = async (item) => {
@@ -70,7 +90,9 @@ const FlagCompanies = () => {
             <div style={cardS}>
                 <h3 style={{ color: '#f1f5f9', marginTop: 0 }}>Add new</h3>
                 <div style={{ display: 'grid', gap: 8, gridTemplateColumns: '120px 1fr 1fr 1fr 1fr 80px 80px auto' }}>
-                    <input style={inputS} placeholder="cc (tr/de/...)" value={draft.country_code} onChange={e => setDraft({ ...draft, country_code: e.target.value.toLowerCase() })} />
+                    <select style={inputS} value={draft.country_code} onChange={e => setDraft({ ...draft, country_code: e.target.value })}>
+                        {FLAG_CODES.map(f => <option key={f.code} value={f.code}>{f.code.toUpperCase()} — {f.label}</option>)}
+                    </select>
                     <input style={inputS} placeholder="Company name" value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} />
                     <input style={inputS} placeholder="Description" value={draft.description} onChange={e => setDraft({ ...draft, description: e.target.value })} />
                     <input style={inputS} placeholder="Logo URL" value={draft.logo_url} onChange={e => setDraft({ ...draft, logo_url: e.target.value })} />
@@ -84,7 +106,9 @@ const FlagCompanies = () => {
             </div>
             {rows.map(r => (
                 <div key={r.id} style={{ ...cardS, display: 'grid', gap: 8, gridTemplateColumns: '120px 1fr 1fr 1fr 1fr 80px 80px auto auto' }}>
-                    <input style={inputS} value={r.country_code} onChange={e => setRows(rs => rs.map(x => x.id === r.id ? { ...x, country_code: e.target.value } : x))} />
+                    <select style={inputS} value={r.country_code} onChange={e => setRows(rs => rs.map(x => x.id === r.id ? { ...x, country_code: e.target.value } : x))}>
+                        {FLAG_CODES.map(f => <option key={f.code} value={f.code}>{f.code.toUpperCase()} — {f.label}</option>)}
+                    </select>
                     <input style={inputS} value={r.name} onChange={e => setRows(rs => rs.map(x => x.id === r.id ? { ...x, name: e.target.value } : x))} />
                     <input style={inputS} value={r.description || ''} onChange={e => setRows(rs => rs.map(x => x.id === r.id ? { ...x, description: e.target.value } : x))} />
                     <input style={inputS} value={r.logo_url || ''} onChange={e => setRows(rs => rs.map(x => x.id === r.id ? { ...x, logo_url: e.target.value } : x))} />
