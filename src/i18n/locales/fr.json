@@ -107,7 +107,9 @@
     "color": "Couleur",
     "colorTitle": "Couleur de la caisse en 3D",
     "stackable": "Empilable",
-    "unstackable": "Non empilable"
+    "unstackable": "Non empilable",
+    "useTotalWeight": "Utiliser le poids total pour ce produit",
+    "totalWeightKg": "Poids total (kg)"
   },
   "step3": {
     "title": "Rapport de résultat",

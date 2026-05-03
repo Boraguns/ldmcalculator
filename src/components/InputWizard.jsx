@@ -28,7 +28,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
 
     // Initial product state
     const [products, setProducts] = useState([
-        { id: 1, name: '', length: '', width: '', height: '', weight: '', quantity: '', maxStack: 1, allowRotation: false, color: '', stackable: true }
+        { id: 1, name: '', length: '', width: '', height: '', weight: '', quantity: '', maxStack: 1, allowRotation: false, color: '', stackable: true, useTotalWeight: false, totalWeight: '' }
     ]);
 
     const handleResetAll = () => {
@@ -39,7 +39,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
         setTotalTons('');
         setTonnageInfo(null);
         setResultData(null);
-        setProducts([{ id: 1, name: '', length: '', width: '', height: '', weight: '', quantity: '', maxStack: 1, allowRotation: false, color: '', stackable: true }]);
+        setProducts([{ id: 1, name: '', length: '', width: '', height: '', weight: '', quantity: '', maxStack: 1, allowRotation: false, color: '', stackable: true, useTotalWeight: false, totalWeight: '' }]);
         if (onFullReset) onFullReset();
     };
 
@@ -100,7 +100,8 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
             id: newId,
             name: '',
             length: '', width: '', height: '', weight: '', quantity: sameSize ? '' : '1',
-            maxStack: 1, allowRotation: false, color: '', stackable: true
+            maxStack: 1, allowRotation: false, color: '', stackable: true,
+            useTotalWeight: false, totalWeight: ''
         }]);
     };
 
@@ -145,27 +146,25 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
         // If "sameSize" is true, we only care about the first product in the list
         const sourceProducts = sameSize ? [products[0]] : products;
 
-        // Tonnage-based reverse calc: derive quantity from totalTons / unitWeight
+        // Per-product tonnage normalization: when a product has the "use total
+        // weight" toggle on, derive the unit weight from totalWeight/quantity
+        // so the packer downstream only ever sees per-unit weight.
         let tonnageInfoLocal = null;
-        let workingProducts = sourceProducts;
-        if (byTonnage && sourceProducts.length === 1) {
-            const p = sourceProducts[0];
-            const unitKg = parseFloat(p.weight);
-            const totalKg = parseFloat(totalTons) * 1000;
-            if (!unitKg || unitKg <= 0 || !totalKg || totalKg <= 0) {
-                alert(t('wizard.invalid'));
-                return;
+        const workingProducts = sourceProducts.map(p => {
+            if (!p.useTotalWeight) return p;
+            const totalKg = parseFloat(p.totalWeight);
+            const qty = parseInt(p.quantity);
+            if (!totalKg || totalKg <= 0 || !qty || qty <= 0) return p; // let validator catch it
+            const unitKg = totalKg / qty;
+            // Surface a small summary for the first such product so step-3 can
+            // mention the derivation. Keeps backwards-compatible UI.
+            if (!tonnageInfoLocal) {
+                tonnageInfoLocal = { totalKg, unitKg, derivedQty: qty, perProduct: true, productId: p.id };
             }
-            const derivedQty = Math.floor(totalKg / unitKg);
-            if (derivedQty <= 0) {
-                alert(t('wizard.invalid'));
-                return;
-            }
-            workingProducts = [{ ...p, quantity: String(derivedQty) }];
-            tonnageInfoLocal = { totalKg, unitKg, derivedQty };
-        }
+            return { ...p, weight: String(unitKg) };
+        });
 
-        const validProducts = workingProducts.filter(p => p.length && p.width && p.height && p.quantity);
+        const validProducts = workingProducts.filter(p => p.length && p.width && p.height && p.quantity && p.weight);
         if (validProducts.length === 0) {
             alert(t('wizard.invalid'));
             return;
@@ -337,24 +336,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                 </label>
             </div>
 
-            {/* Tonnage mode toggle — only when there is exactly one product (sameSize forces single, or no 2nd added). */}
-            {(sameSize || products.length === 1) && (
-                <div className="checkbox-group" style={{ marginBottom: '15px', padding: '0.5rem' }}>
-                    <label className="pulse-checkbox-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', width: 'auto' }}>
-                        <div className="pulse-checkbox-wrapper">
-                            <input
-                                type="checkbox"
-                                checked={byTonnage}
-                                onChange={(e) => setByTonnage(e.target.checked)}
-                            />
-                            <div className="checkmark"></div>
-                        </div>
-                        <span className="checkbox-label" style={{ fontSize: '0.9rem', color: '#cbd5e1', fontWeight: '500' }}>
-                            {t('wizard.byTonnage')}
-                        </span>
-                    </label>
-                </div>
-            )}
+{/* Per-product tonnage is now toggled inside each product card. */}
 
             <div className="product-list" ref={productListRef} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {products.map((product, index) => {
@@ -492,10 +474,17 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                                     </div>
                                 </div>
                                 <div className="ai-input-group">
-                                    <span className="ai-input-label">{t('wizard.weight')}</span>
-                                    <div className="ai-input-container">
+                                    <span className="ai-input-label">
+                                        {product.useTotalWeight ? t('wizard.totalWeightKg') : t('wizard.weight')}
+                                    </span>
+                                    <div className="ai-input-container" style={{ borderColor: product.useTotalWeight ? '#3b82f6' : 'transparent' }}>
                                         <div className="ai-input-inner">
-                                            <input type="number" placeholder="kg" value={product.weight} onChange={(e) => updateProduct(product.id, 'weight', e.target.value)} />
+                                            <input
+                                                type="number"
+                                                placeholder="kg"
+                                                value={product.useTotalWeight ? product.totalWeight : product.weight}
+                                                onChange={(e) => updateProduct(product.id, product.useTotalWeight ? 'totalWeight' : 'weight', e.target.value)}
+                                            />
                                         </div>
                                     </div>
                                 </div>
@@ -510,26 +499,26 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                                         </div>
                                     </div>
                                 </div>
-                                {byTonnage && (sameSize || products.length === 1) ? (
-                                    <div className="ai-input-group">
-                                        <span className="ai-input-label">{t('wizard.totalWeightTons')}</span>
-                                        <div className="ai-input-container" style={{ borderColor: '#3b82f6' }}>
-                                            <div className="ai-input-inner">
-                                                <input type="number" step="0.01" placeholder="t" value={totalTons} onChange={(e) => setTotalTons(e.target.value)} />
-                                            </div>
+                                <div className="ai-input-group">
+                                    <span className="ai-input-label">{t('wizard.quantity')}</span>
+                                    <div className="ai-input-container" style={{ borderColor: sameSize ? '#3b82f6' : 'transparent' }}>
+                                        <div className="ai-input-inner">
+                                            <input type="number" placeholder="#" value={product.quantity} onChange={(e) => updateProduct(product.id, 'quantity', e.target.value)} />
                                         </div>
                                     </div>
-                                ) : (
-                                    <div className="ai-input-group">
-                                        <span className="ai-input-label">{t('wizard.quantity')}</span>
-                                        <div className="ai-input-container" style={{ borderColor: sameSize ? '#3b82f6' : 'transparent' }}>
-                                            <div className="ai-input-inner">
-                                                <input type="number" placeholder="#" value={product.quantity} onChange={(e) => updateProduct(product.id, 'quantity', e.target.value)} />
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
+                                </div>
                             </div>
+                            {/* Per-product "use total weight" toggle. When checked the
+                                weight input above accepts kg-total instead of kg-per-unit;
+                                the algorithm derives unit weight = total / quantity. */}
+                            <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginTop: '8px', fontSize: '0.8rem', color: '#94a3b8' }}>
+                                <input
+                                    type="checkbox"
+                                    checked={!!product.useTotalWeight}
+                                    onChange={(e) => updateProduct(product.id, 'useTotalWeight', e.target.checked)}
+                                />
+                                {t('wizard.useTotalWeight')}
+                            </label>
                         </div>
                     );
                 })}

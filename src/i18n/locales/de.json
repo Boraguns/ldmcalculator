@@ -108,7 +108,9 @@
     "color": "Farbe",
     "colorTitle": "Kistenfarbe in der 3D-Vorschau",
     "stackable": "Stapelbar",
-    "unstackable": "Nicht stapelbar"
+    "unstackable": "Nicht stapelbar",
+    "useTotalWeight": "Gesamtgewicht für dieses Produkt verwenden",
+    "totalWeightKg": "Gesamtgewicht (kg)"
   },
   "step3": {
     "title": "Ergebnisbericht",

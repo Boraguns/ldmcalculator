@@ -107,7 +107,9 @@
     "color": "Renk",
     "colorTitle": "3D önizlemede koli rengi",
     "stackable": "İstiflenebilir",
-    "unstackable": "İstiflenemez"
+    "unstackable": "İstiflenemez",
+    "useTotalWeight": "Bu ürün için toplam ağırlık gir",
+    "totalWeightKg": "Toplam ağırlık (kg)"
   },
   "step3": {
     "title": "Sonuç Raporu",

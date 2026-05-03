@@ -742,6 +742,23 @@ const Admin = () => {
     const [user, setUser] = useState(null);
     const [tab, setTab] = useState('flags');
 
+    // Global CSS pins body to overflow:hidden / height:100vh for the 3D viewer
+    // pages. The admin dashboard is content-heavy and needs native scrolling,
+    // so we restore body overflow while mounted and revert on unmount.
+    useEffect(() => {
+        const prevBodyOv = document.body.style.overflow;
+        const prevBodyH  = document.body.style.height;
+        const prevHtmlOv = document.documentElement.style.overflow;
+        document.body.style.overflow = 'auto';
+        document.body.style.height = 'auto';
+        document.documentElement.style.overflow = 'auto';
+        return () => {
+            document.body.style.overflow = prevBodyOv;
+            document.body.style.height = prevBodyH;
+            document.documentElement.style.overflow = prevHtmlOv;
+        };
+    }, []);
+
     useEffect(() => {
         const tok = localStorage.getItem(TOKEN_KEY);
         if (tok) {

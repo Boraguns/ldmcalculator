@@ -107,7 +107,9 @@
     "color": "Color",
     "colorTitle": "Box color in 3D preview",
     "stackable": "Stackable",
-    "unstackable": "Unstackable"
+    "unstackable": "Unstackable",
+    "useTotalWeight": "Use total weight for this product",
+    "totalWeightKg": "Total weight (kg)"
   },
   "step3": {
     "title": "Result Report",

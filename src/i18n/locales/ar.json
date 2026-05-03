@@ -24,35 +24,27 @@
       "intro": "يساعد LDMCalculator فرق الخدمات اللوجستية على تخطيط كيفية احتواء الشحنات والمنصات والصناديق في الشاحنات والحاويات والطائرات والسفن. تصور الحمولة في 3D واعثر على نمط التكديس الأمثل وقلل من الفاقد.",
       "howTitle": "كيف يعمل",
       "how1": "اختر نوع المركبة وحجم المقطورة أو الحاوية المناسب لشحنتك.",
-      "how2": "أدخل طول وعرض وارتفاع ووزن وكمية وقابلية تكديس كل منتج — أو انتقل إلى وضع الحمولة الإجمالية.",
-      "how3": "احصل على خطة 3D فورية مع أمتار التحميل (LDM) وكفاءة الحجم وتفصيل لكل عنصر.",
+      "how2": "أدخل طول وعرض وارتفاع ووزن وكمية وقابلية تكديس كل منتج — أو انتقل إلى وضع الحمولة الإجمالية للمنتج الواحد.",
+      "how3": "احصل على خطة 3D فورية مع أمتار التحميل (LDM) وكفاءة الحجم وتفصيل لكل عنصر يمكنك التقاطه ومشاركته.",
       "whyTitle": "لماذا تستخدم LDMCalculator",
-      "whyBody": "مصمم للشاحنين ومنفذي الشحن وشركات اللوجستيات. محرك التعبئة ثلاثي الأبعاد يقلل من الرحلات والوقود والوقت.",
+      "whyBody": "مصمم للشاحنين ومنفذي الشحن وشركات اللوجستيات. محرك التعبئة ثلاثي الأبعاد يتعامل مع المنتجات المختلطة وقواعد التدوير وحدود الوزن وتكديس المنتجات المتعددة، ويقلل من الرحلات والوقود ووقت التخطيط.",
       "faqTitle": "الأسئلة الشائعة",
       "faq": [
         {
-          "q": "What is LDM (loading meter) and how is it calculated?",
-          "a": "Loading meter (LDM) represents one full meter of trailer length used at full width and stackable height. LDMCalculator computes it from the longest used position along your trailer divided by 100 cm — so 6.80m of cargo across a 13.60m trailer is 6.80 LDM."
+          "q": "ما هو LDM (متر التحميل)؟",
+          "a": "LDM هو متر طولي على أرضية المقطورة. تستخدمه شركات الشحن البري الأوروبية لتسعير الشحنات الجزئية بناءً على المساحة الأرضية المستخدمة."
         },
         {
-          "q": "How does the 3D bin-packing algorithm choose a layout?",
-          "a": "It places larger and heavier items first, tries each rotation you allow, and fills gaps using a greedy guillotine strategy. Stack height is capped per SKU and total trailer weight is enforced."
+          "q": "هل LDMCalculator مجاني؟",
+          "a": "نعم. الحاسبة بأكملها مجانية للاستخدام في المتصفح. لا حاجة للتسجيل."
         },
         {
-          "q": "Can I optimize loading by total tonnage instead of unit count?",
-          "a": "Yes. On the product step, enable \"Calculate by total tonnage\" and enter the unit weight plus the total tons. The system derives quantity automatically and reports how many tons fit and how many are left over."
+          "q": "هل تخزن بيانات شحنتي؟",
+          "a": "لا. تعمل التعبئة بالكامل في متصفحك. لا يتم إرسال أي بيانات منتج إلى خوادمنا ما لم تستخدم نموذج اتصال."
         },
         {
-          "q": "Does it consider weight distribution across the axles?",
-          "a": "Yes. Heavy SKUs are placed lower and toward the front of the trailer, and the engine refuses to exceed the maximum payload of the selected trailer or container."
-        },
-        {
-          "q": "Which trailers and containers are supported?",
-          "a": "Standard and Mega tilt trailers, closed box trailers, custom-sized trailers, 20ft / 40ft / 40HC sea containers, rail containers and the most common air ULDs (PMC/PLA and high cube)."
-        },
-        {
-          "q": "Is LDMCalculator free?",
-          "a": "Yes — the core 3D loading calculator is free for unlimited use directly in your browser."
+          "q": "ما الذي يجعل التكديس قابلاً للضبط؟",
+          "a": "أنت تتحكم في الحد الأقصى لارتفاع التكديس لكل منتج، وتسمح بالتدوير 90°، وتضع علامة على العناصر كقابلة أو غير قابلة للتكديس، ويتجنب المحرك التكديس بين المنتجات للسلع غير القابلة للتكديس."
         }
       ]
     }
@@ -107,7 +99,9 @@
     "color": "اللون",
     "colorTitle": "لون الصندوق في 3D",
     "stackable": "قابل للتكديس",
-    "unstackable": "غير قابل للتكديس"
+    "unstackable": "غير قابل للتكديس",
+    "useTotalWeight": "استخدم الوزن الإجمالي لهذا المنتج",
+    "totalWeightKg": "الوزن الإجمالي (كجم)"
   },
   "step3": {
     "title": "النتائج",
@@ -139,9 +133,9 @@
     "axleBalance": "توازن حمل المحور",
     "front": "أمام",
     "rear": "خلف",
-    "balanceWarn": "توزيع الحمولة يتجاوز حد 60/40. ضع الصناديق الثقيلة بالقرب من البن المركزي (الأمام).",
+    "balanceWarn": "توزيع الحمولة يتجاوز حد 60/40. وفقاً لتوجيه الاتحاد الأوروبي 96/53/EC وقواعد المرور، يمثل عدم توازن المحور خطراً على السلامة. ضع الصناديق الثقيلة بالقرب من البن المركزي (الأمام).",
     "rebalance": "إعادة تكديس متوازن",
-    "rebalanceNoOp": "لا يمكن تحسين التوازن أكثر من ذلك هندسياً.",
+    "rebalanceNoOp": "لا يمكن تحسين التوازن أكثر من ذلك هندسياً لهذه الحمولة.",
     "addStanga": "إضافة شطنغة",
     "stangaModeActive": "انقر على الشحنة للإضافة/الإزالة",
     "addSpanzet": "إضافة شريط ربط",
@@ -159,7 +153,7 @@
     "product": "المنتج",
     "shippers": "الناقلون الموصى بهم لـ {country}",
     "featured": "مميّز",
-    "etnalogDesc": "حلول النقل البري إلى {country}.",
+    "etnalogDesc": "حلول النقل البري الدولية إلى {country}.",
     "moreShippers": "Want to list more carriers? Get in touch.",
     "screenshot": "لقطة شاشة",
     "saveScreenshot": "حفظ لقطة الشاشة",
@@ -170,19 +164,19 @@
   },
   "truckTypes": {
     "type": {
-      "trailer": "Trailer",
-      "container": "Container",
+      "trailer": "دورس",
+      "container": "حاوية",
       "uld": "ULD"
     },
-    "standard": "Standard Trailer",
-    "mega": "Mega Trailer",
-    "closedBox": "Closed Box Trailer",
-    "custom": "Custom Size Trailer",
-    "customDims": "Set your own dimensions",
-    "standardCnt": "Standard Container",
-    "megaCnt": "Mega Container",
-    "standardUld": "Standard ULD (PMC/PLA)",
-    "megaUld": "High Volume ULD"
+    "standard": "دورس قياسي",
+    "mega": "دورس ميجا",
+    "closedBox": "صندوق مغلق",
+    "custom": "أبعاد مخصصة",
+    "customDims": "حدد الأبعاد",
+    "standardCnt": "حاوية قياسية",
+    "megaCnt": "حاوية ميجا",
+    "standardUld": "ULD قياسي",
+    "megaUld": "ULD ميجا"
   },
   "footer": {
     "company": "Company",

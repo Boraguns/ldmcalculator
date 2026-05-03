@@ -1021,6 +1021,10 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck', addStan
             )}
 
             {/* Placed Cargo Items */}
+            {/* When the load is large (>120 items), drop the per-item edge
+                wireframes and individual cast-shadows; they double the draw
+                calls and tank framerate. The boxes still read clearly thanks
+                to ambient/directional lighting. */}
             {packedItems.map((item, i) => {
                 const w = item.dimensions.length * scaleFactor;
                 const d = item.dimensions.width * scaleFactor;
@@ -1031,14 +1035,15 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck', addStan
                 const z = (item.position.y * scaleFactor) - (tWid / 2) + (d / 2);
 
                 const colors = ['#3b82f6', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
-                // Prefer a user-chosen color (from InputWizard) when present.
                 const color = item.color || colors[item.id % colors.length];
+                const heavyLoad = packedItems.length > 120;
+                const showEdges = packedItems.length <= 120;
 
                 return (
                     <mesh
                         key={i}
                         position={[x, y, z]}
-                        castShadow
+                        castShadow={!heavyLoad}
                         onPointerOver={(e) => {
                             e.stopPropagation();
                             onHover(item, e.clientX, e.clientY);
@@ -1060,10 +1065,10 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck', addStan
                             emissive={addStangaMode ? '#fbbf24' : (addSpanzetMode ? '#a855f7' : '#000')}
                             emissiveIntensity={(addStangaMode || addSpanzetMode) ? 0.15 : 0}
                         />
-                        <lineSegments>
+                        {showEdges && <lineSegments>
                             <edgesGeometry args={[new THREE.BoxGeometry(w, h, d)]} />
                             <lineBasicMaterial color="rgba(0,0,0,0.5)" />
-                        </lineSegments>
+                        </lineSegments>}
                     </mesh>
                 )
             })}
@@ -1260,11 +1265,12 @@ const ModelViewer = ({
                 id="truck-canvas"
                 shadows
                 camera={{ fov: 38, position: [12, 12, 15] }}
-                gl={{ preserveDrawingBuffer: true }}
+                gl={{ preserveDrawingBuffer: true, antialias: true, powerPreference: 'high-performance' }}
+                dpr={[1, 1.5]}
             >
                 {/* Warehouse lighting (brighter for industrial indoor look) */}
                 <ambientLight intensity={0.85} />
-                <directionalLight position={[15, 25, 15]} intensity={2.0} castShadow shadow-mapSize={[2048, 2048]} />
+                <directionalLight position={[15, 25, 15]} intensity={2.0} castShadow shadow-mapSize={[1024, 1024]} />
                 <directionalLight position={[-15, 10, -5]} intensity={0.65} />
                 <pointLight position={[0, 8, 0]} intensity={0.5} />
 
