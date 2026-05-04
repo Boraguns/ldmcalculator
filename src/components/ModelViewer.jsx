@@ -1036,8 +1036,8 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck', addStan
 
                 const colors = ['#3b82f6', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
                 const color = item.color || colors[item.id % colors.length];
-                const heavyLoad = packedItems.length > 120;
-                const showEdges = packedItems.length <= 120;
+                const heavyLoad = packedItems.length > 400;
+                const showEdges = packedItems.length <= 600;
 
                 return (
                     <mesh

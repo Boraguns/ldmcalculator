@@ -557,10 +557,25 @@ export class BinPacking3D {
             const heavySide = delta > 0 ? 'front' : 'rear';
             const lightSide = delta > 0 ? 'rear' : 'front';
 
-            // Pick a heavy-side bottom-row item that, if moved, has the largest
-            // |weight| → biggest balance shift per move.
+            // Pick a heavy-side TOP-OF-STACK item, sorted by weight descending.
+            // We must NOT move a bottom item that has anything stacked on it,
+            // because the stack above would be left floating in mid-air.
+            // "Top of stack" = no other placed item directly above this one.
+            const hasItemAbove = (it) => {
+                const myTop = it.position.z + it.dimensions.height;
+                for (const p of this.placedItems) {
+                    if (p === it) continue;
+                    if (Math.abs(p.position.z - myTop) > 0.001) continue;
+                    const ox = !(it.position.x + it.dimensions.length <= p.position.x ||
+                                  p.position.x + p.dimensions.length <= it.position.x);
+                    const oy = !(it.position.y + it.dimensions.width  <= p.position.y ||
+                                  p.position.y + p.dimensions.width  <= it.position.y);
+                    if (ox && oy) return true;
+                }
+                return false;
+            };
             const candidates = this.placedItems
-                .filter(it => isOnSide(it, heavySide) && it.position.z === 0)
+                .filter(it => isOnSide(it, heavySide) && !hasItemAbove(it))
                 .sort((a, b) => (b.weight || 0) - (a.weight || 0));
 
             let moved = false;
