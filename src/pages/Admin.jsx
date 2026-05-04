@@ -600,6 +600,179 @@ const SiteAssets = () => {
     );
 };
 
+const FAQManager = () => {
+    const [lang, setLang] = useState('tr');
+    const [items, setItems] = useState([]);
+    const [draft, setDraft] = useState({ question: '', answer: '', sort_order: 0 });
+    const [busy, setBusy] = useState(false);
+    const [feedback, setFeedback] = useState(null);
+
+    const load = async (l) => {
+        const r = await fetch(`/api/admin/faq?lang=${l}`, { headers: auth() });
+        if (!r.ok) { setItems([]); return; }
+        const j = await r.json();
+        setItems(j.items || []);
+    };
+    useEffect(() => { load(lang); }, [lang]);
+
+    const create = async () => {
+        if (!draft.question.trim() || !draft.answer.trim()) {
+            setFeedback({ type: 'err', text: 'Soru ve cevap zorunlu' });
+            return;
+        }
+        setBusy(true);
+        try {
+            const r = await fetch('/api/admin/faq', {
+                method: 'POST',
+                headers: { ...auth(), 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    lang,
+                    question: draft.question.trim(),
+                    answer: draft.answer.trim(),
+                    sort_order: parseInt(draft.sort_order) || items.length
+                })
+            });
+            const j = await r.json().catch(() => ({}));
+            if (!r.ok) throw new Error(j.error || `HTTP ${r.status}`);
+            setDraft({ question: '', answer: '', sort_order: 0 });
+            await load(lang);
+            setFeedback({ type: 'ok', text: 'Eklendi' });
+            setTimeout(() => setFeedback(null), 2500);
+        } catch (e) {
+            setFeedback({ type: 'err', text: e.message });
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    const update = async (item, patch) => {
+        const r = await fetch('/api/admin/faq', {
+            method: 'PATCH',
+            headers: { ...auth(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: item.id, ...patch })
+        });
+        if (!r.ok) { alert('Güncellenemedi'); return; }
+        load(lang);
+    };
+
+    const remove = async (id) => {
+        if (!confirm('Bu SSS kaydını silmek istediğinize emin misiniz?')) return;
+        await fetch(`/api/admin/faq?id=${id}`, { method: 'DELETE', headers: auth() });
+        load(lang);
+    };
+
+    const moveSort = async (item, delta) => {
+        await update(item, { sort_order: (item.sort_order || 0) + delta });
+    };
+
+    return (
+        <div>
+            <div style={{ ...cardS, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                <strong style={{ color: '#f1f5f9' }}>Dil:</strong>
+                {['tr', 'en', 'de', 'ru', 'fr', 'ar'].map(l => (
+                    <button key={l} onClick={() => setLang(l)} className="ai-btn" style={{ height: 32 }}>
+                        <div className="ai-btn-inner" style={{
+                            padding: '0 14px',
+                            background: lang === l ? '#3b82f6' : 'transparent',
+                            color: 'white',
+                            fontSize: '0.85rem',
+                            textTransform: 'uppercase'
+                        }}>{l}</div>
+                    </button>
+                ))}
+                <span style={{ color: '#94a3b8', fontSize: '0.8rem', marginLeft: 'auto' }}>
+                    {items.length} kayıt
+                </span>
+            </div>
+
+            <div style={cardS}>
+                <h3 style={{ color: '#f1f5f9', marginTop: 0 }}>Yeni SSS Ekle</h3>
+                <input
+                    style={{ ...inputS, marginBottom: 8 }}
+                    placeholder="Soru başlığı (örn. LDM nedir?)"
+                    value={draft.question}
+                    onChange={e => setDraft({ ...draft, question: e.target.value })}
+                />
+                <textarea
+                    style={{ ...inputS, marginBottom: 8, minHeight: 90, resize: 'vertical' }}
+                    placeholder="Cevap metni"
+                    value={draft.answer}
+                    onChange={e => setDraft({ ...draft, answer: e.target.value })}
+                />
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <input
+                        type="number"
+                        style={{ ...inputS, width: 120 }}
+                        placeholder="Sıra"
+                        value={draft.sort_order}
+                        onChange={e => setDraft({ ...draft, sort_order: e.target.value })}
+                    />
+                    <button onClick={create} disabled={busy} className="ai-btn ai-btn-primary" style={{ height: 36, opacity: busy ? 0.5 : 1 }}>
+                        <div className="ai-btn-inner" style={{ background: '#10b981', color: 'white' }}>
+                            {busy ? '...' : '+ Ekle'}
+                        </div>
+                    </button>
+                    {feedback && (
+                        <span style={{ color: feedback.type === 'ok' ? '#10b981' : '#ef4444', fontSize: '0.85rem' }}>
+                            {feedback.type === 'ok' ? '✓ ' : '⚠ '}{feedback.text}
+                        </span>
+                    )}
+                </div>
+            </div>
+
+            {items.length === 0 && (
+                <div style={{ ...cardS, color: '#64748b', textAlign: 'center' }}>
+                    Bu dilde kayıt yok. Boş bırakırsanız ana sayfada bundle JSON'daki varsayılan SSS gösterilir.
+                </div>
+            )}
+
+            {items.map((it, idx) => (
+                <div key={it.id} style={cardS}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                        <span style={{ color: '#94a3b8', fontSize: '0.78rem', fontFamily: 'monospace' }}>
+                            #{it.id} • sıra {it.sort_order} {!it.is_active && '• PASİF'}
+                        </span>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                            {idx > 0 && (
+                                <button onClick={() => moveSort(it, -1)} className="ai-btn" style={{ height: 28 }}>
+                                    <div className="ai-btn-inner" style={{ padding: '0 8px', fontSize: '0.75rem' }}>▲</div>
+                                </button>
+                            )}
+                            {idx < items.length - 1 && (
+                                <button onClick={() => moveSort(it, 1)} className="ai-btn" style={{ height: 28 }}>
+                                    <div className="ai-btn-inner" style={{ padding: '0 8px', fontSize: '0.75rem' }}>▼</div>
+                                </button>
+                            )}
+                            <button
+                                onClick={() => update(it, { is_active: !it.is_active })}
+                                className="ai-btn"
+                                style={{ height: 28 }}
+                            >
+                                <div className="ai-btn-inner" style={{ padding: '0 10px', fontSize: '0.75rem' }}>
+                                    {it.is_active ? 'Gizle' : 'Aktif'}
+                                </div>
+                            </button>
+                            <button onClick={() => remove(it.id)} className="ai-btn ai-btn-danger" style={{ height: 28 }}>
+                                <div className="ai-btn-inner" style={{ padding: '0 10px', fontSize: '0.75rem' }}>Sil</div>
+                            </button>
+                        </div>
+                    </div>
+                    <input
+                        style={{ ...inputS, marginBottom: 8, fontWeight: 600 }}
+                        defaultValue={it.question}
+                        onBlur={e => { if (e.target.value !== it.question) update(it, { question: e.target.value }); }}
+                    />
+                    <textarea
+                        style={{ ...inputS, minHeight: 80, resize: 'vertical' }}
+                        defaultValue={it.answer}
+                        onBlur={e => { if (e.target.value !== it.answer) update(it, { answer: e.target.value }); }}
+                    />
+                </div>
+            ))}
+        </div>
+    );
+};
+
 const ProductNameLogs = () => {
     const [rows, setRows] = useState([]);
     const [filter, setFilter] = useState('');
@@ -786,6 +959,7 @@ const Admin = () => {
                     ['banners',   'Banners'],
                     ['assets',    'Site Görselleri'],
                     ['site',      'Site Yönetimi'],
+                    ['faq',       'SSS (FAQ)'],
                     ['names',     'Ürün İsim Logları'],
                     ['contact',   'Contact'],
                     ['advertise', 'Advertise'],
@@ -801,6 +975,7 @@ const Admin = () => {
                 {tab === 'banners' && <Banners />}
                 {tab === 'assets'  && <SiteAssets />}
                 {tab === 'site'    && <SiteContent />}
+                {tab === 'faq'     && <FAQManager />}
                 {tab === 'names'   && <ProductNameLogs />}
                 {tab === 'contact' && <MessageList type="contact" columns={{
                     title: r => `${r.name} <${r.email}>${r.subject ? ' — ' + r.subject : ''}`,

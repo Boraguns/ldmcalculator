@@ -430,31 +430,40 @@ export class BinPacking3D {
      * front/rear weight split. Mutates this.placedItems in place.
      */
     rebalance() {
-        const halfX = this.container.length / 2;
+        // Target distribution: front 25% of trailer length carries 25% of
+        // weight; the remaining 75% length carries the rest. We use "rear"
+        // in variable names but it really means "everything outside the
+        // front zone" — middle and rear combined.
+        const frontZoneEnd = this.container.length * 0.25;
         const sumWeight = (items, side) => items.reduce((acc, it) => {
             const cx = it.position.x + it.dimensions.length / 2;
-            const isFront = cx < halfX;
-            if (side === 'front' && isFront) return acc + (it.weight || 0);
-            if (side === 'rear' && !isFront) return acc + (it.weight || 0);
+            const inFront = cx < frontZoneEnd;
+            if (side === 'front' && inFront)  return acc + (it.weight || 0);
+            if (side === 'rear'  && !inFront) return acc + (it.weight || 0);
             return acc;
         }, 0);
 
         let frontW = sumWeight(this.placedItems, 'front');
         let rearW = sumWeight(this.placedItems, 'rear');
-        const initialDiff = Math.abs(frontW - rearW);
+        const totalW0 = frontW + rearW;
+        const targetFrontW = totalW0 * 0.25;
+        const initialDiff = Math.abs(frontW - targetFrontW);
         let swapsMade = 0;
 
         // Iterative pair swap. Cap iterations to keep it bounded.
         const MAX_ITER = 500;
         for (let iter = 0; iter < MAX_ITER; iter++) {
-            const diff = frontW - rearW;
-            if (Math.abs(diff) / Math.max(1, frontW + rearW) <= 0.05) break; // <=5% gap is good enough
+            const total = frontW + rearW;
+            // delta > 0 → front has too much weight; need to move weight out.
+            // delta < 0 → front needs more weight.
+            const delta = frontW - (total * 0.25);
+            if (Math.abs(delta) / Math.max(1, total) <= 0.03) break; // within 3% of target
 
-            const heavySide = diff > 0 ? 'front' : 'rear';
-            const lightSide = diff > 0 ? 'rear'  : 'front';
+            const heavySide = delta > 0 ? 'front' : 'rear';
+            const lightSide = delta > 0 ? 'rear'  : 'front';
             const isOnSide = (it, side) => {
                 const cx = it.position.x + it.dimensions.length / 2;
-                return side === 'front' ? cx < halfX : cx >= halfX;
+                return side === 'front' ? cx < frontZoneEnd : cx >= frontZoneEnd;
             };
             const dimsKey = (it) => `${it.dimensions.length}x${it.dimensions.width}x${it.dimensions.height}`;
 
@@ -535,17 +544,18 @@ export class BinPacking3D {
         // that the original packer used, so collision-correctness is free.
         const isOnSide = (it, side) => {
             const cx = it.position.x + it.dimensions.length / 2;
-            return side === 'front' ? cx < halfX : cx >= halfX;
+            return side === 'front' ? cx < frontZoneEnd : cx >= frontZoneEnd;
         };
         const sumW = () => {
             frontW = sumWeight(this.placedItems, 'front');
             rearW  = sumWeight(this.placedItems, 'rear');
         };
         for (let r = 0; r < 200; r++) {
-            const diff = frontW - rearW;
-            if (Math.abs(diff) / Math.max(1, frontW + rearW) <= 0.05) break;
-            const heavySide = diff > 0 ? 'front' : 'rear';
-            const lightSide = diff > 0 ? 'rear' : 'front';
+            const total = frontW + rearW;
+            const delta = frontW - (total * 0.25);
+            if (Math.abs(delta) / Math.max(1, total) <= 0.03) break;
+            const heavySide = delta > 0 ? 'front' : 'rear';
+            const lightSide = delta > 0 ? 'rear' : 'front';
 
             // Pick a heavy-side bottom-row item that, if moved, has the largest
             // |weight| → biggest balance shift per move.
@@ -563,8 +573,8 @@ export class BinPacking3D {
 
                 // Search positions in the light side along x. Reuse corner
                 // points but constrained to lightSide x range.
-                const xMin = lightSide === 'front' ? 0 : halfX;
-                const xMax = lightSide === 'front' ? halfX : this.container.length;
+                const xMin = lightSide === 'front' ? 0 : frontZoneEnd;
+                const xMax = lightSide === 'front' ? frontZoneEnd : this.container.length;
                 const dims = cand.dimensions;
                 const xPoints = new Set([xMin]);
                 const yPoints = new Set([0]);
@@ -585,8 +595,8 @@ export class BinPacking3D {
                     for (const x of sortedX) {
                         if (x < xMin || x + dims.length > xMax) continue;
                         // Center of new position must be on the light side.
-                        if (lightSide === 'front' && (x + dims.length / 2) >= halfX) continue;
-                        if (lightSide === 'rear'  && (x + dims.length / 2) <  halfX) continue;
+                        if (lightSide === 'front' && (x + dims.length / 2) >= frontZoneEnd) continue;
+                        if (lightSide === 'rear'  && (x + dims.length / 2) <  frontZoneEnd) continue;
                         for (const y of sortedY) {
                             if (y + dims.width > this.container.width) break;
                             const newPos = { x, y, z };
@@ -620,7 +630,7 @@ export class BinPacking3D {
             front: frontW,
             rear: rearW,
             swapsMade,
-            improved: Math.abs(frontW - rearW) < initialDiff - 1
+            improved: Math.abs(frontW - ((frontW + rearW) * 0.25)) < initialDiff - 1
         };
     }
 }

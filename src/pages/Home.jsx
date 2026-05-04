@@ -65,10 +65,14 @@ const Home = () => {
         return () => window.removeEventListener('resize', checkDevice);
     }, []);
 
-    // Inject JSON-LD structured data
+    // Inject JSON-LD structured data — also picks up admin-managed FAQ
+    // overrides for the current language (so SEO crawlers see the same
+    // questions visible on screen).
     useEffect(() => {
-        const faqRaw = t('home.seo.faq');
-        const faqArr = Array.isArray(faqRaw) ? faqRaw : [];
+        const adminList = adminFaq[lang];
+        const faqArr = (Array.isArray(adminList) && adminList.length > 0)
+            ? adminList
+            : (Array.isArray(t('home.seo.faq')) ? t('home.seo.faq') : []);
         const ld = [
             {
                 '@context': 'https://schema.org',
@@ -98,9 +102,24 @@ const Home = () => {
         return () => {
             if (script.parentNode) script.parentNode.removeChild(script);
         };
-    }, [lang, t]);
+    }, [lang, t, adminFaq]);
+
+    const [adminFaq, setAdminFaq] = useState({});
+    useEffect(() => {
+        // Pull admin-managed FAQ overrides. When the current language has any
+        // entries, those replace the bundled JSON default; otherwise we fall
+        // back. Failure is silent — defaults still render.
+        let cancelled = false;
+        fetch('/api/public/faq')
+            .then(r => r.ok ? r.json() : null)
+            .then(j => { if (j?.faq && !cancelled) setAdminFaq(j.faq); })
+            .catch(() => {});
+        return () => { cancelled = true; };
+    }, []);
 
     const faqItems = (() => {
+        const adminList = adminFaq[lang];
+        if (Array.isArray(adminList) && adminList.length > 0) return adminList;
         const f = t('home.seo.faq');
         return Array.isArray(f) ? f : [];
     })();
