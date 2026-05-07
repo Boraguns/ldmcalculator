@@ -2,7 +2,7 @@
 //   GET    /api/admin/translations?lang=tr             → all overrides for a lang
 //   PUT    /api/admin/translations { lang, key, value } → upsert one override
 //   DELETE /api/admin/translations?lang=tr&key=foo     → drop one override
-import { sql, json, requireAdmin, readJsonBody } from '../_lib/db.js';
+import { sql, json, requireAdmin, readJsonBody } from '../../_lib/db.js';
 
 const SUPPORTED = new Set(['en', 'tr', 'de', 'ru', 'fr', 'ar']);
 

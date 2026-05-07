@@ -1,7 +1,7 @@
 // GET /api/public/faq — returns active FAQ items grouped by language.
 // The home page falls back to the bundled JSON default for any language with
 // no admin entries.
-import { sql, json } from '../_lib/db.js';
+import { sql, json } from '../../_lib/db.js';
 
 export default async function handler(req, res) {
     if (req.method !== 'GET') return json(res, 405, { error: 'Method not allowed' });

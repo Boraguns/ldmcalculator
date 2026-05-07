@@ -1,7 +1,7 @@
 // GET /api/public/translations — admin-overridden strings, grouped by lang.
 // The front merges these on top of the bundled JSON dictionaries so admins can
 // edit any localized string without redeploying.
-import { sql, json } from '../_lib/db.js';
+import { sql, json } from '../../_lib/db.js';
 
 export default async function handler(req, res) {
     if (req.method !== 'GET') return json(res, 405, { error: 'Method not allowed' });

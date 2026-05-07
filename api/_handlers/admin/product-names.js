@@ -1,6 +1,6 @@
 // GET /api/admin/product-names — returns the last N calculation events
 // grouped by session_id for display in the admin panel.
-import { sql, json, requireAdmin } from '../_lib/db.js';
+import { sql, json, requireAdmin } from '../../_lib/db.js';
 
 export default async function handler(req, res) {
     if (!requireAdmin(req)) return json(res, 401, { error: 'unauthorized' });

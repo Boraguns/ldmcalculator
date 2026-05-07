@@ -1,7 +1,7 @@
 // GET /api/public/config — returns banner image URLs and per-country featured
 // company info. Used by the front-end on the truck page so admins can update
 // content without redeploying.
-import { sql, json } from '../_lib/db.js';
+import { sql, json } from '../../_lib/db.js';
 
 export default async function handler(req, res) {
     if (req.method !== 'GET') return json(res, 405, { error: 'Method not allowed' });

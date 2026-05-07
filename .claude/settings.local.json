@@ -7,7 +7,11 @@
       "Bash(node -e \"['en','tr','de','ru','fr'].forEach\\(l=>{const j=require\\('E:/calculator/src/i18n/locales/'+l+'.json'\\);console.log\\(l,'wizard.color=',j.wizard.color,'| step3.axleBalance=',j.step3.axleBalance\\)}\\)\")",
       "Bash(DATABASE_URL=\"postgresql://neondb_owner:npg_br5ytJhRVSw4@ep-silent-sound-alz9f6gv-pooler.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require\" ADMIN_EMAIL=\"info@ldmcalculator.com\" ADMIN_PASSWORD=\"LDM2026*\" node db/seed-admin.js)",
       "Bash(node -e ' *)",
-      "Bash(npx madge *)"
+      "Bash(npx madge *)",
+      "Bash(git remote *)",
+      "Bash(git push *)",
+      "Bash(git mv *)",
+      "Bash(git add *)"
     ]
   }
 }

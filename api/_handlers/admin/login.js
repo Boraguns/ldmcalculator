@@ -1,6 +1,6 @@
 // POST /api/admin/login — exchange email+password for a JWT.
 import bcrypt from 'bcryptjs';
-import { sql, json, readJsonBody, signAdminToken } from '../_lib/db.js';
+import { sql, json, readJsonBody, signAdminToken } from '../../_lib/db.js';
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' });

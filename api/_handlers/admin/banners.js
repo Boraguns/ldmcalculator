@@ -3,7 +3,7 @@
 // Note: Image upload to a CDN is out of scope here. For now we accept a URL
 // (e.g. an Imgur, Cloudflare R2 or your own static path). Wire up multipart
 // to a storage provider later if you want in-admin uploads.
-import { sql, json, requireAdmin, readJsonBody } from '../_lib/db.js';
+import { sql, json, requireAdmin, readJsonBody } from '../../_lib/db.js';
 
 const VALID_SLOTS = new Set(['left', 'right', 'top']);
 

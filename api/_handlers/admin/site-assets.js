@@ -1,7 +1,7 @@
 // CRUD for general site image overrides (logos, vehicle thumbnails, backgrounds…).
 //   GET  /api/admin/site-assets                            → list all
 //   PUT  /api/admin/site-assets  { asset_key, image_url }  → upsert (empty url → delete)
-import { sql, json, requireAdmin, readJsonBody } from '../_lib/db.js';
+import { sql, json, requireAdmin, readJsonBody } from '../../_lib/db.js';
 
 export default async function handler(req, res) {
     if (!requireAdmin(req)) return json(res, 401, { error: 'unauthorized' });

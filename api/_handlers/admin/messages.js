@@ -1,6 +1,6 @@
 // GET /api/admin/messages?type=contact|advertise|screenshot — list submissions.
 // PATCH /api/admin/messages — { type, id, is_read } mark as read.
-import { sql, json, requireAdmin, readJsonBody } from '../_lib/db.js';
+import { sql, json, requireAdmin, readJsonBody } from '../../_lib/db.js';
 
 const TABLES = {
     contact:    'contact_messages',

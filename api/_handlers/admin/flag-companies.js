@@ -3,7 +3,7 @@
 //   POST   /api/admin/flag-companies   { ... }      → create
 //   PATCH  /api/admin/flag-companies   { id, ... }  → update
 //   DELETE /api/admin/flag-companies?id=N           → delete
-import { sql, json, requireAdmin, readJsonBody } from '../_lib/db.js';
+import { sql, json, requireAdmin, readJsonBody } from '../../_lib/db.js';
 
 export default async function handler(req, res) {
     if (!requireAdmin(req)) return json(res, 401, { error: 'unauthorized' });

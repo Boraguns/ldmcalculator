@@ -3,7 +3,7 @@
 //   POST   /api/admin/faq   { lang, question, answer, sort_order }
 //   PATCH  /api/admin/faq   { id, question?, answer?, sort_order?, is_active? }
 //   DELETE /api/admin/faq?id=N
-import { sql, json, requireAdmin, readJsonBody } from '../_lib/db.js';
+import { sql, json, requireAdmin, readJsonBody } from '../../_lib/db.js';
 
 const SUPPORTED = new Set(['en', 'tr', 'de', 'ru', 'fr', 'ar']);
 
