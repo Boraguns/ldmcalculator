@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import StaticPage from './StaticPage';
 import { useT } from '../i18n/LanguageContext';
+import usePageMeta from '../hooks/usePageMeta';
 
 const inputStyle = {
     width: '100%',
@@ -15,6 +16,11 @@ const inputStyle = {
 
 const Contact = () => {
     const { t } = useT();
+    usePageMeta({
+        title: 'Contact LDMCalculator — Support, Feedback & Partnerships',
+        description: 'Get in touch with the LDMCalculator team for support, partnership inquiries or feedback on our free 3D cargo loading and LDM planning calculator.',
+        canonical: 'https://ldmcalculator.com/contact'
+    });
     const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
     const [status, setStatus] = useState('idle'); // idle | sending | sent | error
 

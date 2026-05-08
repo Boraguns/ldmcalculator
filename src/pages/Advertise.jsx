@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import StaticPage from './StaticPage';
 import { useT } from '../i18n/LanguageContext';
+import usePageMeta from '../hooks/usePageMeta';
 
 const inputStyle = {
     width: '100%',
@@ -15,6 +16,11 @@ const inputStyle = {
 
 const Advertise = () => {
     const { t } = useT();
+    usePageMeta({
+        title: 'Advertise on LDMCalculator — Reach Logistics & Freight Professionals',
+        description: 'Promote your logistics, freight or fleet brand to LDMCalculator users — operators planning truck, container, air and sea cargo loads worldwide.',
+        canonical: 'https://ldmcalculator.com/advertise'
+    });
     const [form, setForm] = useState({ company_name: '', contact_name: '', email: '', phone: '', budget: '', message: '' });
     const [status, setStatus] = useState('idle');
 

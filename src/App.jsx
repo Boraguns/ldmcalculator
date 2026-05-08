@@ -13,9 +13,34 @@ import Advertise from './pages/Advertise';
 import Admin from './pages/Admin';
 import { useT } from './i18n/LanguageContext';
 import { useSiteAsset } from './hooks/useSiteAssets';
+import usePageMeta from './hooks/usePageMeta';
+
+const MODE_META = {
+    truck: {
+        title: 'Truck Load Calculator — Plan Trailer & Container Loads in 3D | LDMCalculator',
+        description: 'Free 3D truck loading calculator. Plan trailer and container loads, calculate LDM (loading meters), pallet placement, volume efficiency and axle weight balance.',
+        canonical: 'https://ldmcalculator.com/truck'
+    },
+    train: {
+        title: 'Train Wagon Load Calculator — Rail Cargo Planner in 3D | LDMCalculator',
+        description: 'Plan rail freight loads in 3D. Calculate wagon capacity, pallet placement and weight distribution for train cargo with our free LDM calculator.',
+        canonical: 'https://ldmcalculator.com/train'
+    },
+    plane: {
+        title: 'Air Cargo ULD Calculator — Plane Load Planner in 3D | LDMCalculator',
+        description: 'Free air cargo ULD load planner. Visualize pallet placement across multiple ULDs, calculate volume efficiency and weight balance for plane freight.',
+        canonical: 'https://ldmcalculator.com/plane'
+    },
+    ship: {
+        title: 'Sea Container Load Calculator — Ship Cargo Planner in 3D | LDMCalculator',
+        description: 'Plan ocean freight container loads in 3D. Optimize pallet placement, volume utilization and weight distribution for 20ft and 40ft sea containers.',
+        canonical: 'https://ldmcalculator.com/ship'
+    }
+};
 
 const GeneralCalculator = ({ mode = 'truck' }) => {
     const { t } = useT();
+    usePageMeta(MODE_META[mode] || MODE_META.truck);
     const viewerLogo = useSiteAsset('viewer_logo', '/src/ldm-calculator-beyaz-logo.png');
     const [specs, setSpecs] = useState(null);
     const [packedItems, setPackedItems] = useState([]);

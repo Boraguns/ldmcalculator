@@ -2,10 +2,16 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useT, LanguageSwitcher } from '../i18n/LanguageContext';
 import { useSiteAsset } from '../hooks/useSiteAssets';
+import usePageMeta from '../hooks/usePageMeta';
 
 const Home = () => {
     const navigate = useNavigate();
     const { t, lang } = useT();
+    usePageMeta({
+        title: 'LDMCalculator — Free 3D Cargo Loading & LDM Calculator for Trucks, Containers, Planes & Ships',
+        description: 'Plan truck, container, air ULD and sea container loads in 3D. Calculate LDM (loading meters), volume efficiency and weight distribution in seconds — free, no signup.',
+        canonical: 'https://ldmcalculator.com/'
+    });
     const homeLogo  = useSiteAsset('home_logo',  '/src/ldm-calculator-logo.png');
     const homeBg    = useSiteAsset('home_bg',    '/src/bg.jpg');
     const mobileBg  = useSiteAsset('home_bg_mobile', '/src/mobil-bg.jpg');
