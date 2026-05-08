@@ -8,7 +8,7 @@ export default defineConfig({
         react(),
         VitePWA({
             registerType: 'autoUpdate',
-            includeAssets: ['src/favicon.png'],
+            includeAssets: ['favicon.ico', 'favicon.png', 'apple-touch-icon.png'],
             manifest: {
                 name: 'LDM Calculator',
                 short_name: 'LDM Calc',
@@ -20,13 +20,13 @@ export default defineConfig({
                 start_url: '/',
                 icons: [
                     {
-                        src: '/src/favicon.png',
+                        src: '/favicon.png',
                         sizes: '192x192',
                         type: 'image/png',
                         purpose: 'any maskable'
                     },
                     {
-                        src: '/src/favicon.png',
+                        src: '/favicon.png',
                         sizes: '512x512',
                         type: 'image/png',
                         purpose: 'any maskable'
