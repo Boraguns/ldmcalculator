@@ -1,4 +1,14 @@
 {
+  "tools": {
+    "label": "Tools",
+    "cmr": "CMR-Frachtbrief",
+    "invoice": "Rechnung",
+    "packingList": "Packliste",
+    "soon": "Diese Dokumentvorlage wird bald hinzugefügt.",
+    "print": "Drucken / PDF",
+    "reset": "Leeren",
+    "back": "Zurück"
+  },
   "home": {
     "title": "Alle Berechnungen, die Sie für die Frachtplanung brauchen",
     "comingSoon": "Demnächst",

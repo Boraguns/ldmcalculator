@@ -1073,6 +1073,65 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck', addStan
                 )
             })}
 
+            {/* ===== Per-product name badges =====
+                One floating label per distinct product, anchored above the
+                topmost box of that product. The user types the product name in
+                the wizard; here it renders as a colored badge next to that
+                product's boxes so each load group is identifiable at a glance. */}
+            {(() => {
+                if (!packedItems || packedItems.length === 0) return null;
+                const repById = {};
+                packedItems.forEach(item => {
+                    if (!item || item.name == null) return;
+                    const w = item.dimensions.length * scaleFactor;
+                    const h = item.dimensions.height * scaleFactor;
+                    const d = item.dimensions.width * scaleFactor;
+                    const x = (item.position.x * scaleFactor) - (tLen / 2) + (w / 2);
+                    const y = (item.position.z * scaleFactor) - (tHei / 2) + (h / 2) + 0.3;
+                    const z = (item.position.y * scaleFactor) - (tWid / 2) + (d / 2);
+                    const topY = y + h / 2;
+                    const cur = repById[item.id];
+                    if (!cur || topY > cur.topY) {
+                        repById[item.id] = { id: item.id, name: item.name, color: item.color, x, topY, z };
+                    }
+                });
+                const colorsB = ['#3b82f6', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
+                return Object.values(repById).map(r => {
+                    const label = (r.name && !String(r.name).startsWith('#')) ? r.name : `#${r.id}`;
+                    const bg = r.color || colorsB[r.id % colorsB.length];
+                    return (
+                        <Html
+                            key={`badge-${r.id}`}
+                            position={[r.x, r.topY + 0.18, r.z]}
+                            center
+                            distanceFactor={12}
+                            zIndexRange={[20, 0]}
+                            style={{ pointerEvents: 'none' }}
+                        >
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 6,
+                                whiteSpace: 'nowrap',
+                                background: 'rgba(15,23,42,0.92)',
+                                color: '#fff',
+                                border: `2px solid ${bg}`,
+                                borderRadius: 999,
+                                padding: '3px 10px',
+                                fontSize: 13,
+                                fontWeight: 700,
+                                fontFamily: 'Inter, system-ui, sans-serif',
+                                boxShadow: '0 2px 6px rgba(0,0,0,0.4)',
+                                transform: 'translateY(-50%)'
+                            }}>
+                                <span style={{ width: 9, height: 9, borderRadius: '50%', background: bg, flex: '0 0 auto' }} />
+                                {label}
+                            </div>
+                        </Html>
+                    );
+                });
+            })()}
+
             {/* ===== Manually-placed horizontal ştanga bars =====
                 Each entry refers to a placedItems index. The bar lies horizontally
                 across the trailer width on the +X face (rear edge) of the chosen

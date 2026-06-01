@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useT, LanguageSwitcher } from '../i18n/LanguageContext';
 import { useSiteAsset } from '../hooks/useSiteAssets';
 import usePageMeta from '../hooks/usePageMeta';
+import ToolsMenu from '../components/ToolsMenu';
 
 const Home = () => {
     const navigate = useNavigate();
@@ -137,13 +138,16 @@ const Home = () => {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            paddingTop: 'calc(env(safe-area-inset-top, 0px) + 3vh)',
+            // On desktop keep the hero flush to the top so the background image
+            // fully covers the viewport (no black strip above it). Mobile keeps
+            // the safe-area + small offset so the switcher row isn't clipped.
+            paddingTop: isDesktop ? 'env(safe-area-inset-top, 0px)' : 'calc(env(safe-area-inset-top, 0px) + 3vh)',
         }}>
-            {/* Hero wrapper — slightly less than full viewport on desktop so the
-                SEO section below peeks into view and signals scrollable content. */}
+            {/* Hero wrapper — full viewport height on desktop so the background
+                image always covers the whole screen (100vh). */}
             <div style={{
                 width: '100%',
-                minHeight: isDesktop ? '88vh' : 'auto',
+                minHeight: isDesktop ? '100vh' : 'auto',
                 position: 'relative',
                 display: 'flex',
                 alignItems: 'flex-start',
@@ -151,7 +155,8 @@ const Home = () => {
             }}>
             {/* Language switcher top-right (smaller height on mobile so it
                 doesn't crowd the centered logo) */}
-            <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 200 }}>
+            <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 200, display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <ToolsMenu height={isDesktop ? 44 : 36} compact={!isDesktop} />
                 <LanguageSwitcher height={isDesktop ? 44 : 36} compact={!isDesktop} />
             </div>
             {/*

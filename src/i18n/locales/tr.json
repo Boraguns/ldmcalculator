@@ -1,4 +1,14 @@
 {
+  "tools": {
+    "label": "Tools",
+    "cmr": "CMR Belgesi",
+    "invoice": "Invoice",
+    "packingList": "Çeki Listesi",
+    "soon": "Bu belge şablonu yakında eklenecek.",
+    "print": "Yazdır / PDF",
+    "reset": "Temizle",
+    "back": "Geri Dön"
+  },
   "home": {
     "title": "Yük planlaması için ihtiyaç duyacağınız tüm hesaplamalar",
     "comingSoon": "Çok Yakında",

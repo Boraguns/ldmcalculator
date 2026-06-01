@@ -1,4 +1,14 @@
 {
+  "tools": {
+    "label": "Tools",
+    "cmr": "CMR Note",
+    "invoice": "Invoice",
+    "packingList": "Packing List",
+    "soon": "This document template will be added soon.",
+    "print": "Print / PDF",
+    "reset": "Clear",
+    "back": "Go Back"
+  },
   "home": {
     "title": "All the calculations you need for cargo planning",
     "comingSoon": "Coming Soon",

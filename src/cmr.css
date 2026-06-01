@@ -1,0 +1,226 @@
+/* ============================================================
+   CMR (International Consignment Note) — fillable template
+   Faithful reproduction of cmr.pdf: blue ink, boxed fields,
+   numbered cells, central CMR watermark. Built to print 1:1 on A4.
+   ============================================================ */
+
+:root {
+    --cmr-blue: #1b3a8f;
+    --cmr-blue-soft: #9fb3e0;
+    --cmr-line: #1b3a8f;
+}
+
+.cmr-page {
+    min-height: 100vh;
+    width: 100%;
+    background: #0f172a;
+    padding: 24px 12px 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+.cmr-toolbar {
+    width: 210mm;
+    max-width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.cmr-toolbar .cmr-tb-left { display: flex; align-items: center; gap: 12px; }
+.cmr-toolbar .cmr-tb-actions { display: flex; gap: 10px; }
+
+.cmr-btn {
+    border: none;
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: #1a1a1a;
+    color: #fff;
+    transition: filter .15s;
+}
+.cmr-btn:hover { filter: brightness(1.2); }
+.cmr-btn-primary { background: #3b82f6; }
+
+/* ---------- The A4 sheet ---------- */
+.cmr-sheet {
+    width: 210mm;
+    max-width: 100%;
+    background: #fff;
+    color: var(--cmr-blue);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+    box-sizing: border-box;
+    padding: 6mm;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 8.5px;
+    line-height: 1.18;
+}
+
+.cmr-frame {
+    border: 1.5px solid var(--cmr-line);
+    display: flex;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Left & right vertical legend strips */
+.cmr-vstrip {
+    flex: 0 0 16px;
+    border-right: 1.5px solid var(--cmr-line);
+    position: relative;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-size: 6px;
+    line-height: 1.1;
+    padding: 4px 1px;
+    color: var(--cmr-blue);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    text-align: center;
+}
+.cmr-vstrip.right { border-right: none; border-left: 1.5px solid var(--cmr-line); }
+
+.cmr-body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+
+/* generic row / col */
+.cmr-row { display: flex; width: 100%; }
+.cmr-col { display: flex; flex-direction: column; }
+
+/* a bordered cell */
+.cmr-cell {
+    border: 0.75px solid var(--cmr-line);
+    padding: 2px 3px;
+    box-sizing: border-box;
+    position: relative;
+    min-height: 0;
+}
+.cmr-cell .num {
+    font-weight: 700;
+    margin-right: 3px;
+}
+.cmr-label {
+    font-size: 7px;
+    line-height: 1.12;
+    margin-bottom: 1px;
+}
+.cmr-label .tr { font-style: italic; }
+
+/* inputs */
+.cmr-input, .cmr-textarea {
+    width: 100%;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--cmr-blue);
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 600;
+    resize: none;
+    box-sizing: border-box;
+    padding: 1px 0 0;
+}
+.cmr-textarea { display: block; }
+.cmr-input::placeholder, .cmr-textarea::placeholder { color: #b9c4de; font-weight: 400; }
+
+/* title block */
+.cmr-title {
+    text-align: center;
+    font-weight: 700;
+    font-size: 9px;
+    line-height: 1.25;
+}
+.cmr-conv { font-size: 6.5px; line-height: 1.2; margin-top: 3px; }
+
+.cmr-no-box {
+    text-align: center;
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: 1px;
+}
+
+/* goods table */
+.cmr-goods th {
+    border: 0.75px solid var(--cmr-line);
+    font-size: 6.8px;
+    font-weight: 700;
+    vertical-align: top;
+    padding: 2px 2px;
+    text-align: left;
+}
+.cmr-goods td {
+    border: 0.75px solid var(--cmr-line);
+    height: 16px;
+    padding: 0;
+}
+.cmr-goods { width: 100%; border-collapse: collapse; position: relative; }
+.cmr-goods .cell-input {
+    width: 100%; height: 100%;
+    border: none; outline: none; background: transparent;
+    color: var(--cmr-blue); font-family: inherit; font-size: 9px; font-weight: 600;
+    padding: 0 3px; box-sizing: border-box;
+}
+
+/* CMR oval watermark */
+.cmr-watermark {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 150px; height: 78px;
+    border: 4px solid var(--cmr-blue-soft);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--cmr-blue-soft);
+    font-size: 34px; font-weight: 800; letter-spacing: 2px;
+    pointer-events: none;
+    opacity: 0.85;
+}
+
+/* payment table */
+.cmr-pay { width: 100%; border-collapse: collapse; }
+.cmr-pay th, .cmr-pay td {
+    border: 0.75px solid var(--cmr-line);
+    font-size: 6.8px;
+    padding: 1px 2px;
+    text-align: center;
+    vertical-align: middle;
+}
+.cmr-pay td.lbl { text-align: left; font-size: 6.8px; white-space: nowrap; }
+.cmr-pay .pay-input {
+    width: 100%; border: none; outline: none; background: transparent;
+    color: var(--cmr-blue); font-family: inherit; font-size: 9px; font-weight: 600;
+    text-align: center; box-sizing: border-box;
+}
+
+.cmr-heavy { border: 2px solid var(--cmr-line) !important; }
+
+.cmr-check { display: flex; align-items: center; gap: 4px; margin: 1px 0; font-size: 7px; }
+.cmr-check input { width: 9px; height: 9px; accent-color: var(--cmr-blue); margin: 0; }
+
+.cmr-sign {
+    min-height: 70px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+.cmr-sign .cap { font-size: 7px; border-top: 0.75px solid var(--cmr-line); padding-top: 2px; }
+
+/* ---------- Print ---------- */
+@media print {
+    @page { size: A4 portrait; margin: 8mm; }
+    body { background: #fff !important; }
+    .cmr-page { background: #fff; padding: 0; min-height: auto; }
+    .cmr-toolbar { display: none !important; }
+    .cmr-sheet { box-shadow: none; width: 100%; padding: 0; }
+    .cmr-input::placeholder, .cmr-textarea::placeholder,
+    .cmr-goods .cell-input::placeholder, .cmr-pay .pay-input::placeholder { color: transparent !important; }
+}
