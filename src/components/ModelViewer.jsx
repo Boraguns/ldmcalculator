@@ -6,6 +6,101 @@ import { OrbitControls, useProgress, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { useT } from '../i18n/LanguageContext';
 
+/* ============================================================
+   Per-box printed labels (like EasyCargo3D): each cargo box gets
+   its product name/number printed on its faces via a CanvasTexture.
+   Textures are cached per (color + label) so hundreds of boxes that
+   share a product reuse a single GPU texture.
+   ============================================================ */
+const _labelTexCache = new Map();
+
+const _wrapLines = (ctx, text, maxW) => {
+    const words = String(text).split(/\s+/).filter(Boolean);
+    const lines = [];
+    let cur = '';
+    for (const word of words) {
+        const test = cur ? `${cur} ${word}` : word;
+        if (ctx.measureText(test).width > maxW && cur) {
+            lines.push(cur);
+            cur = word;
+        } else {
+            cur = test;
+        }
+    }
+    if (cur) lines.push(cur);
+    return lines;
+};
+
+const _roundRect = (ctx, x, y, w, h, r) => {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+};
+
+const makeLabelTexture = (label, color) => {
+    const text = String(label || '').trim();
+    const key = `${color || '#3b82f6'}|${text}`;
+    if (_labelTexCache.has(key)) return _labelTexCache.get(key);
+
+    const size = 256;
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+
+    // Box surface = the product colour, with a faint inner border so the
+    // face reads as a real crate panel rather than a flat plane.
+    ctx.fillStyle = color || '#3b82f6';
+    ctx.fillRect(0, 0, size, size);
+    ctx.strokeStyle = 'rgba(0,0,0,0.22)';
+    ctx.lineWidth = 6;
+    ctx.strokeRect(4, 4, size - 8, size - 8);
+
+    if (text) {
+        const pad = 18;
+        const maxW = size - pad * 2;
+        // Shrink the font until the wrapped text fits within ~4 lines.
+        let fontSize = 44;
+        let lines = [];
+        for (; fontSize >= 14; fontSize -= 2) {
+            ctx.font = `bold ${fontSize}px Arial, sans-serif`;
+            lines = _wrapLines(ctx, text, maxW);
+            const totalH = lines.length * fontSize * 1.15;
+            if (lines.length <= 4 && totalH <= size - pad * 2) break;
+        }
+        const lineH = fontSize * 1.15;
+        const blockH = lines.length * lineH;
+        const blockW = Math.min(maxW, Math.max(...lines.map(l => ctx.measureText(l).width)));
+
+        // Dark "label sticker" plate behind the text → readable on any colour.
+        const pw = blockW + 22;
+        const ph = blockH + 18;
+        const px = (size - pw) / 2;
+        const py = (size - ph) / 2;
+        ctx.fillStyle = 'rgba(15,23,42,0.64)';
+        _roundRect(ctx, px, py, pw, ph, 12);
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        lines.forEach((l, i) => {
+            const y = size / 2 - blockH / 2 + lineH * (i + 0.5);
+            ctx.fillText(l, size / 2, y);
+        });
+    }
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.anisotropy = 4;
+    tex.needsUpdate = true;
+    _labelTexCache.set(key, tex);
+    return tex;
+};
+
 const Loader = () => {
     const { progress, active } = useProgress();
     if (!active) return null;
@@ -1038,6 +1133,11 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck', addStan
                 const color = item.color || colors[item.id % colors.length];
                 const heavyLoad = packedItems.length > 400;
                 const showEdges = packedItems.length <= 600;
+                // Printed label on the box faces. For very large loads (>800
+                // boxes) skip the canvas texture and fall back to flat colour to
+                // keep texture memory/upload time in check.
+                const labelText = (item.name && !String(item.name).startsWith('#')) ? item.name : `#${item.id}`;
+                const labelTex = packedItems.length <= 800 ? makeLabelTexture(labelText, color) : null;
 
                 return (
                     <mesh
@@ -1059,8 +1159,9 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck', addStan
                     >
                         <boxGeometry args={[w, h, d]} />
                         <meshStandardMaterial
-                            color={color}
-                            roughness={0.3}
+                            map={labelTex || undefined}
+                            color={labelTex ? '#ffffff' : color}
+                            roughness={0.45}
                             metalness={0.1}
                             emissive={addStangaMode ? '#fbbf24' : (addSpanzetMode ? '#a855f7' : '#000')}
                             emissiveIntensity={(addStangaMode || addSpanzetMode) ? 0.15 : 0}
@@ -1072,65 +1173,6 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck', addStan
                     </mesh>
                 )
             })}
-
-            {/* ===== Per-product name badges =====
-                One floating label per distinct product, anchored above the
-                topmost box of that product. The user types the product name in
-                the wizard; here it renders as a colored badge next to that
-                product's boxes so each load group is identifiable at a glance. */}
-            {(() => {
-                if (!packedItems || packedItems.length === 0) return null;
-                const repById = {};
-                packedItems.forEach(item => {
-                    if (!item || item.name == null) return;
-                    const w = item.dimensions.length * scaleFactor;
-                    const h = item.dimensions.height * scaleFactor;
-                    const d = item.dimensions.width * scaleFactor;
-                    const x = (item.position.x * scaleFactor) - (tLen / 2) + (w / 2);
-                    const y = (item.position.z * scaleFactor) - (tHei / 2) + (h / 2) + 0.3;
-                    const z = (item.position.y * scaleFactor) - (tWid / 2) + (d / 2);
-                    const topY = y + h / 2;
-                    const cur = repById[item.id];
-                    if (!cur || topY > cur.topY) {
-                        repById[item.id] = { id: item.id, name: item.name, color: item.color, x, topY, z };
-                    }
-                });
-                const colorsB = ['#3b82f6', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
-                return Object.values(repById).map(r => {
-                    const label = (r.name && !String(r.name).startsWith('#')) ? r.name : `#${r.id}`;
-                    const bg = r.color || colorsB[r.id % colorsB.length];
-                    return (
-                        <Html
-                            key={`badge-${r.id}`}
-                            position={[r.x, r.topY + 0.18, r.z]}
-                            center
-                            distanceFactor={12}
-                            zIndexRange={[20, 0]}
-                            style={{ pointerEvents: 'none' }}
-                        >
-                            <div style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 6,
-                                whiteSpace: 'nowrap',
-                                background: 'rgba(15,23,42,0.92)',
-                                color: '#fff',
-                                border: `2px solid ${bg}`,
-                                borderRadius: 999,
-                                padding: '3px 10px',
-                                fontSize: 13,
-                                fontWeight: 700,
-                                fontFamily: 'Inter, system-ui, sans-serif',
-                                boxShadow: '0 2px 6px rgba(0,0,0,0.4)',
-                                transform: 'translateY(-50%)'
-                            }}>
-                                <span style={{ width: 9, height: 9, borderRadius: '50%', background: bg, flex: '0 0 auto' }} />
-                                {label}
-                            </div>
-                        </Html>
-                    );
-                });
-            })()}
 
             {/* ===== Manually-placed horizontal ştanga bars =====
                 Each entry refers to a placedItems index. The bar lies horizontally
