@@ -421,231 +421,129 @@ export class BinPacking3D {
 
     /**
      * Rebalance the existing packing along the X-axis (front/rear of the
-     * trailer) by swapping the POSITIONS of pairs of placed items that share
-     * identical footprint dimensions. Because the swapped items have the same
-     * length/width/height, the swap is guaranteed to be collision-safe — each
-     * one simply takes the spot the other was occupying.
+     * trailer) for realistic axle weight distribution.
      *
-     * The goal is to reduce |frontWeight - rearWeight|. Returns the new
-     * front/rear weight split. Mutates this.placedItems in place.
+     * Real-world rules this models:
+     *  - The load must stay packed SOLID from the front (headboard). A loader
+     *    never leaves an air gap in the middle/front of a trailer, so we never
+     *    relocate a box into empty space — we only SWAP the positions of pairs
+     *    of already-placed items that share the same footprint
+     *    (length×width×height). Such a swap is collision-safe and, crucially,
+     *    leaves the occupied volume unchanged → no gaps are ever created.
+     *  - The centre of gravity should sit near the middle of the deck, biased
+     *    slightly FORWARD (toward the kingpin / tractor drive axles). A
+     *    rear-biased load overloads the trailer axles and lightens the drive
+     *    axles — unsafe and illegal. We therefore target the CoG at ~48% of the
+     *    trailer length and shuffle heavier boxes toward that point.
+     *
+     * Returns { cg, targetCx, swapsMade, improved }. Mutates placedItems.
      */
     rebalance() {
-        // Target distribution: front 25% of trailer length carries 25% of
-        // weight; the remaining 75% length carries the rest. We use "rear"
-        // in variable names but it really means "everything outside the
-        // front zone" — middle and rear combined.
-        const frontZoneEnd = this.container.length * 0.25;
-        const sumWeight = (items, side) => items.reduce((acc, it) => {
-            const cx = it.position.x + it.dimensions.length / 2;
-            const inFront = cx < frontZoneEnd;
-            if (side === 'front' && inFront)  return acc + (it.weight || 0);
-            if (side === 'rear'  && !inFront) return acc + (it.weight || 0);
-            return acc;
-        }, 0);
+        const L = this.container.length;
+        // Target centre of gravity: 48% of length from the front (just forward
+        // of centre). Measured to each item's centre along X.
+        const targetCx = L * 0.48;
 
-        let frontW = sumWeight(this.placedItems, 'front');
-        let rearW = sumWeight(this.placedItems, 'rear');
-        const totalW0 = frontW + rearW;
-        const targetFrontW = totalW0 * 0.25;
-        const initialDiff = Math.abs(frontW - targetFrontW);
-        let swapsMade = 0;
+        const totalW = this.placedItems.reduce((a, it) => a + (it.weight || 0), 0);
+        if (totalW <= 0 || this.placedItems.length < 2) {
+            this.placedItems = this.placedItems.map(it => ({ ...it, position: { ...it.position } }));
+            return { cg: 0, targetCx, swapsMade: 0, improved: false };
+        }
 
-        // Iterative pair swap. Cap iterations to keep it bounded.
-        const MAX_ITER = 500;
-        for (let iter = 0; iter < MAX_ITER; iter++) {
-            const total = frontW + rearW;
-            // delta > 0 → front has too much weight; need to move weight out.
-            // delta < 0 → front needs more weight.
-            const delta = frontW - (total * 0.25);
-            if (Math.abs(delta) / Math.max(1, total) <= 0.03) break; // within 3% of target
+        const cogX = () => this.placedItems.reduce(
+            (a, it) => a + (it.weight || 0) * (it.position.x + it.dimensions.length / 2), 0
+        ) / totalW;
+        const dimsKey = (it) => `${it.dimensions.length}x${it.dimensions.width}x${it.dimensions.height}`;
 
-            const heavySide = delta > 0 ? 'front' : 'rear';
-            const lightSide = delta > 0 ? 'rear'  : 'front';
-            const isOnSide = (it, side) => {
-                const cx = it.position.x + it.dimensions.length / 2;
-                return side === 'front' ? cx < frontZoneEnd : cx >= frontZoneEnd;
-            };
-            const dimsKey = (it) => `${it.dimensions.length}x${it.dimensions.width}x${it.dimensions.height}`;
-
-            // Find a heavier-than-partner item on heavy side that has a
-            // lighter same-shape partner on the light side.
-            let bestPair = null;
-            let bestGain = 0;
-            for (const a of this.placedItems) {
-                if (!isOnSide(a, heavySide)) continue;
-                for (const b of this.placedItems) {
-                    if (!isOnSide(b, lightSide)) continue;
-                    if (dimsKey(a) !== dimsKey(b)) continue;
-                    const w1 = a.weight || 0, w2 = b.weight || 0;
-                    if (w1 <= w2) continue; // swapping wouldn't help
-                    // After swap: heavy side loses (w1 - w2), light side gains (w1 - w2)
-                    const gain = (w1 - w2);
-                    if (gain > bestGain) { bestGain = gain; bestPair = [a, b]; }
-                }
+        // A swap (a<->b) is only allowed if it doesn't put an unstackable item
+        // under a different product (or leave one stranded). Same logic the old
+        // code used, scoped to the two movers.
+        const wouldViolate = (a, b, newPos, mover) => {
+            if (newPos.z <= 0) {
+                // Floor placement: still must not strand an unstackable mover
+                // that has a different product on top after the swap.
             }
-
-            if (!bestPair) break;
-            const [a, b] = bestPair;
-            // Don't allow a swap that would put an unstackable item on top of
-            // a different product, or vice versa. We only do such checks when
-            // either side has different id.
-            const wouldViolate = (newPos, mover) => {
-                if (newPos.z <= 0) return false;
-                // Check items DIRECTLY BELOW the mover's new position.
+            // Items DIRECTLY BELOW the mover's new position.
+            for (const p of this.placedItems) {
+                if (p === a || p === b) continue;
+                const ptop = p.position.z + p.dimensions.height;
+                if (Math.abs(ptop - newPos.z) > 0.001) continue;
+                const overlapX = !(newPos.x + mover.dimensions.length <= p.position.x ||
+                                    p.position.x + p.dimensions.length <= newPos.x);
+                const overlapY = !(newPos.y + mover.dimensions.width <= p.position.y ||
+                                    p.position.y + p.dimensions.width <= newPos.y);
+                if (!overlapX || !overlapY) continue;
+                if (p.id === mover.id) continue;
+                if (p.stackable === false || mover.stackable === false) return true;
+            }
+            // If mover is unstackable, nothing of a different product may sit
+            // directly on top of its new position.
+            if (mover.stackable === false) {
+                const moverTop = newPos.z + mover.dimensions.height;
                 for (const p of this.placedItems) {
                     if (p === a || p === b) continue;
-                    const ptop = p.position.z + p.dimensions.height;
-                    if (Math.abs(ptop - newPos.z) > 0.001) continue;
+                    if (Math.abs(p.position.z - moverTop) > 0.001) continue;
                     const overlapX = !(newPos.x + mover.dimensions.length <= p.position.x ||
                                         p.position.x + p.dimensions.length <= newPos.x);
                     const overlapY = !(newPos.y + mover.dimensions.width <= p.position.y ||
                                         p.position.y + p.dimensions.width <= newPos.y);
                     if (!overlapX || !overlapY) continue;
-                    if (p.id === mover.id) continue;
-                    // Cross-product stacking only allowed if BOTH stackable.
-                    if (p.stackable === false || mover.stackable === false) return true;
+                    if (p.id !== mover.id) return true;
                 }
-                // Also check items DIRECTLY ABOVE this position (in case mover
-                // is unstackable, nothing should sit on top of it after the swap).
-                if (mover.stackable === false) {
-                    const moverTop = newPos.z + mover.dimensions.height;
-                    for (const p of this.placedItems) {
-                        if (p === a || p === b) continue;
-                        if (Math.abs(p.position.z - moverTop) > 0.001) continue;
-                        const overlapX = !(newPos.x + mover.dimensions.length <= p.position.x ||
-                                            p.position.x + p.dimensions.length <= newPos.x);
-                        const overlapY = !(newPos.y + mover.dimensions.width <= p.position.y ||
-                                            p.position.y + p.dimensions.width <= newPos.y);
-                        if (!overlapX || !overlapY) continue;
-                        if (p.id !== mover.id) return true;
-                    }
-                }
-                return false;
-            };
-            if (wouldViolate(b.position, a) || wouldViolate(a.position, b)) {
-                bestGain = 0;
-                continue;
             }
-            const tmp = a.position;
-            a.position = b.position;
-            b.position = tmp;
-            swapsMade++;
-
-            // Recompute (cheap because we know the delta but recompute to be safe)
-            frontW = sumWeight(this.placedItems, 'front');
-            rearW  = sumWeight(this.placedItems, 'rear');
-        }
-
-        // ---- Relocation pass (handles mono-product / asymmetric loads) ----
-        // When pair-swaps can't improve further (e.g. all items same weight),
-        // try MOVING items from the heavy side into empty space on the light
-        // side. We only move bottom-row items (z=0) so we don't have to worry
-        // about toppling their stacks above. We use the same canPlaceAt logic
-        // that the original packer used, so collision-correctness is free.
-        const isOnSide = (it, side) => {
-            const cx = it.position.x + it.dimensions.length / 2;
-            return side === 'front' ? cx < frontZoneEnd : cx >= frontZoneEnd;
+            return false;
         };
-        const sumW = () => {
-            frontW = sumWeight(this.placedItems, 'front');
-            rearW  = sumWeight(this.placedItems, 'rear');
-        };
-        for (let r = 0; r < 200; r++) {
-            const total = frontW + rearW;
-            const delta = frontW - (total * 0.25);
-            if (Math.abs(delta) / Math.max(1, total) <= 0.03) break;
-            const heavySide = delta > 0 ? 'front' : 'rear';
-            const lightSide = delta > 0 ? 'rear' : 'front';
 
-            // Pick a heavy-side TOP-OF-STACK item, sorted by weight descending.
-            // We must NOT move a bottom item that has anything stacked on it,
-            // because the stack above would be left floating in mid-air.
-            // "Top of stack" = no other placed item directly above this one.
-            const hasItemAbove = (it) => {
-                const myTop = it.position.z + it.dimensions.height;
-                for (const p of this.placedItems) {
-                    if (p === it) continue;
-                    if (Math.abs(p.position.z - myTop) > 0.001) continue;
-                    const ox = !(it.position.x + it.dimensions.length <= p.position.x ||
-                                  p.position.x + p.dimensions.length <= it.position.x);
-                    const oy = !(it.position.y + it.dimensions.width  <= p.position.y ||
-                                  p.position.y + p.dimensions.width  <= it.position.y);
-                    if (ox && oy) return true;
-                }
-                return false;
-            };
-            const candidates = this.placedItems
-                .filter(it => isOnSide(it, heavySide) && !hasItemAbove(it))
-                .sort((a, b) => (b.weight || 0) - (a.weight || 0));
+        let cg = cogX();
+        const initialErr = Math.abs(cg - targetCx);
+        let swapsMade = 0;
 
-            let moved = false;
-            for (const cand of candidates) {
-                // Temporarily remove cand from placedItems so canPlaceAt
-                // doesn't see it as a self-collision.
-                const idx = this.placedItems.indexOf(cand);
-                if (idx < 0) continue;
-                this.placedItems.splice(idx, 1);
+        const MAX_ITER = 500;
+        for (let iter = 0; iter < MAX_ITER; iter++) {
+            if (Math.abs(cg - targetCx) / L <= 0.02) break; // within 2% of length
 
-                // Search positions in the light side along x. Reuse corner
-                // points but constrained to lightSide x range.
-                const xMin = lightSide === 'front' ? 0 : frontZoneEnd;
-                const xMax = lightSide === 'front' ? frontZoneEnd : this.container.length;
-                const dims = cand.dimensions;
-                const xPoints = new Set([xMin]);
-                const yPoints = new Set([0]);
-                const zPoints = new Set([0]);
-                for (const p of this.placedItems) {
-                    const px = p.position.x + p.dimensions.length;
-                    if (px >= xMin && px <= xMax) xPoints.add(px);
-                    yPoints.add(p.position.y + p.dimensions.width);
-                    zPoints.add(p.position.z + p.dimensions.height);
-                }
-                const sortedX = [...xPoints].sort((a, b) => a - b);
-                const sortedY = [...yPoints].sort((a, b) => a - b);
-                const sortedZ = [...zPoints].sort((a, b) => a - b);
-
-                let placed = null;
-                outer: for (const z of sortedZ) {
-                    if (z + dims.height > this.container.height) break;
-                    for (const x of sortedX) {
-                        if (x < xMin || x + dims.length > xMax) continue;
-                        // Center of new position must be on the light side.
-                        if (lightSide === 'front' && (x + dims.length / 2) >= frontZoneEnd) continue;
-                        if (lightSide === 'rear'  && (x + dims.length / 2) <  frontZoneEnd) continue;
-                        for (const y of sortedY) {
-                            if (y + dims.width > this.container.width) break;
-                            const newPos = { x, y, z };
-                            if (this.canPlaceAt(newPos, dims, cand)) {
-                                placed = newPos;
-                                break outer;
-                            }
+            // Greedily find the same-footprint pair whose swap moves the CoG
+            // closest to the target. Swapping a<->b shifts the CoG numerator by
+            // (wa-wb)(bx-ax), so newCg = cg + (wa-wb)(bx-ax)/totalW.
+            let bestPair = null;
+            let bestImprove = 1e-6;
+            for (let i = 0; i < this.placedItems.length; i++) {
+                const a = this.placedItems[i];
+                const ax = a.position.x + a.dimensions.length / 2;
+                const wa = a.weight || 0;
+                for (let j = i + 1; j < this.placedItems.length; j++) {
+                    const b = this.placedItems[j];
+                    if (dimsKey(a) !== dimsKey(b)) continue;
+                    const wb = b.weight || 0;
+                    if (wa === wb) continue; // swap changes nothing
+                    const bx = b.position.x + b.dimensions.length / 2;
+                    const newCg = cg + ((wa - wb) * (bx - ax)) / totalW;
+                    const improve = Math.abs(cg - targetCx) - Math.abs(newCg - targetCx);
+                    if (improve > bestImprove) {
+                        if (!wouldViolate(a, b, b.position, a) && !wouldViolate(a, b, a.position, b)) {
+                            bestImprove = improve;
+                            bestPair = [a, b];
                         }
                     }
                 }
-
-                if (placed) {
-                    cand.position = placed;
-                    this.placedItems.push(cand);
-                    moved = true;
-                    sumW();
-                    break;
-                } else {
-                    // Put it back where it was.
-                    this.placedItems.push(cand);
-                }
             }
-            if (!moved) break;
+
+            if (!bestPair) break;
+            const [a, b] = bestPair;
+            const tmp = a.position; a.position = b.position; b.position = tmp;
+            swapsMade++;
+            cg = cogX();
         }
 
         // Rebuild the array reference so React state updates detect the change
-        // even if individual item positions were mutated in place.
+        // even though individual item positions were mutated in place.
         this.placedItems = this.placedItems.map(it => ({ ...it, position: { ...it.position } }));
 
         return {
-            front: frontW,
-            rear: rearW,
+            cg,
+            targetCx,
             swapsMade,
-            improved: Math.abs(frontW - ((frontW + rearW) * 0.25)) < initialDiff - 1
+            improved: Math.abs(cg - targetCx) < initialErr - 0.5
         };
     }
 }

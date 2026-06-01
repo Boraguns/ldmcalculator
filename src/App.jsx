@@ -107,27 +107,39 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
             });
         }
 
-        // Front zone = first 25% of trailer length (≈3.4m on a 13.6m dorse).
-        // Target weight in this zone is 25% of total; the remaining 75%
-        // length carries the remaining 75% of weight (mid+rear lumped).
-        // Warning fires when front-zone share is >±10 pp off target.
-        const frontZoneEnd = actualTruck.length * 0.25;
-        let frontW = 0, restW = 0;
+        // Realistic axle balance for a semi-trailer: split the deck at its
+        // midpoint and compare front-half vs rear-half weight, and compute the
+        // longitudinal centre of gravity (CoG) as a % of trailer length
+        // (0 = headboard/front, 100 = rear doors).
+        //
+        // A safe load is centred or biased slightly FORWARD (toward the kingpin
+        // and tractor drive axles). A REAR-biased load is the dangerous/illegal
+        // case (overloads the trailer axles, lightens the drive axles), so the
+        // warning + "rebalance" action only fire when the CoG drifts behind the
+        // safe zone. A partially-loaded truck packed solid from the front is
+        // front-biased and perfectly normal — it must NOT warn.
+        const L = actualTruck.length;
+        let frontW = 0, restW = 0, cogNum = 0;
         result.placedItems.forEach(it => {
             const cx = (it.position?.x || 0) + (it.dimensions?.length || 0) / 2;
             const w = (it.weight || 0) * (it.quantity || 1);
-            if (cx < frontZoneEnd) frontW += w; else restW += w;
+            if (cx < L / 2) frontW += w; else restW += w;
+            cogNum += w * cx;
         });
         const totalDistW = frontW + restW;
         if (totalDistW > 0) {
             const frontPct = (frontW / totalDistW) * 100;
+            const cogPct = (cogNum / totalDistW / L) * 100;
             result.balance = {
                 front: frontW,
                 rear: restW,
                 frontPct,
                 rearPct: 100 - frontPct,
-                targetFrontPct: 25,
-                warning: Math.abs(frontPct - 25) > 10
+                cogPct,
+                targetFrontPct: 50,
+                // Only flag genuinely rear-biased loads (CoG behind ~58% of the
+                // deck). Front bias is safe and is left unflagged.
+                warning: cogPct > 58
             };
         }
         return result;

@@ -23,7 +23,15 @@
       "Bash(node --input-type=module -e ' *)",
       "Bash(node -e 'JSON.parse\\(require\\('\\\\''fs'\\\\''\\).readFileSync\\('\\\\''src/i18n/locales/__TRACKED_VAR__.json'\\\\'','\\\\''utf8'\\\\''\\)\\)')",
       "Bash(node -e \"console.log\\('nodemailer', require\\('nodemailer/package.json'\\).version\\)\")",
-      "Bash(node -e 'const o=require\\('\\\\''./__TRACKED_VAR__'\\\\''\\); console.log\\(Object.keys\\(o\\).join\\('\\\\'', '\\\\''\\)\\)')"
+      "Bash(node -e 'const o=require\\('\\\\''./__TRACKED_VAR__'\\\\''\\); console.log\\(Object.keys\\(o\\).join\\('\\\\'', '\\\\''\\)\\)')",
+      "Bash(sed -i '549,769d' src/utils/binpacking.js)",
+      "Bash(sed -n '544,556p' src/utils/binpacking.js)",
+      "Bash(sed -i 's#\"axleBalance\": \"Ön Bölge Yük Dağılımı\",#\"axleBalance\": \"Aks Yük Dengesi\",#' tr.json)",
+      "Bash(sed -i 's#\"balanceWarn\": \"Ön bölge \\(ilk %25 / ≈3,4 m\\) toplam ağırlığın yaklaşık %25.*\",#\"balanceWarn\": \"Yükün ağırlık merkezi dorsenin arkasına kaymış. Bu, dorse akslarını aşırı yükler ve çekici \\(kingpin\\) akslarını hafifletir — güvensiz ve mevzuata aykırı. Ağır kolileri ön tarafa alın.\",#' tr.json)",
+      "Bash(sed -i 's#\"axleBalance\": \"Front-Zone Load Distribution\",#\"axleBalance\": \"Axle Load Balance\",#' en.json)",
+      "Bash(sed -i 's#\"balanceWarn\": \"Front zone \\(first 25% / ≈3.4 m\\) should carry ~25%.*\",#\"balanceWarn\": \"The load.s centre of gravity has shifted toward the rear. This overloads the trailer axles and lightens the tractor drive axles — unsafe and non-compliant. Move heavier boxes toward the front \\(kingpin\\).\",#' en.json)",
+      "Bash(sed -i 's#\"axleBalance\": \"Lastverteilung Frontzone\",#\"axleBalance\": \"Achslastverteilung\",#' de.json)",
+      "Bash(node -e 'JSON.parse\\(require\\('\\\\''fs'\\\\''\\).readFileSync\\('\\\\''src/i18n/locales/__TRACKED_VAR__.json'\\\\'','\\\\''utf8'\\\\''\\)\\); console.log\\('\\\\''__TRACKED_VAR__ OK'\\\\''\\)')"
     ]
   }
 }
