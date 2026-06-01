@@ -911,6 +911,148 @@ const MessageList = ({ type, columns, allowMarkRead = true }) => {
     );
 };
 
+// ---- Pricing management ----------------------------------------------------
+const PLANS = ['individual', 'corporate'];
+const PERIODS = ['monthly', 'yearly'];
+const CURRENCIES = ['TRY', 'USD', 'EUR'];
+const CORP_TIERS = [3, 5, 10, 20, 30, 50, 100];
+
+const PricingManager = () => {
+    const [rows, setRows] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [draft, setDraft] = useState({ plan: 'individual', tier: '', period: 'monthly', currency: 'TRY', amount: '', vat_rate: '20', active: true });
+
+    const load = async () => {
+        setLoading(true);
+        const r = await fetch('/api/admin/pricing', { headers: auth() });
+        const j = await r.json().catch(() => ({}));
+        setRows(j.pricing || []);
+        setLoading(false);
+    };
+    useEffect(() => { load(); }, []);
+
+    const save = async (row) => {
+        await fetch('/api/admin/pricing', {
+            method: 'PUT', headers: { ...auth(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                plan: row.plan, tier: row.plan === 'corporate' ? parseInt(row.tier, 10) : null,
+                period: row.period, currency: row.currency,
+                amount: parseFloat(row.amount) || 0, vat_rate: parseFloat(row.vat_rate) || 0, active: row.active !== false,
+            }),
+        });
+        await load();
+    };
+    const addRow = async () => { await save(draft); setDraft({ ...draft, amount: '' }); };
+    const del = async (id) => { if (!window.confirm('Sil?')) return; await fetch(`/api/admin/pricing?id=${id}`, { method: 'DELETE', headers: auth() }); await load(); };
+
+    const inp = { background: '#0b1220', color: '#e2e8f0', border: '1px solid #334155', borderRadius: 6, padding: '6px 8px' };
+    return (
+        <div>
+            <h2 style={{ color: '#f8fafc' }}>Fiyatlandırma</h2>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 16, background: '#111827', padding: 12, borderRadius: 10 }}>
+                <select value={draft.plan} onChange={e => setDraft({ ...draft, plan: e.target.value })} style={inp}>{PLANS.map(p => <option key={p} value={p}>{p}</option>)}</select>
+                {draft.plan === 'corporate' && (
+                    <select value={draft.tier} onChange={e => setDraft({ ...draft, tier: e.target.value })} style={inp}>
+                        <option value="">tier</option>{CORP_TIERS.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                )}
+                <select value={draft.period} onChange={e => setDraft({ ...draft, period: e.target.value })} style={inp}>{PERIODS.map(p => <option key={p} value={p}>{p}</option>)}</select>
+                <select value={draft.currency} onChange={e => setDraft({ ...draft, currency: e.target.value })} style={inp}>{CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}</select>
+                <input placeholder="amount" value={draft.amount} onChange={e => setDraft({ ...draft, amount: e.target.value })} style={{ ...inp, width: 90 }} />
+                <input placeholder="vat %" value={draft.vat_rate} onChange={e => setDraft({ ...draft, vat_rate: e.target.value })} style={{ ...inp, width: 70 }} />
+                <button onClick={addRow} className="ai-btn" style={{ height: 34 }}><div className="ai-btn-inner" style={{ background: '#3b82f6', color: '#fff' }}>Ekle / Güncelle</div></button>
+            </div>
+            {loading ? <p>…</p> : (
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+                    <thead><tr style={{ textAlign: 'left', color: '#94a3b8' }}><th>Plan</th><th>Tier</th><th>Period</th><th>Cur</th><th>Amount</th><th>VAT%</th><th>Active</th><th></th></tr></thead>
+                    <tbody>
+                        {rows.map(r => (
+                            <tr key={r.id} style={{ borderTop: '1px solid #1f2937' }}>
+                                <td style={{ padding: '6px 4px' }}>{r.plan}</td>
+                                <td>{r.tier ?? '—'}</td>
+                                <td>{r.period}</td>
+                                <td>{r.currency}</td>
+                                <td><input defaultValue={r.amount} onBlur={e => save({ ...r, amount: e.target.value })} style={{ ...inp, width: 90 }} /></td>
+                                <td><input defaultValue={r.vat_rate} onBlur={e => save({ ...r, vat_rate: e.target.value })} style={{ ...inp, width: 60 }} /></td>
+                                <td><input type="checkbox" defaultChecked={r.active} onChange={e => save({ ...r, active: e.target.checked })} /></td>
+                                <td><button onClick={() => del(r.id)} style={{ background: 'transparent', border: '1px solid #7f1d1d', color: '#fca5a5', borderRadius: 6, padding: '4px 8px', cursor: 'pointer' }}>Sil</button></td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            )}
+        </div>
+    );
+};
+
+// ---- Subscriptions / users / payments overview -----------------------------
+const SubscriptionsManager = () => {
+    const [view, setView] = useState('stats');
+    const [data, setData] = useState(null);
+    useEffect(() => {
+        setData(null);
+        const q = view === 'list' ? '' : `?view=${view}`;
+        fetch(`/api/admin/subscriptions${q}`, { headers: auth() })
+            .then(r => r.json()).then(setData).catch(() => setData({}));
+    }, [view]);
+
+    const money = (a, c) => `${c} ${(Number(a) || 0).toLocaleString()}`;
+    const td = { padding: '6px 8px', borderTop: '1px solid #1f2937' };
+    const th = { textAlign: 'left', color: '#94a3b8', padding: '6px 8px' };
+
+    return (
+        <div>
+            <h2 style={{ color: '#f8fafc' }}>Abonelikler</h2>
+            <nav style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
+                {[['stats', 'Özet'], ['list', 'Abonelikler'], ['users', 'Kullanıcılar'], ['payments', 'Ödemeler']].map(([k, l]) => (
+                    <button key={k} onClick={() => setView(k)} className="ai-btn" style={{ height: 32 }}>
+                        <div className="ai-btn-inner" style={{ background: view === k ? '#3b82f6' : 'transparent', color: '#fff' }}>{l}</div>
+                    </button>
+                ))}
+            </nav>
+            {!data ? <p>…</p> : view === 'stats' ? (
+                <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+                    {[['Kullanıcı', data.stats?.users], ['Firma', data.stats?.companies], ['Aktif abonelik', data.stats?.activeSubs]].map(([l, v]) => (
+                        <div key={l} style={{ background: '#111827', padding: 18, borderRadius: 10, minWidth: 140 }}>
+                            <div style={{ color: '#94a3b8', fontSize: '0.85rem' }}>{l}</div>
+                            <div style={{ fontSize: '1.8rem', fontWeight: 700, color: '#fff' }}>{v ?? 0}</div>
+                        </div>
+                    ))}
+                    <div style={{ background: '#111827', padding: 18, borderRadius: 10, minWidth: 180 }}>
+                        <div style={{ color: '#94a3b8', fontSize: '0.85rem' }}>MRR</div>
+                        {(data.stats?.mrr || []).map(m => <div key={m.currency} style={{ color: '#fff' }}>{money(m.mrr, m.currency)}</div>)}
+                    </div>
+                    <div style={{ background: '#111827', padding: 18, borderRadius: 10, minWidth: 180 }}>
+                        <div style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Bu ay tahsilat</div>
+                        {(data.stats?.paidThisMonth || []).map(m => <div key={m.currency} style={{ color: '#fff' }}>{money(m.total, m.currency)} ({m.n})</div>)}
+                    </div>
+                </div>
+            ) : view === 'users' ? (
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                    <thead><tr><th style={th}>Email</th><th style={th}>Ad</th><th style={th}>Tip</th><th style={th}>Firma</th><th style={th}>Doğrulı</th><th style={th}>Kayıt</th></tr></thead>
+                    <tbody>{(data.users || []).map(u => (
+                        <tr key={u.id}><td style={td}>{u.email}</td><td style={td}>{u.first_name} {u.last_name}</td><td style={td}>{u.account_type}</td><td style={td}>{u.company_name || '—'}</td><td style={td}>{u.email_verified ? '✓' : '—'}</td><td style={td}>{new Date(u.created_at).toLocaleDateString()}</td></tr>
+                    ))}</tbody>
+                </table>
+            ) : view === 'payments' ? (
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                    <thead><tr><th style={th}>Tarih</th><th style={th}>Tutar</th><th style={th}>KDV</th><th style={th}>Durum</th><th style={th}>Tür</th><th style={th}>Kullanıcı/Firma</th></tr></thead>
+                    <tbody>{(data.payments || []).map(p => (
+                        <tr key={p.id}><td style={td}>{new Date(p.paid_at || p.created_at).toLocaleDateString()}</td><td style={td}>{money(p.amount, p.currency)}</td><td style={td}>{money(p.vat_amount, p.currency)}</td><td style={td}>{p.status}</td><td style={td}>{p.kind}</td><td style={td}>{p.company_name || p.user_email || '—'}</td></tr>
+                    ))}</tbody>
+                </table>
+            ) : (
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                    <thead><tr><th style={th}>Plan</th><th style={th}>Period</th><th style={th}>Tier</th><th style={th}>Tutar</th><th style={th}>Durum</th><th style={th}>Bitiş</th><th style={th}>Kullanıcı/Firma</th></tr></thead>
+                    <tbody>{(data.subscriptions || []).map(s => (
+                        <tr key={s.id}><td style={td}>{s.plan}</td><td style={td}>{s.period}</td><td style={td}>{s.tier ?? '—'}</td><td style={td}>{money(s.amount, s.currency)}</td><td style={td}>{s.status}{s.cancel_at_period_end ? ' (iptal)' : ''}</td><td style={td}>{s.current_period_end ? new Date(s.current_period_end).toLocaleDateString() : '—'}</td><td style={td}>{s.company_name || s.user_email || '—'}</td></tr>
+                    ))}</tbody>
+                </table>
+            )}
+        </div>
+    );
+};
+
 const Admin = () => {
     const [user, setUser] = useState(null);
     const [tab, setTab] = useState('flags');
@@ -961,6 +1103,8 @@ const Admin = () => {
                     ['site',      'Site Yönetimi'],
                     ['faq',       'SSS (FAQ)'],
                     ['names',     'Ürün İsim Logları'],
+                    ['pricing',   'Fiyatlandırma'],
+                    ['subs',      'Abonelikler'],
                     ['contact',   'Contact'],
                     ['advertise', 'Advertise'],
                     ['screenshot','Screenshot logs']
@@ -977,6 +1121,8 @@ const Admin = () => {
                 {tab === 'site'    && <SiteContent />}
                 {tab === 'faq'     && <FAQManager />}
                 {tab === 'names'   && <ProductNameLogs />}
+                {tab === 'pricing' && <PricingManager />}
+                {tab === 'subs'    && <SubscriptionsManager />}
                 {tab === 'contact' && <MessageList type="contact" columns={{
                     title: r => `${r.name} <${r.email}>${r.subject ? ' — ' + r.subject : ''}`,
                     body: r => r.message

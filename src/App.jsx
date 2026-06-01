@@ -16,6 +16,17 @@ import ToolPlaceholder from './pages/ToolPlaceholder';
 import { useT } from './i18n/LanguageContext';
 import { useSiteAsset } from './hooks/useSiteAssets';
 import usePageMeta from './hooks/usePageMeta';
+import { UsageProvider } from './usage/UsageContext';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import VerifyEmail from './pages/VerifyEmail';
+import ResetPassword from './pages/ResetPassword';
+import Pricing from './pages/Pricing';
+import Account from './pages/Account';
+import AcceptInvite from './pages/AcceptInvite';
+import Kvkk from './pages/legal/Kvkk';
+import ExplicitConsent from './pages/legal/ExplicitConsent';
+import RefundPolicy from './pages/legal/RefundPolicy';
 
 const MODE_META = {
     truck: {
@@ -624,22 +635,37 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
 function App() {
     return (
         <Router>
-            <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/truck" element={<GeneralCalculator mode="truck" />} />
-                <Route path="/train" element={<GeneralCalculator mode="train" />} />
-                <Route path="/plane" element={<GeneralCalculator mode="plane" />} />
-                <Route path="/ship" element={<GeneralCalculator mode="ship" />} />
-                <Route path="/terms" element={<Terms />} />
-                <Route path="/privacy" element={<Privacy />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/advertise" element={<Advertise />} />
-                <Route path="/tools/cmr" element={<CmrDocument />} />
-                <Route path="/tools/invoice" element={<ToolPlaceholder titleKey="tools.invoice" />} />
-                <Route path="/tools/packing-list" element={<ToolPlaceholder titleKey="tools.packingList" />} />
-                <Route path="/admin" element={<Admin />} />
-            </Routes>
+            <UsageProvider>
+                <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/truck" element={<GeneralCalculator mode="truck" />} />
+                    <Route path="/train" element={<GeneralCalculator mode="train" />} />
+                    <Route path="/plane" element={<GeneralCalculator mode="plane" />} />
+                    <Route path="/ship" element={<GeneralCalculator mode="ship" />} />
+                    <Route path="/terms" element={<Terms />} />
+                    <Route path="/privacy" element={<Privacy />} />
+                    <Route path="/about" element={<About />} />
+                    <Route path="/contact" element={<Contact />} />
+                    <Route path="/advertise" element={<Advertise />} />
+                    <Route path="/tools/cmr" element={<CmrDocument />} />
+                    <Route path="/tools/invoice" element={<ToolPlaceholder titleKey="tools.invoice" />} />
+                    <Route path="/tools/packing-list" element={<ToolPlaceholder titleKey="tools.packingList" />} />
+                    {/* Auth + account */}
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
+                    <Route path="/verify-email" element={<VerifyEmail />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route path="/accept-invite" element={<AcceptInvite />} />
+                    <Route path="/pricing" element={<Pricing />} />
+                    <Route path="/account" element={<Account />} />
+                    <Route path="/account/:tab" element={<Account />} />
+                    {/* Legal */}
+                    <Route path="/legal/kvkk" element={<Kvkk />} />
+                    <Route path="/legal/explicit-consent" element={<ExplicitConsent />} />
+                    <Route path="/legal/refund-policy" element={<RefundPolicy />} />
+                    <Route path="/admin" element={<Admin />} />
+                </Routes>
+            </UsageProvider>
         </Router>
     );
 }

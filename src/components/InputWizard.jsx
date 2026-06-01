@@ -5,9 +5,11 @@ import '../input-style.css';
 import StepLoader from './StepLoader';
 import { useT, LanguageSwitcher } from '../i18n/LanguageContext';
 import { downloadProductTemplate, parseProductsFile } from '../utils/excelProducts';
+import { useUsage } from '../usage/UsageContext';
 
 const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mode = 'truck', customSpecs = null, addStangaMode = false, onToggleStangaMode, stangaCount = 0, addSpanzetMode = false, onToggleSpanzetMode, spanzetCount = 0 }) => {
     const { t, lang } = useT();
+    const { guard } = useUsage();
     const excelInputRef = useRef(null);
     const [step, setStep] = useState(1);
     const [truckType, setTruckType] = useState(null); // 'standard' or 'mega'
@@ -176,7 +178,12 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
         else setDrawerOpen(false);
     }, [step]);
 
-    const handleCalculate = () => {
+    const handleCalculate = async () => {
+        // Free-tier gate: a stacking run counts as one service use. When the
+        // daily quota is exhausted the paywall opens and we abort the run.
+        const allowed = await guard('stacking', mode);
+        if (!allowed) return;
+
         // If "sameSize" is true, we only care about the first product in the list
         const sourceProducts = sameSize ? [products[0]] : products;
 

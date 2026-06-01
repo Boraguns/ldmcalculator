@@ -21,7 +21,9 @@
       "Bash(npm install *)",
       "Bash(node -e \"const x=require\\('xlsx'\\); console.log\\('xlsx version:', x.version\\)\")",
       "Bash(node --input-type=module -e ' *)",
-      "Bash(node -e 'JSON.parse\\(require\\('\\\\''fs'\\\\''\\).readFileSync\\('\\\\''src/i18n/locales/__TRACKED_VAR__.json'\\\\'','\\\\''utf8'\\\\''\\)\\)')"
+      "Bash(node -e 'JSON.parse\\(require\\('\\\\''fs'\\\\''\\).readFileSync\\('\\\\''src/i18n/locales/__TRACKED_VAR__.json'\\\\'','\\\\''utf8'\\\\''\\)\\)')",
+      "Bash(node -e \"console.log\\('nodemailer', require\\('nodemailer/package.json'\\).version\\)\")",
+      "Bash(node -e 'const o=require\\('\\\\''./__TRACKED_VAR__'\\\\''\\); console.log\\(Object.keys\\(o\\).join\\('\\\\'', '\\\\''\\)\\)')"
     ]
   }
 }

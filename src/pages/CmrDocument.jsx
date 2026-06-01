@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useT } from '../i18n/LanguageContext';
 import usePageMeta from '../hooks/usePageMeta';
+import { useUsage } from '../usage/UsageContext';
+import { useAuth } from '../auth/AuthContext';
+import { api } from '../utils/api';
 import '../cmr.css';
 
 /**
@@ -14,6 +17,8 @@ import '../cmr.css';
 const CmrDocument = () => {
     const navigate = useNavigate();
     const { t } = useT();
+    const { guard } = useUsage();
+    const { user } = useAuth();
     usePageMeta({
         title: 'CMR Note — Fillable International Consignment Note Template | LDMCalculator',
         description: 'Free fillable CMR (International Consignment Note) template. Fill in sender, consignee, carrier and goods details and print or save as PDF.',
@@ -32,6 +37,20 @@ const CmrDocument = () => {
         if (window.confirm(t('tools.resetConfirm'))) {
             setF({ no: 'NO 02030', place3: 'İSTANBUL / TÜRKİYE' });
         }
+    };
+
+    // Printing/saving a CMR counts as one tool use against the free-tier quota.
+    const handlePrint = async () => {
+        const allowed = await guard('tool', 'cmr');
+        if (!allowed) return;
+        // Logged-in users get the document saved to their panel for re-download.
+        if (user) {
+            api('/api/account/documents', {
+                method: 'POST',
+                body: { type: 'cmr', title: `CMR ${f.no || ''}`.trim(), data: f },
+            }).catch(() => {});
+        }
+        window.print();
     };
 
     const ta = (k, rows = 3) => (
@@ -56,7 +75,7 @@ const CmrDocument = () => {
                 <div className="cmr-tb-actions">
                     <button className="cmr-btn" onClick={() => navigate('/')}>{t('tools.back')}</button>
                     <button className="cmr-btn" onClick={handleReset}>{t('tools.reset')}</button>
-                    <button className="cmr-btn cmr-btn-primary" onClick={() => window.print()}>{t('tools.print')}</button>
+                    <button className="cmr-btn cmr-btn-primary" onClick={handlePrint}>{t('tools.print')}</button>
                 </div>
             </div>
 
