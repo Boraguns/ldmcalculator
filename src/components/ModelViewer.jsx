@@ -209,6 +209,10 @@ const CameraController = ({ viewMode, onUserInteraction }) => {
             maxDistance={70}
             enableDamping
             dampingFactor={0.1}
+            // Zoom toward the mouse pointer instead of always recentring on the
+            // scene origin — gives finer, more intuitive control of the truck.
+            zoomToCursor
+            zoomSpeed={1.1}
             // Allow user to take over
             onStart={() => {
                 setIsAnimating(false);
@@ -219,6 +223,13 @@ const CameraController = ({ viewMode, onUserInteraction }) => {
 };
 
 import { useGLTF, useTexture } from '@react-three/drei';
+
+// Kick off fetching the heavy truck + wheel meshes as soon as this module is
+// evaluated (ModelViewer is part of the main bundle). The downloads then
+// overlap with the time the user spends entering products in the wizard, so by
+// the time results are shown the GLBs are usually already cached.
+useGLTF.preload('/src/truck.glb');
+useGLTF.preload('/src/rear-wheel.glb');
 
 /**
  * Decorative banner (branda) hanging on the back wall around the flag grid.
@@ -1117,7 +1128,11 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck', addStan
             {/* 3D GLB Truck Model (Cabin) - Only for Truck mode */}
             {!isTrain && !isPlane && !isShip && (
                 // Position Adjusted: Moved FURTHER forward (-3.5) and slightly UP (0.5) to align with trailer and avoid clipping/floor issues
-                <TruckCabinModel position={[-tLen / 2 - 3.5, -tHei / 2 + 0.55, 0]} />
+                // Own Suspense boundary (null fallback) so the trailer + cargo
+                // render instantly while the 6 MB cabin GLB streams in behind.
+                <Suspense fallback={null}>
+                    <TruckCabinModel position={[-tLen / 2 - 3.5, -tHei / 2 + 0.55, 0]} />
+                </Suspense>
             )}
 
             {/* Professional Wheel Assemblies */}
@@ -1147,15 +1162,19 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck', addStan
                 ) : (
                     // Truck mode: Replace trailer rear wheels with GLB wheel visuals
                     // so it looks consistent with the (already good-looking) front wheels.
-                    <GLBWheelAssembly
-                        targets={[
-                            [tLen / 2 - 1.5, -tHei / 2 - 0.55, tWid / 2],
-                            [tLen / 2 - 1.5, -tHei / 2 - 0.55, -tWid / 2],
-                            [tLen / 2 - 3.2, -tHei / 2 - 0.55, tWid / 2],
-                            [tLen / 2 - 3.2, -tHei / 2 - 0.55, -tWid / 2]
-                        ]}
-                        glbPath="/src/rear-wheel.glb"
-                    />
+                    // Own Suspense boundary (null fallback) so the 14 MB wheel GLB
+                    // does not hold back the rest of the scene from rendering.
+                    <Suspense fallback={null}>
+                        <GLBWheelAssembly
+                            targets={[
+                                [tLen / 2 - 1.5, -tHei / 2 - 0.55, tWid / 2],
+                                [tLen / 2 - 1.5, -tHei / 2 - 0.55, -tWid / 2],
+                                [tLen / 2 - 3.2, -tHei / 2 - 0.55, tWid / 2],
+                                [tLen / 2 - 3.2, -tHei / 2 - 0.55, -tWid / 2]
+                            ]}
+                            glbPath="/src/rear-wheel.glb"
+                        />
+                    </Suspense>
                 )
             )}
 
@@ -1217,7 +1236,7 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck', addStan
                         )}
                         {showEdges && <lineSegments>
                             <edgesGeometry args={[new THREE.BoxGeometry(w, h, d)]} />
-                            <lineBasicMaterial color="rgba(0,0,0,0.5)" />
+                            <lineBasicMaterial color="#000000" transparent opacity={0.5} />
                         </lineSegments>}
                     </mesh>
                 )
