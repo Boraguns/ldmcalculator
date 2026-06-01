@@ -33,12 +33,63 @@ const BOOLEAN = new Set(['allowRotation', 'stackable']);
 // --- Localised header labels (for the downloaded template) ------------------
 
 const HEADER_LABELS = {
-    tr: { name: 'Ürün Adı', length: 'Uzunluk (cm)', width: 'Genişlik (cm)', height: 'Yükseklik (cm)', weight: 'Ağırlık (kg)', quantity: 'Adet', maxStack: 'Max İstif', allowRotation: 'Döndürülebilir (E/H)', stackable: 'İstiflenebilir (E/H)', color: 'Renk (#hex)' },
-    en: { name: 'Product Name', length: 'Length (cm)', width: 'Width (cm)', height: 'Height (cm)', weight: 'Weight (kg)', quantity: 'Quantity', maxStack: 'Max Stack', allowRotation: 'Rotation (Y/N)', stackable: 'Stackable (Y/N)', color: 'Color (#hex)' },
-    de: { name: 'Produktname', length: 'Länge (cm)', width: 'Breite (cm)', height: 'Höhe (cm)', weight: 'Gewicht (kg)', quantity: 'Menge', maxStack: 'Max Stapel', allowRotation: 'Drehung (J/N)', stackable: 'Stapelbar (J/N)', color: 'Farbe (#hex)' },
-    ru: { name: 'Название', length: 'Длина (см)', width: 'Ширина (см)', height: 'Высота (см)', weight: 'Вес (кг)', quantity: 'Количество', maxStack: 'Макс. штабель', allowRotation: 'Поворот (Д/Н)', stackable: 'Штабелируемый (Д/Н)', color: 'Цвет (#hex)' },
-    fr: { name: 'Nom du produit', length: 'Longueur (cm)', width: 'Largeur (cm)', height: 'Hauteur (cm)', weight: 'Poids (kg)', quantity: 'Quantité', maxStack: 'Empilage max', allowRotation: 'Rotation (O/N)', stackable: 'Empilable (O/N)', color: 'Couleur (#hex)' },
-    ar: { name: 'اسم المنتج', length: 'الطول (سم)', width: 'العرض (سم)', height: 'الارتفاع (سم)', weight: 'الوزن (كجم)', quantity: 'الكمية', maxStack: 'أقصى تكديس', allowRotation: 'الدوران (نعم/لا)', stackable: 'قابل للتكديس (نعم/لا)', color: 'اللون (#hex)' },
+    tr: { name: 'Ürün Adı', length: 'Uzunluk (cm)', width: 'Genişlik (cm)', height: 'Yükseklik (cm)', weight: 'Ağırlık (kg)', quantity: 'Adet', maxStack: 'Max İstif', allowRotation: 'Döndürülebilir (E/H)', stackable: 'İstiflenebilir (E/H)', color: 'Renk (isim)' },
+    en: { name: 'Product Name', length: 'Length (cm)', width: 'Width (cm)', height: 'Height (cm)', weight: 'Weight (kg)', quantity: 'Quantity', maxStack: 'Max Stack', allowRotation: 'Rotation (Y/N)', stackable: 'Stackable (Y/N)', color: 'Color (name)' },
+    de: { name: 'Produktname', length: 'Länge (cm)', width: 'Breite (cm)', height: 'Höhe (cm)', weight: 'Gewicht (kg)', quantity: 'Menge', maxStack: 'Max Stapel', allowRotation: 'Drehung (J/N)', stackable: 'Stapelbar (J/N)', color: 'Farbe (Name)' },
+    ru: { name: 'Название', length: 'Длина (см)', width: 'Ширина (см)', height: 'Высота (см)', weight: 'Вес (кг)', quantity: 'Количество', maxStack: 'Макс. штабель', allowRotation: 'Поворот (Д/Н)', stackable: 'Штабелируемый (Д/Н)', color: 'Цвет (название)' },
+    fr: { name: 'Nom du produit', length: 'Longueur (cm)', width: 'Largeur (cm)', height: 'Hauteur (cm)', weight: 'Poids (kg)', quantity: 'Quantité', maxStack: 'Empilage max', allowRotation: 'Rotation (O/N)', stackable: 'Empilable (O/N)', color: 'Couleur (nom)' },
+    ar: { name: 'اسم المنتج', length: 'الطول (سم)', width: 'العرض (سم)', height: 'الارتفاع (سم)', weight: 'الوزن (كجم)', quantity: 'الكمية', maxStack: 'أقصى تكديس', allowRotation: 'الدوران (نعم/لا)', stackable: 'قابل للتكديس (نعم/لا)', color: 'اللون (الاسم)' },
+};
+
+// --- Named colours ----------------------------------------------------------
+// Excel cells can't host an HTML colour picker, so instead of a hex code the
+// user types a plain colour NAME (e.g. "Mavi"/"Blue"). The template ships a
+// "Colors" reference sheet listing the valid names, and the parser maps any of
+// them (in any of the 6 languages) to a hex value. Raw hex is still accepted.
+
+// Canonical colour -> hex.
+const COLOR_HEX = {
+    red: '#ef4444', blue: '#3b82f6', green: '#10b981', yellow: '#f59e0b',
+    orange: '#f97316', purple: '#8b5cf6', pink: '#ec4899', gray: '#6b7280',
+    black: '#111827', white: '#f3f4f6', teal: '#14b8a6', brown: '#92400e',
+};
+
+// Per-language display names (same order as COLOR_HEX keys) for the template.
+const COLOR_ORDER = ['red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink', 'gray', 'black', 'white', 'teal', 'brown'];
+const COLOR_NAMES = {
+    tr: ['Kırmızı', 'Mavi', 'Yeşil', 'Sarı', 'Turuncu', 'Mor', 'Pembe', 'Gri', 'Siyah', 'Beyaz', 'Turkuaz', 'Kahverengi'],
+    en: ['Red', 'Blue', 'Green', 'Yellow', 'Orange', 'Purple', 'Pink', 'Gray', 'Black', 'White', 'Teal', 'Brown'],
+    de: ['Rot', 'Blau', 'Grün', 'Gelb', 'Orange', 'Lila', 'Rosa', 'Grau', 'Schwarz', 'Weiß', 'Türkis', 'Braun'],
+    ru: ['Красный', 'Синий', 'Зелёный', 'Жёлтый', 'Оранжевый', 'Фиолетовый', 'Розовый', 'Серый', 'Чёрный', 'Белый', 'Бирюзовый', 'Коричневый'],
+    fr: ['Rouge', 'Bleu', 'Vert', 'Jaune', 'Orange', 'Violet', 'Rose', 'Gris', 'Noir', 'Blanc', 'Turquoise', 'Marron'],
+    ar: ['أحمر', 'أزرق', 'أخضر', 'أصفر', 'برتقالي', 'بنفسجي', 'وردي', 'رمادي', 'أسود', 'أبيض', 'فيروزي', 'بني'],
+};
+
+// Normaliser that preserves non-Latin letters (Cyrillic/Arabic) so colour
+// names in every language survive — only drops case, spaces and diacritics.
+const normColor = (s) => String(s == null ? '' : s)
+    .trim().toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/\s+/g, '');
+
+// normalisedName -> hex, built from every language's name list + the canonical
+// English keys.
+const COLOR_LOOKUP = (() => {
+    const m = {};
+    for (const key of COLOR_ORDER) m[normColor(key)] = COLOR_HEX[key];
+    for (const list of Object.values(COLOR_NAMES)) {
+        list.forEach((nm, i) => { m[normColor(nm)] = COLOR_HEX[COLOR_ORDER[i]]; });
+    }
+    return m;
+})();
+
+// Resolve a cell value to a hex colour: accepts #rrggbb / rrggbb hex or a
+// colour name in any supported language. Returns '' when unrecognised/empty.
+const resolveColor = (raw) => {
+    const s = String(raw == null ? '' : raw).trim();
+    if (!s) return '';
+    if (/^#?[0-9a-fA-F]{6}$/.test(s)) return s.startsWith('#') ? s : `#${s}`;
+    return COLOR_LOOKUP[normColor(s)] || '';
 };
 
 // --- Helpers ----------------------------------------------------------------
@@ -53,13 +104,15 @@ const normalizeKey = (s) => String(s == null ? '' : s)
     .normalize('NFD').replace(/[̀-ͯ]/g, '') // strip diacritics
     .replace(/[^a-z0-9]/g, '');
 
-const TRUE_TOKENS = new Set(['e', 'evet', 'y', 'yes', 'true', '1', 'j', 'ja', 'oui', 'o', 'd', 'da', 'naam', 'نعم', 'var', 'x']);
-const FALSE_TOKENS = new Set(['h', 'hayir', 'n', 'no', 'false', '0', 'nein', 'non', 'net', 'la', 'لا', 'yok']);
+// Yes/No tokens across the 6 UI languages. Compared with normColor (which
+// keeps Cyrillic/Arabic letters), so Russian "Да/Нет" and Arabic "نعم/لا" work.
+const TRUE_TOKENS = new Set(['e', 'evet', 'y', 'yes', 'true', '1', 'j', 'ja', 'oui', 'o', 'd', 'da', 'д', 'да', 'نعم', 'var', 'x']);
+const FALSE_TOKENS = new Set(['h', 'hayir', 'n', 'no', 'false', '0', 'nein', 'non', 'net', 'н', 'нет', 'la', 'لا', 'yok']);
 
 const parseBool = (v, fallback) => {
     if (v === true) return true;
     if (v === false) return false;
-    const k = normalizeKey(v);
+    const k = normColor(v); // unicode-preserving lowercase/trim
     if (!k) return fallback;
     if (TRUE_TOKENS.has(k)) return true;
     if (FALSE_TOKENS.has(k)) return false;
@@ -73,10 +126,29 @@ const parseNum = (v) => {
     return Number.isFinite(n) ? n : '';
 };
 
+// Exact localised header -> field lookup, built from every language's
+// HEADER_LABELS using the unicode-preserving normaliser, so Cyrillic/Arabic
+// headers (which normalizeKey would strip to nothing) still match.
+const stripParen = (s) => String(s == null ? '' : s).replace(/\(.*?\)/g, ' ');
+const LABEL_LOOKUP = (() => {
+    const m = {};
+    for (const labels of Object.values(HEADER_LABELS)) {
+        for (const [field, label] of Object.entries(labels)) {
+            const k = normColor(stripParen(label));
+            if (k) m[k] = field;
+        }
+    }
+    return m;
+})();
+
 // Build header -> field lookup from the sheet's first row.
 const buildHeaderMap = (headerRow) => {
     const map = {}; // columnIndex -> field
     headerRow.forEach((h, idx) => {
+        // 1) Exact localised label match (handles all scripts).
+        const uni = normColor(stripParen(h));
+        if (uni && LABEL_LOOKUP[uni]) { map[idx] = LABEL_LOOKUP[uni]; return; }
+        // 2) Latin alias match.
         const key = normalizeKey(h);
         if (!key) return;
         for (const col of COLUMNS) {
@@ -100,15 +172,29 @@ const buildHeaderMap = (headerRow) => {
 export const downloadProductTemplate = async (lang = 'en') => {
     const XLSX = await import('xlsx');
     const labels = HEADER_LABELS[lang] || HEADER_LABELS.en;
+    const names = COLOR_NAMES[lang] || COLOR_NAMES.en;
     const header = COLUMNS.map((c) => labels[c.field]);
-    const example = ['Box A', 120, 80, 100, 25, 10, 3, 'N', 'Y', ''];
-    const example2 = ['Box B', 60, 40, 40, 8, 24, 5, 'Y', 'Y', ''];
+    // Example rows use friendly colour NAMES so the user copies the pattern
+    // (instead of guessing hex). Colour is optional — leaving it blank lets the
+    // app auto-assign one.
+    const example = ['Box A', 120, 80, 100, 25, 10, 3, 'N', 'Y', names[1]]; // Blue
+    const example2 = ['Box B', 60, 40, 40, 8, 24, 5, 'Y', 'Y', names[0]];   // Red
 
     const ws = XLSX.utils.aoa_to_sheet([header, example, example2]);
     ws['!cols'] = COLUMNS.map((c) => ({ wch: c.field === 'name' ? 18 : 14 }));
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Products');
+
+    // Reference sheet: the list of valid colour names the user can type in the
+    // colour column (with the matching hex for anyone who prefers it).
+    const colorTitle = labels.color;
+    const refRows = [[colorTitle, 'HEX']];
+    COLOR_ORDER.forEach((k, i) => refRows.push([names[i], COLOR_HEX[k]]));
+    const refWs = XLSX.utils.aoa_to_sheet(refRows);
+    refWs['!cols'] = [{ wch: 16 }, { wch: 12 }];
+    XLSX.utils.book_append_sheet(wb, refWs, 'Colors');
+
     XLSX.writeFile(wb, 'ldm-stacking-template.xlsx');
 };
 
@@ -165,7 +251,7 @@ export const parseProductsFile = async (file) => {
             maxStack: rec.maxStack != null && parseNum(rec.maxStack) ? parseNum(rec.maxStack) : 1,
             allowRotation: parseBool(rec.allowRotation, false),
             stackable: parseBool(rec.stackable, true),
-            color: rec.color ? String(rec.color).trim() : '',
+            color: resolveColor(rec.color),
             useTotalWeight: false,
             totalWeight: '',
         });

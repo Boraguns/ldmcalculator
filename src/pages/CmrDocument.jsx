@@ -27,6 +27,13 @@ const CmrDocument = () => {
     const set = (k) => (e) => setF(prev => ({ ...prev, [k]: e.target.value }));
     const val = (k) => f[k] ?? '';
 
+    // Reset asks for confirmation first so a full form isn't wiped by accident.
+    const handleReset = () => {
+        if (window.confirm(t('tools.resetConfirm'))) {
+            setF({ no: 'NO 02030', place3: 'İSTANBUL / TÜRKİYE' });
+        }
+    };
+
     const ta = (k, rows = 3) => (
         <textarea className="cmr-textarea" rows={rows} value={val(k)} onChange={set(k)} />
     );
@@ -48,7 +55,7 @@ const CmrDocument = () => {
                 </div>
                 <div className="cmr-tb-actions">
                     <button className="cmr-btn" onClick={() => navigate('/')}>{t('tools.back')}</button>
-                    <button className="cmr-btn" onClick={() => setF({ no: 'NO 02030', place3: 'İSTANBUL / TÜRKİYE' })}>{t('tools.reset')}</button>
+                    <button className="cmr-btn" onClick={handleReset}>{t('tools.reset')}</button>
                     <button className="cmr-btn cmr-btn-primary" onClick={() => window.print()}>{t('tools.print')}</button>
                 </div>
             </div>
