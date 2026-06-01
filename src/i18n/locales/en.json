@@ -8,7 +8,12 @@
     "print": "Print / PDF",
     "reset": "Clear",
     "resetConfirm": "All information in the form will be deleted. Are you sure?",
-    "back": "Go Back"
+    "back": "Go Back",
+    "zoom": "Zoom",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "zoomFit": "Fit width",
+    "zoomReset": "Actual size (100%)"
   },
   "home": {
     "title": "All the calculations you need for cargo planning",

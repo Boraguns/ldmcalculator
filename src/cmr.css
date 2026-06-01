@@ -50,10 +50,20 @@
 .cmr-btn:hover { filter: brightness(1.2); }
 .cmr-btn-primary { background: #3b82f6; }
 
+/* ---------- Zoom stage (scrolls; centres the sheet) ---------- */
+.cmr-stage {
+    width: 100%;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+}
+.cmr-zoomwrap {
+    position: relative;
+    margin: 0 auto;          /* centre when narrower than stage, scroll when wider */
+}
+
 /* ---------- The A4 sheet ---------- */
 .cmr-sheet {
     width: 210mm;
-    max-width: 100%;
     background: #fff;
     color: var(--cmr-blue);
     box-shadow: 0 12px 40px rgba(0,0,0,0.45);
@@ -62,6 +72,54 @@
     font-family: Arial, Helvetica, sans-serif;
     font-size: 8.5px;
     line-height: 1.18;
+    transform-origin: top left;
+}
+
+/* ---------- Floating side zoom controls ---------- */
+.cmr-zoom-controls {
+    position: fixed;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    background: rgba(15, 23, 42, 0.92);
+    border: 1px solid #334155;
+    border-radius: 14px;
+    padding: 8px 7px;
+    z-index: 60;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(6px);
+}
+.cmr-zoom-controls button {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 10px;
+    background: #1e293b;
+    color: #e2e8f0;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .15s;
+}
+.cmr-zoom-controls button:hover { background: #334155; }
+.cmr-zoom-controls button:active { background: #2563eb; }
+.cmr-zoom-controls button.is-active { background: #2563eb; color: #fff; }
+.cmr-zoom-pct {
+    text-align: center;
+    color: #94a3b8;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: Arial, Helvetica, sans-serif;
+    user-select: none;
+    padding: 2px 0;
 }
 
 .cmr-frame {
@@ -214,13 +272,38 @@
 }
 .cmr-sign .cap { font-size: 7px; border-top: 0.75px solid var(--cmr-line); padding-top: 2px; }
 
+/* ---------- Mobile / small screens ---------- */
+@media (max-width: 640px) {
+    .cmr-page { padding: 12px 6px 90px; }
+    .cmr-toolbar .cmr-tb-left img { width: 110px !important; }
+    .cmr-toolbar .cmr-tb-left strong { font-size: 0.85rem; }
+    .cmr-btn { padding: 9px 13px; font-size: 0.82rem; }
+
+    /* dock the zoom controls along the bottom for thumb reach */
+    .cmr-zoom-controls {
+        right: 50%;
+        top: auto;
+        bottom: 14px;
+        transform: translateX(50%);
+        flex-direction: row;
+        align-items: center;
+        border-radius: 16px;
+    }
+    .cmr-zoom-controls button { width: 46px; height: 46px; font-size: 20px; }
+    .cmr-zoom-pct { min-width: 42px; }
+}
+
 /* ---------- Print ---------- */
 @media print {
     @page { size: A4 portrait; margin: 8mm; }
     body { background: #fff !important; }
     .cmr-page { background: #fff; padding: 0; min-height: auto; }
     .cmr-toolbar { display: none !important; }
-    .cmr-sheet { box-shadow: none; width: 100%; padding: 0; }
+    .cmr-zoom-controls { display: none !important; }
+    /* neutralise on-screen zoom so the print is always 1:1 A4 */
+    .cmr-stage { overflow: visible !important; }
+    .cmr-zoomwrap { width: auto !important; height: auto !important; margin: 0 !important; }
+    .cmr-sheet { box-shadow: none; width: 100%; padding: 0; transform: none !important; }
     .cmr-input::placeholder, .cmr-textarea::placeholder,
     .cmr-goods .cell-input::placeholder, .cmr-pay .pay-input::placeholder { color: transparent !important; }
 }

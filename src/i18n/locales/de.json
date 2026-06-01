@@ -8,7 +8,12 @@
     "print": "Drucken / PDF",
     "reset": "Leeren",
     "resetConfirm": "Alle Eingaben im Formular werden gelöscht. Sind Sie sicher?",
-    "back": "Zurück"
+    "back": "Zurück",
+    "zoom": "Zoom",
+    "zoomIn": "Vergrößern",
+    "zoomOut": "Verkleinern",
+    "zoomFit": "An Breite anpassen",
+    "zoomReset": "Originalgröße (100%)"
   },
   "home": {
     "title": "Alle Berechnungen, die Sie für die Frachtplanung brauchen",

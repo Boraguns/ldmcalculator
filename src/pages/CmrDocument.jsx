@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useT } from '../i18n/LanguageContext';
 import usePageMeta from '../hooks/usePageMeta';
@@ -31,6 +31,41 @@ const CmrDocument = () => {
     });
     const set = (k) => (e) => setF(prev => ({ ...prev, [k]: e.target.value }));
     const val = (k) => f[k] ?? '';
+
+    // ----- Zoom / fit-to-width (mobile-friendly viewing) -----
+    const stageRef = useRef(null);
+    const sheetRef = useRef(null);
+    const [nat, setNat] = useState({ w: 0, h: 0 });   // unscaled sheet size (px)
+    const [zoom, setZoom] = useState(1);
+    const [autoFit, setAutoFit] = useState(true);     // follow viewport width until user zooms manually
+
+    // Measure the true (unscaled) sheet size; transforms don't affect offset*.
+    useEffect(() => {
+        const el = sheetRef.current;
+        if (!el || typeof ResizeObserver === 'undefined') return;
+        const ro = new ResizeObserver(() => setNat({ w: el.offsetWidth, h: el.offsetHeight }));
+        ro.observe(el);
+        setNat({ w: el.offsetWidth, h: el.offsetHeight });
+        return () => ro.disconnect();
+    }, []);
+
+    // While in auto-fit mode, scale the sheet down to fit the available width.
+    useEffect(() => {
+        if (!autoFit) return;
+        const fit = () => {
+            if (!stageRef.current || !nat.w) return;
+            const avail = stageRef.current.clientWidth;
+            setZoom(Math.min(1, +(avail / nat.w).toFixed(3)));
+        };
+        fit();
+        window.addEventListener('resize', fit);
+        return () => window.removeEventListener('resize', fit);
+    }, [autoFit, nat.w]);
+
+    const zoomIn = useCallback(() => { setAutoFit(false); setZoom(z => Math.min(2.5, +(z + 0.15).toFixed(2))); }, []);
+    const zoomOut = useCallback(() => { setAutoFit(false); setZoom(z => Math.max(0.35, +(z - 0.15).toFixed(2))); }, []);
+    const zoomReset = useCallback(() => { setAutoFit(false); setZoom(1); }, []);
+    const zoomFit = useCallback(() => setAutoFit(true), []);
 
     // Reset asks for confirmation first so a full form isn't wiped by accident.
     const handleReset = () => {
@@ -79,7 +114,18 @@ const CmrDocument = () => {
                 </div>
             </div>
 
-            <div className="cmr-sheet">
+            {/* Side zoom controls (fixed; hidden when printing) */}
+            <div className="cmr-zoom-controls" role="group" aria-label={t('tools.zoom') || 'Zoom'}>
+                <button type="button" onClick={zoomIn} aria-label={t('tools.zoomIn') || 'Zoom in'} title={t('tools.zoomIn') || 'Zoom in'}>+</button>
+                <span className="cmr-zoom-pct">{Math.round(zoom * 100)}%</span>
+                <button type="button" onClick={zoomOut} aria-label={t('tools.zoomOut') || 'Zoom out'} title={t('tools.zoomOut') || 'Zoom out'}>−</button>
+                <button type="button" className={autoFit ? 'is-active' : ''} onClick={zoomFit} aria-label={t('tools.zoomFit') || 'Fit width'} title={t('tools.zoomFit') || 'Fit width'}>⤢</button>
+                <button type="button" onClick={zoomReset} aria-label={t('tools.zoomReset') || '100%'} title={t('tools.zoomReset') || '100%'}>1:1</button>
+            </div>
+
+            <div className="cmr-stage" ref={stageRef}>
+              <div className="cmr-zoomwrap" style={{ width: nat.w ? nat.w * zoom : '210mm', height: nat.h ? nat.h * zoom : 'auto' }}>
+                <div className="cmr-sheet" ref={sheetRef} style={{ transform: `scale(${zoom})`, transformOrigin: 'top left' }}>
                 <div className="cmr-frame">
                     {/* ===== LEFT VERTICAL LEGEND STRIP ===== */}
                     <div className="cmr-vstrip">
@@ -311,6 +357,8 @@ const CmrDocument = () => {
                         <span>Tehlikeli malın taşınması halinde, mal spesifikasyonu ile ilgili tüm bilgiyi 6,7,8,9. hanelerin oluşturduğu çerçevenin en alt satırında belirtin.</span>
                     </div>
                 </div>
+                </div>
+              </div>
             </div>
         </div>
     );

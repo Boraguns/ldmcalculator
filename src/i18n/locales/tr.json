@@ -8,7 +8,12 @@
     "print": "Yazdır / PDF",
     "reset": "Temizle",
     "resetConfirm": "Formdaki tüm bilgiler silinecek. Emin misiniz?",
-    "back": "Geri Dön"
+    "back": "Geri Dön",
+    "zoom": "Yakınlaştırma",
+    "zoomIn": "Yakınlaştır",
+    "zoomOut": "Uzaklaştır",
+    "zoomFit": "Genişliğe sığdır",
+    "zoomReset": "Gerçek boyut (%100)"
   },
   "home": {
     "title": "Yük planlaması için ihtiyaç duyacağınız tüm hesaplamalar",
