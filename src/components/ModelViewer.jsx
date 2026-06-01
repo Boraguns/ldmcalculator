@@ -41,56 +41,67 @@ const _roundRect = (ctx, x, y, w, h, r) => {
     ctx.closePath();
 };
 
-const makeLabelTexture = (label, color) => {
+// Build a label texture whose CANVAS aspect ratio matches the target face's
+// aspect ratio. Mapping an aspect-matched canvas onto the face means the text
+// is NOT stretched — it keeps a fixed proportion on every face regardless of
+// how long/short that face is.
+const makeLabelTexture = (label, color, aspect = 1) => {
     const text = String(label || '').trim();
-    const key = `${color || '#3b82f6'}|${text}`;
+    const aKey = Math.round(aspect * 10) / 10;
+    const key = `${color || '#3b82f6'}|${text}|${aKey}`;
     if (_labelTexCache.has(key)) return _labelTexCache.get(key);
 
-    const size = 256;
+    const BASE = 256;
+    let cw, ch;
+    if (aspect >= 1) { cw = BASE; ch = Math.max(40, Math.round(BASE / aspect)); }
+    else { ch = BASE; cw = Math.max(40, Math.round(BASE * aspect)); }
+
     const canvas = document.createElement('canvas');
-    canvas.width = size;
-    canvas.height = size;
+    canvas.width = cw;
+    canvas.height = ch;
     const ctx = canvas.getContext('2d');
 
     // Box surface = the product colour, with a faint inner border so the
     // face reads as a real crate panel rather than a flat plane.
     ctx.fillStyle = color || '#3b82f6';
-    ctx.fillRect(0, 0, size, size);
+    ctx.fillRect(0, 0, cw, ch);
     ctx.strokeStyle = 'rgba(0,0,0,0.22)';
     ctx.lineWidth = 6;
-    ctx.strokeRect(4, 4, size - 8, size - 8);
+    ctx.strokeRect(4, 4, cw - 8, ch - 8);
 
     if (text) {
-        const pad = 18;
-        const maxW = size - pad * 2;
-        // Shrink the font until the wrapped text fits within ~4 lines.
-        let fontSize = 44;
+        const padX = 14, padY = 8;
+        const maxW = cw - padX * 2;
+        const maxH = ch - padY * 2;
+        // Font size scales with face height (so it stays proportional), then
+        // we wrap to fit the width.
+        let fontSize = Math.min(Math.round(ch * 0.42), 56);
         let lines = [];
-        for (; fontSize >= 14; fontSize -= 2) {
+        for (; fontSize >= 10; fontSize -= 2) {
             ctx.font = `bold ${fontSize}px Arial, sans-serif`;
             lines = _wrapLines(ctx, text, maxW);
             const totalH = lines.length * fontSize * 1.15;
-            if (lines.length <= 4 && totalH <= size - pad * 2) break;
+            if (totalH <= maxH) break;
         }
         const lineH = fontSize * 1.15;
         const blockH = lines.length * lineH;
         const blockW = Math.min(maxW, Math.max(...lines.map(l => ctx.measureText(l).width)));
 
         // Dark "label sticker" plate behind the text → readable on any colour.
-        const pw = blockW + 22;
-        const ph = blockH + 18;
-        const px = (size - pw) / 2;
-        const py = (size - ph) / 2;
+        const pw = blockW + 18;
+        const ph = blockH + 12;
+        const px = (cw - pw) / 2;
+        const py = (ch - ph) / 2;
         ctx.fillStyle = 'rgba(15,23,42,0.64)';
-        _roundRect(ctx, px, py, pw, ph, 12);
+        _roundRect(ctx, px, py, pw, ph, Math.min(12, ph / 2));
         ctx.fill();
 
         ctx.fillStyle = '#ffffff';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         lines.forEach((l, i) => {
-            const y = size / 2 - blockH / 2 + lineH * (i + 0.5);
-            ctx.fillText(l, size / 2, y);
+            const y = ch / 2 - blockH / 2 + lineH * (i + 0.5);
+            ctx.fillText(l, cw / 2, y);
         });
     }
 
@@ -99,6 +110,39 @@ const makeLabelTexture = (label, color) => {
     tex.needsUpdate = true;
     _labelTexCache.set(key, tex);
     return tex;
+};
+
+// Cache of the 6-material arrays (one per box face) keyed by colour+label+
+// size+highlight-mode, so boxes that share a product/size reuse the same
+// materials and we don't rebuild them on every hover re-render.
+const _labelMatCache = new Map();
+
+const getBoxMaterials = (label, color, w, h, d, mode) => {
+    const r = (n) => Math.round(n * 100) / 100;
+    const key = `${color}|${label}|${r(w)}|${r(h)}|${r(d)}|${mode}`;
+    if (_labelMatCache.has(key)) return _labelMatCache.get(key);
+
+    const emissive = mode === 'stanga' ? '#fbbf24' : (mode === 'spanzet' ? '#a855f7' : '#000000');
+    const emissiveIntensity = mode === 'normal' ? 0 : 0.15;
+    const mk = (aspect) => new THREE.MeshStandardMaterial({
+        map: makeLabelTexture(label, color, aspect),
+        color: 0xffffff,
+        roughness: 0.45,
+        metalness: 0.1,
+        emissive: new THREE.Color(emissive),
+        emissiveIntensity
+    });
+    // BoxGeometry face/material order: [+X, -X, +Y, -Y, +Z, -Z].
+    // Face spans → aspect = faceWidth / faceHeight:
+    //   ±X faces: width=depth(d), height=height(h)
+    //   ±Y faces: width=length(w), height=depth(d)   (top / bottom)
+    //   ±Z faces: width=length(w), height=height(h)
+    const mX = mk(d / h);
+    const mY = mk(w / d);
+    const mZ = mk(w / h);
+    const arr = [mX, mX, mY, mY, mZ, mZ];
+    _labelMatCache.set(key, arr);
+    return arr;
 };
 
 const Loader = () => {
@@ -1137,13 +1181,17 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck', addStan
                 // boxes) skip the canvas texture and fall back to flat colour to
                 // keep texture memory/upload time in check.
                 const labelText = (item.name && !String(item.name).startsWith('#')) ? item.name : `#${item.id}`;
-                const labelTex = packedItems.length <= 800 ? makeLabelTexture(labelText, color) : null;
+                const labelMode = addStangaMode ? 'stanga' : (addSpanzetMode ? 'spanzet' : 'normal');
+                // Aspect-matched per-face materials so the printed label is not
+                // stretched on rectangular faces. Skip for very large loads.
+                const matArray = packedItems.length <= 800 ? getBoxMaterials(labelText, color, w, h, d, labelMode) : null;
 
                 return (
                     <mesh
                         key={i}
                         position={[x, y, z]}
                         castShadow={!heavyLoad}
+                        {...(matArray ? { material: matArray } : {})}
                         onPointerOver={(e) => {
                             e.stopPropagation();
                             onHover(item, e.clientX, e.clientY);
@@ -1158,14 +1206,15 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck', addStan
                         }}
                     >
                         <boxGeometry args={[w, h, d]} />
-                        <meshStandardMaterial
-                            map={labelTex || undefined}
-                            color={labelTex ? '#ffffff' : color}
-                            roughness={0.45}
-                            metalness={0.1}
-                            emissive={addStangaMode ? '#fbbf24' : (addSpanzetMode ? '#a855f7' : '#000')}
-                            emissiveIntensity={(addStangaMode || addSpanzetMode) ? 0.15 : 0}
-                        />
+                        {!matArray && (
+                            <meshStandardMaterial
+                                color={color}
+                                roughness={0.45}
+                                metalness={0.1}
+                                emissive={addStangaMode ? '#fbbf24' : (addSpanzetMode ? '#a855f7' : '#000')}
+                                emissiveIntensity={(addStangaMode || addSpanzetMode) ? 0.15 : 0}
+                            />
+                        )}
                         {showEdges && <lineSegments>
                             <edgesGeometry args={[new THREE.BoxGeometry(w, h, d)]} />
                             <lineBasicMaterial color="rgba(0,0,0,0.5)" />
