@@ -4,9 +4,11 @@ import '../checkbox.css';
 import '../input-style.css';
 import StepLoader from './StepLoader';
 import { useT, LanguageSwitcher } from '../i18n/LanguageContext';
+import { downloadProductTemplate, parseProductsFile } from '../utils/excelProducts';
 
 const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mode = 'truck', customSpecs = null, addStangaMode = false, onToggleStangaMode, stangaCount = 0, addSpanzetMode = false, onToggleSpanzetMode, spanzetCount = 0 }) => {
-    const { t } = useT();
+    const { t, lang } = useT();
+    const excelInputRef = useRef(null);
     const [step, setStep] = useState(1);
     const [truckType, setTruckType] = useState(null); // 'standard' or 'mega'
     const [sameSize, setSameSize] = useState(false);
@@ -107,6 +109,38 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
 
     const removeProduct = (id) => {
         setProducts(products.filter(p => p.id !== id));
+    };
+
+    // --- Excel import / template ---
+    const handleDownloadTemplate = async () => {
+        try {
+            await downloadProductTemplate(lang);
+        } catch (e) {
+            alert(t('wizard.excelError'));
+        }
+    };
+
+    const handleExcelFile = async (e) => {
+        const file = e.target.files && e.target.files[0];
+        // Reset the input so the same file can be re-selected later.
+        e.target.value = '';
+        if (!file) return;
+        try {
+            const imported = await parseProductsFile(file);
+            if (!imported.length) {
+                alert(t('wizard.excelEmpty'));
+                return;
+            }
+            // Excel rows have explicit per-row sizes, so turn off the
+            // "all same size" / tonnage shortcuts and load the full list.
+            setSameSize(false);
+            setByTonnage(false);
+            setProducts(imported.slice(0, 20));
+            if (imported.length > 20) alert(t('wizard.maxProducts'));
+            alert(t('wizard.excelLoaded', { count: Math.min(imported.length, 20) }));
+        } catch (err) {
+            alert(t('wizard.excelError'));
+        }
     };
 
     const updateProduct = (id, field, value) => {
@@ -529,6 +563,51 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                     {t('wizard.addProduct')}
                 </button>
             )}
+
+            {/* Excel: bulk-load the product list from a spreadsheet instead of
+                typing each row. Download the template, fill it, upload it. */}
+            <div style={{
+                marginTop: '14px', padding: '10px 12px',
+                background: 'rgba(16,185,129,0.08)', border: '1px dashed rgba(16,185,129,0.4)',
+                borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '8px'
+            }}>
+                <div style={{ fontSize: '0.78rem', color: '#34d399', fontWeight: 600 }}>
+                    {t('wizard.excelTitle')}
+                </div>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    <button
+                        type="button"
+                        onClick={handleDownloadTemplate}
+                        style={{
+                            flex: '1 1 140px', padding: '8px 10px', cursor: 'pointer',
+                            background: 'rgba(255,255,255,0.05)', color: '#e2e8f0',
+                            border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px',
+                            fontSize: '0.8rem', fontWeight: 600
+                        }}
+                    >
+                        ⬇️ {t('wizard.excelTemplate')}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => excelInputRef.current && excelInputRef.current.click()}
+                        style={{
+                            flex: '1 1 140px', padding: '8px 10px', cursor: 'pointer',
+                            background: 'rgba(16,185,129,0.18)', color: '#d1fae5',
+                            border: '1px solid rgba(16,185,129,0.5)', borderRadius: '8px',
+                            fontSize: '0.8rem', fontWeight: 600
+                        }}
+                    >
+                        📤 {t('wizard.excelUpload')}
+                    </button>
+                    <input
+                        ref={excelInputRef}
+                        type="file"
+                        accept=".xlsx,.xls,.csv"
+                        onChange={handleExcelFile}
+                        style={{ display: 'none' }}
+                    />
+                </div>
+            </div>
 
             <div style={{ marginTop: '1.5rem', display: 'flex', gap: '12px' }}>
                 <button className="ai-btn" onClick={() => setStep(1)} style={{ flex: 1 }}>

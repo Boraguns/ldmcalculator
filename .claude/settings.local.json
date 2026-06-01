@@ -17,7 +17,9 @@
       "Bash(echo \"---EXIT:$?---\")",
       "Bash(cd \"C:\\\\Users\\\\Alp Tek Bilişim\\\\Desktop\\\\LDM Calculator\" 2>/dev/null; ls -la; echo \"---\"; cat package.json 2>/dev/null | head -50)",
       "Bash(node -e \"const t=require\\('./src/i18n/locales/tr.json'\\); console.log\\(Object.keys\\(t\\)\\); console.log\\('--- home keys ---'\\); console.log\\(Object.keys\\(t.home||{}\\)\\); console.log\\('--- footer ---'\\); console.log\\(JSON.stringify\\(t.footer\\)\\);\")",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(npm install *)",
+      "Bash(node -e \"const x=require\\('xlsx'\\); console.log\\('xlsx version:', x.version\\)\")"
     ]
   }
 }
