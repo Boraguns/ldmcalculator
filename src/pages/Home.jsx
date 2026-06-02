@@ -5,6 +5,7 @@ import { useSiteAsset } from '../hooks/useSiteAssets';
 import usePageMeta from '../hooks/usePageMeta';
 import ToolsMenu from '../components/ToolsMenu';
 import AccountMenu from '../components/AccountMenu';
+import ReferenceMarquee from '../components/ReferenceMarquee';
 
 const Home = () => {
     const navigate = useNavigate();
@@ -253,6 +254,10 @@ const Home = () => {
                 }}>
                     {t('home.title')}
                 </h1>
+
+                {/* Auto-scrolling strip of partner/customer reference logos,
+                    pulled from the admin "References" list (in sort order). */}
+                <ReferenceMarquee isDesktop={isDesktop} fadeColor="#ececec" />
 
                 <div className="home-grid" style={{
                     display: 'grid',

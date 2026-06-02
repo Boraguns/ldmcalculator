@@ -463,7 +463,8 @@ const PackingList = () => {
                             </button>
                         </div>
 
-                        {/* ===== TOTALS (auto-summed from the line items) ===== */}
+                        {/* ===== TOTALS (left) + NOTES (fills the right gap) ===== */}
+                        <div className="inv-bottom">
                         <div className="inv-totals">
                             {totalRows.map(([k, key]) => (
                                 <div className="inv-row" key={k}>
@@ -477,6 +478,15 @@ const PackingList = () => {
                                     </div>
                                 </div>
                             ))}
+                        </div>
+                        <div className={`inv-notes${(f.notes || '').trim() ? '' : ' inv-notes-empty'}`}>
+                            <div className="inv-cap">{t('invoice.form.notes')}</div>
+                            <textarea
+                                value={val('notes')}
+                                onChange={set('notes')}
+                                placeholder={t('invoice.form.notesPlaceholder')}
+                            />
+                        </div>
                         </div>
                       </div>
                     </div>
