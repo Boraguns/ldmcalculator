@@ -324,9 +324,9 @@
     }
   },
   "paywall": {
-    "title": "Tägliches Gratislimit erreicht",
-    "anonBody": "Sie haben Ihre {limit} kostenlosen Dienste für heute genutzt. Abonnieren Sie für unbegrenzten Zugang oder erstellen Sie ein kostenloses Konto für mehr tägliche Nutzungen.",
-    "freeBody": "Sie haben Ihre {limit} kostenlosen Dienste für heute genutzt. Abonnieren Sie für unbegrenzten Zugang.",
+    "title": "Kostenlose Testphase aufgebraucht",
+    "anonBody": "Sie haben Ihre {limit} kostenlosen Versuche aufgebraucht. Erstellen Sie ein kostenloses Konto für mehr oder abonnieren Sie für unbegrenzten Zugriff.",
+    "freeBody": "Sie haben Ihre {limit} kostenlosen Versuche aufgebraucht. Abonnieren Sie für unbegrenzten Zugriff.",
     "subscribe": "Pakete ansehen",
     "register": "Kostenloses Konto erstellen",
     "haveAccount": "Bereits ein Konto?",
@@ -397,7 +397,10 @@
     "verifyResend": "Bestätigungs-E-Mail erneut senden",
     "verifySending": "Senden…",
     "verifySent": "Bestätigungs-E-Mail gesendet",
-    "verifyError": "Senden fehlgeschlagen. Erneut versuchen."
+    "verifyError": "Senden fehlgeschlagen. Erneut versuchen.",
+    "tierFree": "Kostenloses Konto",
+    "tierPremium": "👑 Premium-Konto",
+    "trialsLeft": "{n} Versuche übrig"
   },
   "invite": {
     "title": "Team beitreten",

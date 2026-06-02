@@ -1,13 +1,14 @@
 // Free-tier usage metering. A "service" is one stacking run OR one tool
-// document. Limits are DAILY and shared across both kinds:
-//   • anonymous visitor      → 2 / day   (tracked by IP + signed cookie + fingerprint)
-//   • free registered user   → 5 / day   (tracked by user_id)
+// document. Limits are a LIFETIME trial allowance (not a daily reset), shared
+// across both kinds, forming a sign-up → subscribe funnel:
+//   • anonymous visitor      → 2 total  (tracked by IP + signed cookie + fingerprint) → register
+//   • free registered user   → 2 total  (tracked by user_id)                          → subscribe
 //   • active paid subscriber → unlimited
 import { sql } from './db.js';
 import { getOrSetAnonId, hashId, clientIp } from './userauth.js';
 
-export const ANON_DAILY = 2;
-export const FREE_DAILY = 5;
+export const ANON_LIMIT = 2;
+export const FREE_LIMIT = 2;
 
 // True if the user (or their company) has a usable, non-expired subscription.
 export async function hasActiveSubscription(user) {
@@ -21,20 +22,22 @@ export async function hasActiveSubscription(user) {
     return !!rows[0];
 }
 
-async function anonCountToday({ ip, cookieId, fp }) {
+// Lifetime trial counts (no day filter) — the allowance is consumed once, never
+// resets, so an exhausted visitor is pushed to register / subscribe.
+async function anonCount({ ip, cookieId, fp }) {
     const rows = await sql`
         SELECT COUNT(*)::int AS n FROM usage_events
-        WHERE day = CURRENT_DATE AND user_id IS NULL
+        WHERE user_id IS NULL
           AND ( (ip <> '' AND ip = ${ip})
              OR (cookie_id <> '' AND cookie_id = ${cookieId})
              OR (fingerprint <> '' AND fingerprint = ${fp}) )`;
     return rows[0]?.n || 0;
 }
 
-async function userCountToday(userId) {
+async function userCount(userId) {
     const rows = await sql`
         SELECT COUNT(*)::int AS n FROM usage_events
-        WHERE day = CURRENT_DATE AND user_id = ${userId}`;
+        WHERE user_id = ${userId}`;
     return rows[0]?.n || 0;
 }
 
@@ -52,15 +55,15 @@ export async function getUsageStatus(req, res, user, fp = '') {
             return { tier: 'paid', unlimited: true, limit: null, used: 0, remaining: null,
                      ip, cookieId, fingerprint, userId: user.id };
         }
-        const used = await userCountToday(user.id);
-        return { tier: 'free', unlimited: false, limit: FREE_DAILY, used,
-                 remaining: Math.max(0, FREE_DAILY - used),
+        const used = await userCount(user.id);
+        return { tier: 'free', unlimited: false, limit: FREE_LIMIT, used,
+                 remaining: Math.max(0, FREE_LIMIT - used),
                  ip, cookieId, fingerprint, userId: user.id };
     }
 
-    const used = await anonCountToday({ ip, cookieId, fp: fingerprint });
-    return { tier: 'anon', unlimited: false, limit: ANON_DAILY, used,
-             remaining: Math.max(0, ANON_DAILY - used),
+    const used = await anonCount({ ip, cookieId, fp: fingerprint });
+    return { tier: 'anon', unlimited: false, limit: ANON_LIMIT, used,
+             remaining: Math.max(0, ANON_LIMIT - used),
              ip, cookieId, fingerprint, userId: null };
 }
 

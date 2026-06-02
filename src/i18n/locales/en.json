@@ -323,9 +323,9 @@
     }
   },
   "paywall": {
-    "title": "Daily free limit reached",
-    "anonBody": "You've used your {limit} free services for today. Subscribe for unlimited access, or create a free account for more daily uses.",
-    "freeBody": "You've used your {limit} free services for today. Subscribe for unlimited access.",
+    "title": "Free trial used up",
+    "anonBody": "You've used your {limit} free trials. Create a free account for more, or subscribe for unlimited access.",
+    "freeBody": "You've used your {limit} free trials. Subscribe for unlimited access.",
     "subscribe": "View plans",
     "register": "Create a free account",
     "haveAccount": "Already have an account?",
@@ -396,7 +396,10 @@
     "verifyResend": "Resend verification email",
     "verifySending": "Sending…",
     "verifySent": "Verification email sent",
-    "verifyError": "Could not send. Try again."
+    "verifyError": "Could not send. Try again.",
+    "tierFree": "Free Account",
+    "tierPremium": "👑 Premium Account",
+    "trialsLeft": "{n} free trials left"
   },
   "invite": {
     "title": "Join your team",

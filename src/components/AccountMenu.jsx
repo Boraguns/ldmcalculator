@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useT } from '../i18n/LanguageContext';
 import { useAuth } from '../auth/AuthContext';
+import { useUsage } from '../usage/UsageContext';
 
 /**
  * Auth-aware account control for the site header. Mirrors the visual language
@@ -17,7 +18,13 @@ const AccountMenu = ({ style = {}, compact = false, height }) => {
     const { t } = useT();
     const navigate = useNavigate();
     const { user, loading, logout } = useAuth();
+    const { status, checkStatus } = useUsage();
     const h = height ?? (compact ? 40 : 48);
+
+    // Refresh the quota whenever the auth state flips (login/logout) and on
+    // first mount, so the tier badge + trial-count border stay accurate. Each
+    // consumed document also pushes a fresh status into this shared context.
+    useEffect(() => { checkStatus(); }, [user, checkStatus]);
     const [open, setOpen] = useState(false);
     const wrapRef = useRef(null);
     const closeTimer = useRef(null);
@@ -60,6 +67,22 @@ const AccountMenu = ({ style = {}, compact = false, height }) => {
     const initial = (user?.firstName || user?.email || '?').trim().charAt(0).toUpperCase();
     const fontSize = compact ? '0.85rem' : '0.95rem';
 
+    // Subscription tier + remaining trial allowance, derived from the usage
+    // quota. `unlimited` is only ever true for an active paid subscriber.
+    const isPremium = status?.unlimited === true;
+    const remaining = typeof status?.remaining === 'number' ? status.remaining : null;
+    // Coloured ring around the button that counts the free trials down:
+    // green (2+) → orange (1) → red (0). Premium users get no ring.
+    const ring = (!isPremium && remaining !== null)
+        ? (remaining >= 2 ? '#22c55e' : remaining === 1 ? '#f59e0b' : '#ef4444')
+        : null;
+    const ringTitle = ring ? t('account.trialsLeft', { n: remaining }) : undefined;
+    // The little tier line shown under the username (logged-in users only).
+    const tierLabel = loggedIn
+        ? (isPremium ? t('account.tierPremium') : t('account.tierFree'))
+        : null;
+    const tierColor = isPremium ? '#fbbf24' : '#94a3b8';
+
     const menuItems = loggedIn
         ? [
             { key: 'myAccount', label: t('nav.myAccount'), onClick: () => go('/account') },
@@ -81,7 +104,13 @@ const AccountMenu = ({ style = {}, compact = false, height }) => {
             <div
                 className="ai-btn ai-language-switcher"
                 onClick={() => (loggedIn ? setOpen(o => !o) : go('/login'))}
-                style={{ padding: '2px', height: `${h}px`, cursor: 'pointer' }}
+                title={ringTitle}
+                style={{
+                    padding: '2px', height: `${h}px`, cursor: 'pointer',
+                    borderRadius: 12,
+                    boxShadow: ring ? `0 0 0 2px ${ring}` : undefined,
+                    transition: 'box-shadow .2s',
+                }}
             >
                 <div
                     className="ai-btn-inner"
@@ -114,8 +143,15 @@ const AccountMenu = ({ style = {}, compact = false, height }) => {
                                 }}
                             >{initial}</span>
                             {!compact && (
-                                <span style={{ maxWidth: 110, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                    {user.firstName || user.email}
+                                <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0, lineHeight: 1.15 }}>
+                                    <span style={{ maxWidth: 130, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        {user.firstName || user.email}
+                                    </span>
+                                    {tierLabel && (
+                                        <span style={{ fontSize: '0.62rem', fontWeight: 600, color: tierColor, letterSpacing: '.2px', whiteSpace: 'nowrap' }}>
+                                            {tierLabel}
+                                        </span>
+                                    )}
                                 </span>
                             )}
                             <svg

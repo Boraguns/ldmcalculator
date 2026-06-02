@@ -323,9 +323,9 @@
     }
   },
   "paywall": {
-    "title": "Limite gratuite quotidienne atteinte",
-    "anonBody": "Vous avez utilisé vos {limit} services gratuits aujourd'hui. Abonnez-vous pour un accès illimité, ou créez un compte gratuit pour plus d'utilisations quotidiennes.",
-    "freeBody": "Vous avez utilisé vos {limit} services gratuits aujourd'hui. Abonnez-vous pour un accès illimité.",
+    "title": "Essai gratuit épuisé",
+    "anonBody": "Vous avez utilisé vos {limit} essais gratuits. Créez un compte gratuit pour en obtenir plus, ou abonnez-vous pour un accès illimité.",
+    "freeBody": "Vous avez utilisé vos {limit} essais gratuits. Abonnez-vous pour un accès illimité.",
     "subscribe": "Voir les forfaits",
     "register": "Créer un compte gratuit",
     "haveAccount": "Déjà un compte ?",
@@ -396,7 +396,10 @@
     "verifyResend": "Renvoyer l'e-mail de vérification",
     "verifySending": "Envoi…",
     "verifySent": "E-mail de vérification envoyé",
-    "verifyError": "Échec de l'envoi. Réessayez."
+    "verifyError": "Échec de l'envoi. Réessayez.",
+    "tierFree": "Compte gratuit",
+    "tierPremium": "👑 Compte Premium",
+    "trialsLeft": "{n} essais restants"
   },
   "invite": {
     "title": "Rejoindre votre équipe",

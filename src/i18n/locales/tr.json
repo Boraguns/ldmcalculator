@@ -323,9 +323,9 @@
     }
   },
   "paywall": {
-    "title": "Günlük ücretsiz limit doldu",
-    "anonBody": "Bugünkü {limit} ücretsiz hizmet hakkınızı kullandınız. Sınırsız erişim için abone olun veya daha fazla günlük kullanım için ücretsiz hesap oluşturun.",
-    "freeBody": "Bugünkü {limit} ücretsiz hizmet hakkınızı kullandınız. Sınırsız erişim için abone olun.",
+    "title": "Ücretsiz deneme hakkınız doldu",
+    "anonBody": "{limit} ücretsiz deneme hakkınızı kullandınız. Daha fazlası için ücretsiz hesap oluşturun veya sınırsız erişim için abone olun.",
+    "freeBody": "{limit} ücretsiz deneme hakkınızı kullandınız. Sınırsız erişim için abone olun.",
     "subscribe": "Paketleri gör",
     "register": "Ücretsiz hesap oluştur",
     "haveAccount": "Zaten hesabınız var mı?",
@@ -396,7 +396,10 @@
     "verifyResend": "Doğrulama e-postasını yeniden gönder",
     "verifySending": "Gönderiliyor…",
     "verifySent": "Doğrulama e-postası gönderildi",
-    "verifyError": "Gönderilemedi. Tekrar deneyin."
+    "verifyError": "Gönderilemedi. Tekrar deneyin.",
+    "tierFree": "Ücretsiz Hesap",
+    "tierPremium": "👑 Premium Hesap",
+    "trialsLeft": "{n} deneme hakkınız kaldı"
   },
   "invite": {
     "title": "Ekibinize katılın",
