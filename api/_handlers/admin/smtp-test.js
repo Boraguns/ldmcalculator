@@ -33,6 +33,7 @@ export default async function handler(req, res) {
         port: Number(SMTP_PORT || 587),
         secure: Number(SMTP_PORT) === 465,
         auth: SMTP_USER ? { user: SMTP_USER, pass: SMTP_PASS } : undefined,
+        tls: { rejectUnauthorized: process.env.SMTP_TLS_REJECT_UNAUTHORIZED === '1' },
     });
 
     let verify;
