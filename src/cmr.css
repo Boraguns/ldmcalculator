@@ -124,17 +124,20 @@
     color: #7dd3fc;
 }
 
-/* ---------- Zoom stage (scrolls; centres the sheet) ---------- */
+/* ---------- Zoom stage (bounded viewport that scrolls in both axes) ---------- */
 .cmr-stage {
     flex: 1 1 auto;
     min-width: 0;
     width: 100%;
+    max-height: calc(100vh - 120px); /* fixed viewport so zoomed sheet can be panned */
     overflow: auto;
     -webkit-overflow-scrolling: touch;
 }
 .cmr-zoomwrap {
     position: relative;
-    margin: 0 auto;          /* centre when narrower than stage, scroll when wider */
+    /* Centre the sheet only while it fits; when zoomed larger than the stage,
+       auto margins collapse to 0 so the full sheet stays reachable by scrolling. */
+    margin: 0 auto;
 }
 
 /* ---------- The A4 sheet ---------- */

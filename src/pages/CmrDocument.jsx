@@ -63,8 +63,27 @@ const CmrDocument = () => {
         return () => window.removeEventListener('resize', fit);
     }, [autoFit, nat.w]);
 
-    const zoomIn = useCallback(() => { setAutoFit(false); setZoom(z => Math.min(2.5, +(z + 0.15).toFixed(2))); }, []);
-    const zoomOut = useCallback(() => { setAutoFit(false); setZoom(z => Math.max(0.35, +(z - 0.15).toFixed(2))); }, []);
+    // Zoom around the current viewport centre and keep that point in view by
+    // re-anchoring the stage scroll position after the scale changes.
+    const zoomBy = useCallback((delta) => {
+        setAutoFit(false);
+        setZoom(prev => {
+            const next = Math.min(2.5, Math.max(0.35, +(prev + delta).toFixed(2)));
+            const stage = stageRef.current;
+            if (stage && prev > 0 && next !== prev) {
+                const ratio = next / prev;
+                const cx = stage.scrollLeft + stage.clientWidth / 2;
+                const cy = stage.scrollTop + stage.clientHeight / 2;
+                requestAnimationFrame(() => {
+                    stage.scrollLeft = cx * ratio - stage.clientWidth / 2;
+                    stage.scrollTop = cy * ratio - stage.clientHeight / 2;
+                });
+            }
+            return next;
+        });
+    }, []);
+    const zoomIn = useCallback(() => zoomBy(0.15), [zoomBy]);
+    const zoomOut = useCallback(() => zoomBy(-0.15), [zoomBy]);
     const zoomReset = useCallback(() => { setAutoFit(false); setZoom(1); }, []);
     const zoomFit = useCallback(() => setAutoFit(true), []);
 
