@@ -348,7 +348,8 @@
     "corporateDesc": "Platzbasierte Pakete für Teams (3–100 Nutzer).",
     "seats": "Plätze",
     "choose": "Wählen",
-    "corporateOnlyAdmin": "Nur ein Firmenadministrator kann ein Firmenpaket kaufen."
+    "corporateOnlyAdmin": "Nur ein Firmenadministrator kann ein Firmenpaket kaufen.",
+    "requestReceived": "Ihre Abo-Anfrage ist eingegangen. Wir prüfen und aktivieren sie in Kürze."
   },
   "account": {
     "overview": "Übersicht",
@@ -400,7 +401,8 @@
     "verifyError": "Senden fehlgeschlagen. Erneut versuchen.",
     "tierFree": "Kostenloses Konto",
     "tierPremium": "👑 Premium-Konto",
-    "trialsLeft": "{n} Versuche übrig"
+    "trialsLeft": "{n} Versuche übrig",
+    "subPending": "Ihre Abo-Anfrage wartet auf Freigabe. Sobald sie bestätigt ist, erhalten Sie Zugriff."
   },
   "invite": {
     "title": "Team beitreten",

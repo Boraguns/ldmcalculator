@@ -347,7 +347,8 @@
     "corporateDesc": "Forfaits par siège pour les équipes (3–100 utilisateurs).",
     "seats": "sièges",
     "choose": "Choisir",
-    "corporateOnlyAdmin": "Seul un administrateur d'entreprise peut acheter un forfait entreprise."
+    "corporateOnlyAdmin": "Seul un administrateur d'entreprise peut acheter un forfait entreprise.",
+    "requestReceived": "Votre demande d'abonnement a été reçue. Nous l'examinerons et l'activerons sous peu."
   },
   "account": {
     "overview": "Aperçu",
@@ -399,7 +400,8 @@
     "verifyError": "Échec de l'envoi. Réessayez.",
     "tierFree": "Compte gratuit",
     "tierPremium": "👑 Compte Premium",
-    "trialsLeft": "{n} essais restants"
+    "trialsLeft": "{n} essais restants",
+    "subPending": "Votre demande d'abonnement est en attente d'approbation. Vous aurez accès dès sa confirmation."
   },
   "invite": {
     "title": "Rejoindre votre équipe",

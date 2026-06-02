@@ -3,10 +3,46 @@
 //   GET /api/admin/subscriptions?view=stats → summary counters
 //   GET /api/admin/subscriptions?view=users → registered users list
 //   GET /api/admin/subscriptions?view=payments → recent payments
-import { sql, json, requireAdmin } from '../../_lib/db.js';
+import { sql, json, requireAdmin, readJsonBody } from '../../_lib/db.js';
+import { periodEnd } from '../../_lib/pricing.js';
 
 export default async function handler(req, res) {
     if (!requireAdmin(req)) return json(res, 401, { error: 'unauthorized' });
+
+    // Manual approval of pending subscription requests (used while PayTR is not
+    // wired up). approve → activate now for the selected period; reject → cancel.
+    if (req.method === 'POST') {
+        try {
+            const b = await readJsonBody(req);
+            const id = parseInt(b.id, 10);
+            const action = (b.action || '').toString();
+            if (!id) return json(res, 400, { error: 'id_required' });
+            const rows = await sql`SELECT id, period, status FROM subscriptions WHERE id = ${id} LIMIT 1`;
+            const sub = rows[0];
+            if (!sub) return json(res, 404, { error: 'not_found' });
+
+            if (action === 'approve') {
+                const start = new Date();
+                const end = periodEnd(start, sub.period || 'monthly');
+                await sql`
+                    UPDATE subscriptions
+                    SET status = 'active', current_period_start = ${start.toISOString()},
+                        current_period_end = ${end.toISOString()}, cancel_at_period_end = FALSE,
+                        updated_at = NOW()
+                    WHERE id = ${id}`;
+                return json(res, 200, { ok: true });
+            }
+            if (action === 'reject') {
+                await sql`UPDATE subscriptions SET status = 'canceled', updated_at = NOW() WHERE id = ${id}`;
+                return json(res, 200, { ok: true });
+            }
+            return json(res, 400, { error: 'bad_action' });
+        } catch (e) {
+            console.error('admin/subscriptions POST', e);
+            return json(res, 500, { error: 'server_error' });
+        }
+    }
+
     if (req.method !== 'GET') return json(res, 405, { error: 'method_not_allowed' });
     const view = (req.query?.view || 'list').toString();
     try {
@@ -53,15 +89,18 @@ export default async function handler(req, res) {
             return json(res, 200, { payments: rows });
         }
 
-        // default: subscriptions list
+        // default: subscriptions list. Pending requests sort to the top so the
+        // admin sees what needs approval first; contact fields (email/phone)
+        // are included so they can reach out before granting access.
         const rows = await sql`
             SELECT s.id, s.owner_type, s.plan, s.period, s.tier, s.currency, s.amount, s.status,
                    s.current_period_start, s.current_period_end, s.cancel_at_period_end, s.created_at,
-                   u.email AS user_email, c.name AS company_name
+                   u.email AS user_email, u.first_name, u.last_name, u.phone, c.name AS company_name
             FROM subscriptions s
             LEFT JOIN users u ON u.id = s.user_id
             LEFT JOIN companies c ON c.id = s.company_id
-            ORDER BY s.created_at DESC LIMIT 500`;
+            ORDER BY (CASE WHEN s.status = 'pending' THEN 0 ELSE 1 END), s.created_at DESC
+            LIMIT 500`;
         return json(res, 200, { subscriptions: rows });
     } catch (e) {
         console.error('admin/subscriptions', e);

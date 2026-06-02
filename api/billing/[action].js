@@ -12,6 +12,16 @@ import {
     paytrConfigured, createIframeToken, verifyCallbackHash, newMerchantOid,
 } from '../_lib/paytr.js';
 
+// The subscriptions table predates the manual-approval flow, so add the
+// `provider` marker column on demand (guarded so warm invocations skip it).
+// 'paytr' is the default; manual requests are tagged 'manual'.
+let providerColEnsured = false;
+async function ensureProviderColumn() {
+    if (providerColEnsured) return;
+    await sql`ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS provider TEXT NOT NULL DEFAULT 'paytr'`;
+    providerColEnsured = true;
+}
+
 // PayTR posts application/x-www-form-urlencoded — parse that, not JSON.
 const readFormBody = (req) => new Promise((resolve) => {
     let data = '';
@@ -52,9 +62,42 @@ async function checkout(req, res) {
     const price = await getPrice({ plan, tier, period, currency });
     if (!price) return json(res, 400, { error: 'price_unavailable' });
 
-    if (!paytrConfigured()) return json(res, 503, { error: 'payments_unavailable' });
-
     const ownerType = plan === 'corporate' ? 'company' : 'user';
+
+    // ---- Manual-approval fallback (while PayTR is not configured) ----------
+    // Record the subscription as a pending request for an admin to approve from
+    // the panel. The moment PayTR env vars are set, paytrConfigured() flips to
+    // true and this branch is skipped — the normal iframe flow below runs with
+    // no code changes needed.
+    if (!paytrConfigured()) {
+        await ensureProviderColumn();
+        const ownerMatch = ownerType === 'user'
+            ? sql`user_id = ${user.id}`
+            : sql`company_id = ${user.company_id}`;
+        // Reuse an open request instead of stacking duplicates.
+        const existing = await sql`
+            SELECT id FROM subscriptions
+            WHERE status = 'pending' AND provider = 'manual' AND ${ownerMatch}
+            ORDER BY created_at DESC LIMIT 1`;
+        let subId;
+        if (existing[0]) {
+            subId = existing[0].id;
+            await sql`
+                UPDATE subscriptions
+                SET plan = ${plan}, period = ${period}, tier = ${tier},
+                    currency = ${currency}, amount = ${price.amount}, updated_at = NOW()
+                WHERE id = ${subId}`;
+        } else {
+            const rows = await sql`
+                INSERT INTO subscriptions (owner_type, user_id, company_id, plan, period, tier, currency, amount, status, provider)
+                VALUES (${ownerType}, ${ownerType === 'user' ? user.id : null}, ${ownerType === 'company' ? user.company_id : null},
+                        ${plan}, ${period}, ${tier}, ${currency}, ${price.amount}, 'pending', 'manual')
+                RETURNING id`;
+            subId = rows[0].id;
+        }
+        return json(res, 200, { pending: true, manual: true, subscriptionId: subId });
+    }
+
     const merchantOid = newMerchantOid();
     const { vat } = vatBreakdown(price.amount, price.vat_rate);
 

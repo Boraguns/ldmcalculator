@@ -347,7 +347,8 @@
     "corporateDesc": "Ekipler için koltuk bazlı paketler (3–100 kullanıcı).",
     "seats": "koltuk",
     "choose": "Seç",
-    "corporateOnlyAdmin": "Kurumsal paketi yalnızca firma yöneticisi satın alabilir."
+    "corporateOnlyAdmin": "Kurumsal paketi yalnızca firma yöneticisi satın alabilir.",
+    "requestReceived": "Abonelik talebiniz alındı. En kısa sürede inceleyip etkinleştireceğiz."
   },
   "account": {
     "overview": "Genel bakış",
@@ -399,7 +400,8 @@
     "verifyError": "Gönderilemedi. Tekrar deneyin.",
     "tierFree": "Ücretsiz Hesap",
     "tierPremium": "👑 Premium Hesap",
-    "trialsLeft": "{n} deneme hakkınız kaldı"
+    "trialsLeft": "{n} deneme hakkınız kaldı",
+    "subPending": "Abonelik talebiniz onay bekliyor. Onaylandığı anda erişiminiz açılacaktır."
   },
   "invite": {
     "title": "Ekibinize katılın",

@@ -1226,12 +1226,27 @@ const PricingManager = () => {
 const SubscriptionsManager = () => {
     const [view, setView] = useState('stats');
     const [data, setData] = useState(null);
+    const [tick, setTick] = useState(0);
+    const [busy, setBusy] = useState(null);
     useEffect(() => {
         setData(null);
         const q = view === 'list' ? '' : `?view=${view}`;
         fetch(`/api/admin/subscriptions${q}`, { headers: auth() })
             .then(r => r.json()).then(setData).catch(() => setData({}));
-    }, [view]);
+    }, [view, tick]);
+
+    const act = async (id, action) => {
+        if (action === 'reject' && !window.confirm('Bu abonelik talebini reddet?')) return;
+        if (action === 'approve' && !window.confirm('Bu talebi onayla ve erişimi aç?')) return;
+        setBusy(id);
+        try {
+            await fetch('/api/admin/subscriptions', {
+                method: 'POST', headers: { ...auth(), 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, action }),
+            });
+            setTick(t => t + 1);
+        } finally { setBusy(null); }
+    };
 
     const money = (a, c) => `${c} ${(Number(a) || 0).toLocaleString()}`;
     const td = { padding: '6px 8px', borderTop: '1px solid #1f2937' };
@@ -1280,10 +1295,42 @@ const SubscriptionsManager = () => {
                 </table>
             ) : (
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-                    <thead><tr><th style={th}>Plan</th><th style={th}>Period</th><th style={th}>Tier</th><th style={th}>Tutar</th><th style={th}>Durum</th><th style={th}>Bitiş</th><th style={th}>Kullanıcı/Firma</th></tr></thead>
-                    <tbody>{(data.subscriptions || []).map(s => (
-                        <tr key={s.id}><td style={td}>{s.plan}</td><td style={td}>{s.period}</td><td style={td}>{s.tier ?? '—'}</td><td style={td}>{money(s.amount, s.currency)}</td><td style={td}>{s.status}{s.cancel_at_period_end ? ' (iptal)' : ''}</td><td style={td}>{s.current_period_end ? new Date(s.current_period_end).toLocaleDateString() : '—'}</td><td style={td}>{s.company_name || s.user_email || '—'}</td></tr>
-                    ))}</tbody>
+                    <thead><tr><th style={th}>Plan</th><th style={th}>Period</th><th style={th}>Tier</th><th style={th}>Tutar</th><th style={th}>Durum</th><th style={th}>Bitiş</th><th style={th}>Kullanıcı/Firma</th><th style={th}>İletişim</th><th style={th}>İşlem</th></tr></thead>
+                    <tbody>{(data.subscriptions || []).map(s => {
+                        const name = [s.first_name, s.last_name].filter(Boolean).join(' ');
+                        const isPending = s.status === 'pending';
+                        return (
+                        <tr key={s.id} style={isPending ? { background: 'rgba(251,191,36,0.06)' } : undefined}>
+                            <td style={td}>{s.plan}</td>
+                            <td style={td}>{s.period}</td>
+                            <td style={td}>{s.tier ?? '—'}</td>
+                            <td style={td}>{money(s.amount, s.currency)}</td>
+                            <td style={{ ...td, color: isPending ? '#fbbf24' : s.status === 'active' ? '#34d399' : '#94a3b8', fontWeight: 600 }}>
+                                {isPending ? 'Onay bekliyor' : s.status}{s.cancel_at_period_end ? ' (iptal)' : ''}
+                            </td>
+                            <td style={td}>{s.current_period_end ? new Date(s.current_period_end).toLocaleDateString() : '—'}</td>
+                            <td style={td}>{s.company_name || name || s.user_email || '—'}</td>
+                            <td style={td}>
+                                <div>{s.user_email || '—'}</div>
+                                {s.phone && <div style={{ color: '#94a3b8' }}>{s.phone}</div>}
+                            </td>
+                            <td style={td}>
+                                {isPending ? (
+                                    <div style={{ display: 'flex', gap: 6 }}>
+                                        <button onClick={() => act(s.id, 'approve')} disabled={busy === s.id}
+                                            style={{ background: '#16a34a', color: '#fff', border: 'none', borderRadius: 6, padding: '5px 10px', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem' }}>
+                                            {busy === s.id ? '…' : 'Onayla'}
+                                        </button>
+                                        <button onClick={() => act(s.id, 'reject')} disabled={busy === s.id}
+                                            style={{ background: 'transparent', color: '#fca5a5', border: '1px solid #7f1d1d', borderRadius: 6, padding: '5px 10px', cursor: 'pointer', fontSize: '0.8rem' }}>
+                                            Reddet
+                                        </button>
+                                    </div>
+                                ) : '—'}
+                            </td>
+                        </tr>
+                        );
+                    })}</tbody>
                 </table>
             )}
         </div>

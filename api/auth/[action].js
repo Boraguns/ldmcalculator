@@ -161,14 +161,17 @@ async function resetPassword(req, res) {
 async function me(req, res) {
     const u = await requireUser(req);
     if (!u) return json(res, 401, { error: 'unauthorized' });
-    // Active subscription (own or via company)
+    // Active subscription (own or via company). Pending manual requests are
+    // also surfaced (so the account page can show "awaiting approval"), but an
+    // active/past_due one always wins via the CASE ordering below.
     const subs = await sql`
         SELECT id, plan, period, tier, currency, amount, status,
                current_period_end, cancel_at_period_end
         FROM subscriptions
-        WHERE status IN ('active','past_due')
+        WHERE status IN ('active','past_due','pending')
           AND (user_id = ${u.id} ${u.company_id ? sql`OR company_id = ${u.company_id}` : sql``})
-        ORDER BY current_period_end DESC NULLS LAST LIMIT 1`;
+        ORDER BY (CASE WHEN status IN ('active','past_due') THEN 0 ELSE 1 END),
+                 current_period_end DESC NULLS LAST LIMIT 1`;
     return json(res, 200, { user: publicUser(u), subscription: subs[0] || null });
 }
 

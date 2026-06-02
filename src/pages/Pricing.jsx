@@ -24,6 +24,7 @@ export default function Pricing() {
     const [rows, setRows] = useState([]);
     const [busy, setBusy] = useState('');
     const [err, setErr] = useState('');
+    const [msg, setMsg] = useState('');
 
     useEffect(() => {
         let cancelled = false;
@@ -50,9 +51,12 @@ export default function Pricing() {
             setErr(t('pricing.corporateOnlyAdmin'));
             return;
         }
-        setErr(''); setBusy(`${plan}|${tier}`);
+        setErr(''); setMsg(''); setBusy(`${plan}|${tier}`);
         try {
             const j = await api('/api/billing/checkout', { method: 'POST', body: { plan, period, tier, currency } });
+            // Manual-approval mode (PayTR not live yet): the request is queued for
+            // an admin to approve — no redirect, just confirm receipt.
+            if (j.pending) { setMsg(t('pricing.requestReceived')); return; }
             if (j.iframeUrl) window.location.href = j.iframeUrl;
         } catch (e) {
             setErr(t(`auth.err.${e.message}`) || t('auth.err.generic'));
@@ -120,6 +124,13 @@ export default function Pricing() {
                 </div>
 
                 {err && <p style={{ color: '#fca5a5', margin: 0 }}>{err}</p>}
+                {msg && (
+                    <p style={{
+                        margin: 0, padding: '10px 14px', borderRadius: 9,
+                        background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.4)',
+                        color: '#6ee7b7', fontSize: '0.9rem',
+                    }}>{msg}</p>
+                )}
 
                 {/* Individual + Free side by side */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14 }}>

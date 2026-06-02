@@ -116,6 +116,7 @@ function Overview({ user, subscription }) {
         finally { setBusy(false); }
     };
     const active = subscription && ['active', 'past_due'].includes(subscription.status);
+    const pending = subscription && subscription.status === 'pending';
     return (
         <>
             <Card>
@@ -135,6 +136,18 @@ function Overview({ user, subscription }) {
                         {subscription.cancel_at_period_end
                             ? <p style={{ color: '#fbbf24' }}>{t('account.willCancel')}</p>
                             : <button onClick={cancel} disabled={busy} style={{ marginTop: 8, background: 'transparent', border: '1px solid #7f1d1d', color: '#fca5a5', borderRadius: 8, padding: '8px 14px', cursor: 'pointer' }}>{t('account.cancel')}</button>}
+                    </>
+                ) : pending ? (
+                    <>
+                        <p style={{ margin: '6px 0' }}>
+                            <strong style={{ textTransform: 'capitalize' }}>{subscription.plan}</strong>
+                            {subscription.tier ? ` · ${subscription.tier} ${t('pricing.seats')}` : ''} · {t(`pricing.${subscription.period}`)}
+                        </p>
+                        <p style={{
+                            margin: '8px 0 0', padding: '10px 14px', borderRadius: 9,
+                            background: 'rgba(251,191,36,0.12)', border: '1px solid rgba(251,191,36,0.4)',
+                            color: '#fbbf24', fontSize: '0.9rem',
+                        }}>{t('account.subPending')}</p>
                     </>
                 ) : (
                     <>

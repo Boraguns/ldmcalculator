@@ -94,6 +94,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
     current_period_start TIMESTAMPTZ,
     current_period_end   TIMESTAMPTZ,
     cancel_at_period_end BOOLEAN DEFAULT FALSE,
+    provider             TEXT NOT NULL DEFAULT 'paytr',  -- paytr | manual (admin-approved request)
     paytr_token          TEXT DEFAULT '',                -- recurring/card token from PayTR
     paytr_sub_ref        TEXT DEFAULT '',
     created_at           TIMESTAMPTZ DEFAULT NOW(),

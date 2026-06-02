@@ -347,7 +347,8 @@
     "corporateDesc": "Seat-based packages for teams (3–100 users).",
     "seats": "seats",
     "choose": "Choose",
-    "corporateOnlyAdmin": "Only a company admin can purchase a corporate plan."
+    "corporateOnlyAdmin": "Only a company admin can purchase a corporate plan.",
+    "requestReceived": "Your subscription request has been received. We'll review and activate it shortly."
   },
   "account": {
     "overview": "Overview",
@@ -399,7 +400,8 @@
     "verifyError": "Could not send. Try again.",
     "tierFree": "Free Account",
     "tierPremium": "👑 Premium Account",
-    "trialsLeft": "{n} free trials left"
+    "trialsLeft": "{n} free trials left",
+    "subPending": "Your subscription request is awaiting approval. You'll get access as soon as it's confirmed."
   },
   "invite": {
     "title": "Join your team",
