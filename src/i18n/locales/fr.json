@@ -574,7 +574,7 @@
       "qty": "Qté",
       "price": "Prix unitaire",
       "total": "Total",
-      "itemNo": "N° d'article"
+      "itemNo": "Code produit"
     }
   },
   "references": {
@@ -588,7 +588,7 @@
     "metaTitle": "Liste de colisage — Modèle de liste de colisage à remplir | LDMCalculator",
     "metaDesc": "Modèle gratuit de liste de colisage d'export à remplir avec codes SH, poids net et brut. Téléchargez votre cachet, signez à la main, puis imprimez ou enregistrez en PDF.",
     "table": {
-      "itemNo": "N° d'article",
+      "itemNo": "Code produit",
       "hs": "Code SH",
       "name": "Désignation des marchandises",
       "qty": "Qté",

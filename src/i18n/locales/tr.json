@@ -574,7 +574,7 @@
       "qty": "Adet",
       "price": "Birim Fiyat",
       "total": "Toplam",
-      "itemNo": "Sıra No"
+      "itemNo": "Ürün Kodu"
     }
   },
   "references": {
@@ -588,7 +588,7 @@
     "metaTitle": "Çeki Listesi — Doldurulabilir İhracat Çeki Listesi Şablonu | LDMCalculator",
     "metaDesc": "HS kodları, net ve brüt ağırlıklarla ücretsiz doldurulabilir ihracat çeki listesi şablonu. Kaşenizi yükleyin, elle imzalayın, yazdırın veya PDF kaydedin.",
     "table": {
-      "itemNo": "Sıra No",
+      "itemNo": "Ürün Kodu",
       "hs": "HS Code",
       "name": "Mal Cinsi",
       "qty": "Adet",

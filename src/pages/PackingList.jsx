@@ -256,13 +256,14 @@ const PackingList = () => {
     const stepKeys = ['s1', 's2', 's3', 's4'];
 
     // Goods declaration columns — localised headers (packing.table.*).
-    // align: l = left, c = centre. Widths chosen so the HS-code edge (20%) lines
+    // align: l = left, c = centre. Widths chosen so the HS-code edge (24%) lines
     // up with the meta label divider and the description edge (60%) lines up with
-    // the meta/totals right edge and the top grid divider.
+    // the meta/totals right edge and the top grid divider. The product-code
+    // column is widened (12%) to hold long codes.
     const cols = [
-        { k: 'itemNo', label: 'packing.table.itemNo', w: '8%', align: 'c' },
+        { k: 'itemNo', label: 'packing.table.itemNo', w: '12%', align: 'c' },
         { k: 'hs', label: 'packing.table.hs', w: '12%', align: 'c' },
-        { k: 'name', label: 'packing.table.name', w: '40%', align: 'l' },
+        { k: 'name', label: 'packing.table.name', w: '36%', align: 'l' },
         { k: 'qty', label: 'packing.table.qty', w: '12%', align: 'c' },
         { k: 'netKg', label: 'packing.table.netKg', w: '14%', align: 'c' },
         { k: 'grossKg', label: 'packing.table.grossKg', w: '14%', align: 'c' },

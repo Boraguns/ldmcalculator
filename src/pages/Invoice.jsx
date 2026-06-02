@@ -286,9 +286,9 @@ const Invoice = () => {
     // align: l = left, c = centre; money: append the active currency symbol;
     // type: 'in' = editable input, 'calc' = auto-computed line total.
     const cols = [
-        { k: 'itemNo', label: 'invoice.table.itemNo', w: '6%', align: 'c', type: 'in' },
+        { k: 'itemNo', label: 'invoice.table.itemNo', w: '12%', align: 'c', type: 'in' },
         { k: 'hs', label: 'invoice.table.hs', w: '10%', align: 'c', type: 'in' },
-        { k: 'name', label: 'invoice.table.name', w: '44%', align: 'l', type: 'in' },
+        { k: 'name', label: 'invoice.table.name', w: '38%', align: 'l', type: 'in' },
         { k: 'qty', label: 'invoice.table.qty', w: '10%', align: 'c', type: 'in' },
         { k: 'price', label: 'invoice.table.price', w: '14%', align: 'c', type: 'in', money: true },
         { k: 'total', label: 'invoice.table.total', w: '16%', align: 'c', type: 'calc', money: true },

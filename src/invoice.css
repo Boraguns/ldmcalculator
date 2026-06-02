@@ -104,10 +104,10 @@
 }
 
 /* ----- meta rows (invoice type / no / dates), left block -----
-   Width 60% so the right edge lines up with the goods table's GTİP+Malın
-   Cinsi boundary (16% + 44% = 60%) and the top grid divider. The label
-   column is 16% of the full sheet (= 26.667% of this 60% block) so its
-   divider sits exactly on the GTİP column edge. */
+   Width 60% so the right edge lines up with the goods table's name-column
+   edge (Ürün Kodu 12% + HS 10% + Mal Cinsi 38% = 60%) and the top grid
+   divider. The label column is 22% of the full sheet (= 36.667% of this 60%
+   block) so its divider sits exactly on the HS-code column edge. */
 .inv-meta, .inv-totals {
     display: flex; flex-direction: column; width: 60%; box-sizing: border-box;
     border-top: 1px solid var(--inv-line);
@@ -116,10 +116,10 @@
 .inv-row { display: flex; border-bottom: 1px solid var(--inv-line); }
 .inv-row:last-child { border-bottom: none; }
 .inv-row .lbl {
-    flex: 0 0 26.667%; border-right: 1px solid var(--inv-line);
+    flex: 0 0 36.667%; border-right: 1px solid var(--inv-line);
     padding: 3px 6px; font-size: 9px; font-weight: 700;
 }
-.inv-row .val { flex: 1 1 73.333%; }
+.inv-row .val { flex: 1 1 63.333%; }
 .inv-row .val input {
     width: 100%; border: none; outline: none; background: transparent;
     font-family: inherit; font-size: 10px; color: #111; padding: 3px 6px; box-sizing: border-box;
@@ -128,12 +128,12 @@
 /* ----- packing list overrides (Çeki Listesi) -----
    The packing sheet reuses every invoice class; only three things differ:
    a full-width sender box across the top grid, and a wider meta/totals label
-   column. The packing goods table puts the HS-code edge at 20% of the frame
-   (Item No 8% + HS 12%), so the label divider must sit at 20% too — i.e.
-   20 / 60 = 33.333% of the 60%-wide meta block. */
+   column. The packing goods table puts the HS-code edge at 24% of the frame
+   (Ürün Kodu 12% + HS 12%), so the label divider must sit at 24% too — i.e.
+   24 / 60 = 40% of the 60%-wide meta block. */
 .pl-sender { grid-column: 1 / -1; }
-.pl-frame .inv-row .lbl { flex: 0 0 33.333%; }
-.pl-frame .inv-row .val { flex: 1 1 66.667%; }
+.pl-frame .inv-row .lbl { flex: 0 0 40%; }
+.pl-frame .inv-row .val { flex: 1 1 60%; }
 
 /* ----- goods table (grows to fill the page) ----- */
 .inv-table-wrap { flex: 1 1 auto; display: flex; flex-direction: column; border-top: 1px solid var(--inv-line); min-height: 150px; }

@@ -574,7 +574,7 @@
       "qty": "Qty",
       "price": "Unit Price",
       "total": "Total",
-      "itemNo": "Item No"
+      "itemNo": "Product Code"
     }
   },
   "references": {
@@ -588,7 +588,7 @@
     "metaTitle": "Packing List — Fillable Export Packing List Template | LDMCalculator",
     "metaDesc": "Free fillable export packing list template with HS codes, net and gross weights. Upload your stamp, sign by hand, then print or save as PDF.",
     "table": {
-      "itemNo": "Item No",
+      "itemNo": "Product Code",
       "hs": "HS Code",
       "name": "Description of Goods",
       "qty": "Qty",

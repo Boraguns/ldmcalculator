@@ -575,7 +575,7 @@
       "qty": "Menge",
       "price": "Einzelpreis",
       "total": "Summe",
-      "itemNo": "Pos.-Nr."
+      "itemNo": "Produktcode"
     }
   },
   "references": {
@@ -589,7 +589,7 @@
     "metaTitle": "Packliste — Ausfüllbare Export-Packlisten-Vorlage | LDMCalculator",
     "metaDesc": "Kostenlose ausfüllbare Export-Packlisten-Vorlage mit HS-Codes, Netto- und Bruttogewicht. Stempel hochladen, von Hand unterschreiben, dann drucken oder als PDF speichern.",
     "table": {
-      "itemNo": "Pos.-Nr.",
+      "itemNo": "Produktcode",
       "hs": "HS-Code",
       "name": "Warenbezeichnung",
       "qty": "Menge",
