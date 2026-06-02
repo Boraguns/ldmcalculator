@@ -407,38 +407,38 @@
     "guide": {
       "title": "Comment remplir une CMR",
       "intro": "La CMR est la lettre de voiture internationale pour le transport routier. Remplissez-la avant la remise des marchandises au transporteur ; trois exemplaires signés accompagnent l’envoi (expéditeur, destinataire, transporteur).",
-      "steps": [
-        {
+      "steps": {
+        "s1": {
           "n": "1–5",
           "title": "Expéditeur et trajet",
           "desc": "Indiquez l’expéditeur, le destinataire, le lieu/date de prise en charge, le lieu de livraison et les documents joints."
         },
-        {
+        "s2": {
           "n": "6–12",
           "title": "Les marchandises",
           "desc": "Pour chaque ligne, précisez marques et numéros, nombre de colis, mode d’emballage, nature des marchandises, numéro statistique et poids brut/net."
         },
-        {
+        "s3": {
           "n": "13–15",
           "title": "Instructions et paiement",
           "desc": "Ajoutez les instructions de l’expéditeur, le mode de paiement du transport (Franco / Non Franco) et un éventuel montant de remboursement."
         },
-        {
+        "s4": {
           "n": "16–19",
           "title": "Transporteur",
           "desc": "Le transporteur remplit les cases à bordure épaisse : coordonnées du transporteur, transporteurs successifs, réserves, carnet TIR et plaque."
         },
-        {
+        "s5": {
           "n": "20–21",
           "title": "Frais",
           "desc": "Détaillez le prix de transport, les déductions, le solde et les frais supplémentaires, et indiquez le lieu d’établissement."
         },
-        {
+        "s6": {
           "n": "22–24",
           "title": "Signatures",
           "desc": "L’expéditeur, le transporteur et le destinataire signent et apposent leur cachet. Le destinataire signe la case 24 à la réception."
         }
-      ],
+      },
       "tip": "Astuce : agrandissez la feuille avec les commandes de zoom puis cliquez sur un champ pour saisir. « Imprimer / PDF » produit une feuille A4 nette."
     },
     "form": {

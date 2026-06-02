@@ -407,38 +407,38 @@
     "guide": {
       "title": "How to complete a CMR",
       "intro": "The CMR is the international consignment note for road freight. Fill it in before the goods are handed to the carrier — three signed copies travel with the shipment (sender, consignee, carrier).",
-      "steps": [
-        {
+      "steps": {
+        "s1": {
           "n": "1–5",
           "title": "Sender & route",
           "desc": "Enter the sender, consignee, the place/date the goods are taken over, the place of delivery and any attached documents."
         },
-        {
+        "s2": {
           "n": "6–12",
           "title": "The goods",
           "desc": "Per line, list marks & numbers, number of packages, packing method, nature of the goods, statistical number and gross/net weight."
         },
-        {
+        "s3": {
           "n": "13–15",
           "title": "Instructions & payment",
           "desc": "Add the sender’s instructions, how carriage is paid (Franco / Non Franco) and any cash-on-delivery amount."
         },
-        {
+        "s4": {
           "n": "16–19",
           "title": "Carrier",
           "desc": "The carrier fills the heavy-bordered boxes: carrier details, successive carriers, reservations, TIR carnet and plate number."
         },
-        {
+        "s5": {
           "n": "20–21",
           "title": "Charges",
           "desc": "Break down carriage charges, deductions, balance and supplementary costs, and state where the note was established."
         },
-        {
+        "s6": {
           "n": "22–24",
           "title": "Signatures",
           "desc": "Sender, carrier and consignee sign and stamp. The consignee signs box 24 on receipt of the goods."
         }
-      ],
+      },
       "tip": "Tip: use the zoom controls to enlarge the sheet, then click any field to type. “Print / PDF” produces a clean A4 sheet."
     },
     "form": {

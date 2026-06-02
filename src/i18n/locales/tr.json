@@ -407,38 +407,38 @@
     "guide": {
       "title": "CMR nasıl doldurulur",
       "intro": "CMR, karayolu taşımacılığı için uluslararası taşıma senedidir. Mal taşıyıcıya teslim edilmeden önce doldurulur; imzalı üç nüsha sevkiyatla birlikte gider (gönderen, alıcı, taşıyıcı).",
-      "steps": [
-        {
+      "steps": {
+        "s1": {
           "n": "1–5",
           "title": "Gönderen ve güzergâh",
           "desc": "Gönderen ve alıcıyı, malın teslim alındığı yer/tarihi, teslim yerini ve ekli belgeleri yazın."
         },
-        {
+        "s2": {
           "n": "6–12",
           "title": "Mallar",
           "desc": "Her satırda marka ve numara, koli adedi, ambalaj şekli, malın cinsi, istatistik numarası ve brüt/net ağırlığı belirtin."
         },
-        {
+        "s3": {
           "n": "13–15",
           "title": "Talimatlar ve ödeme",
           "desc": "Gönderenin talimatlarını, navlunun ödeme şeklini (Franco / Non Franco) ve varsa teslimde tahsil tutarını ekleyin."
         },
-        {
+        "s4": {
           "n": "16–19",
           "title": "Taşıyıcı",
           "desc": "Kalın çerçeveli kutuları taşıyıcı doldurur: taşıyıcı bilgileri, müteakip taşıyıcılar, mülahazalar, TIR karnesi ve plaka."
         },
-        {
+        "s5": {
           "n": "20–21",
           "title": "Masraflar",
           "desc": "Navlun, iskonto, bakiye ve munzam masrafları ayrıntılandırın; senedin düzenlendiği yeri yazın."
         },
-        {
+        "s6": {
           "n": "22–24",
           "title": "İmzalar",
           "desc": "Gönderen, taşıyıcı ve alıcı imzalayıp kaşeler. Alıcı, malı teslim aldığında 24 numaralı kutuyu imzalar."
         }
-      ],
+      },
       "tip": "İpucu: Yakınlaştırma düğmeleriyle formu büyütüp herhangi bir alana tıklayarak yazabilirsiniz. “Yazdır / PDF” temiz bir A4 sayfası üretir."
     },
     "form": {

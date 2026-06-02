@@ -408,38 +408,38 @@
     "guide": {
       "title": "So füllen Sie einen CMR aus",
       "intro": "Der CMR ist der internationale Frachtbrief für den Straßengüterverkehr. Füllen Sie ihn vor der Übergabe der Ware an den Frachtführer aus; drei unterschriebene Exemplare begleiten die Sendung (Absender, Empfänger, Frachtführer).",
-      "steps": [
-        {
+      "steps": {
+        "s1": {
           "n": "1–5",
           "title": "Absender & Route",
           "desc": "Tragen Sie Absender, Empfänger, Ort/Datum der Übernahme, den Lieferort und beigefügte Dokumente ein."
         },
-        {
+        "s2": {
           "n": "6–12",
           "title": "Die Ware",
           "desc": "Geben Sie je Zeile Zeichen und Nummern, Anzahl der Packstücke, Verpackungsart, Art der Ware, statistische Nummer sowie Brutto-/Nettogewicht an."
         },
-        {
+        "s3": {
           "n": "13–15",
           "title": "Weisungen & Zahlung",
           "desc": "Ergänzen Sie die Weisungen des Absenders, die Zahlungsart der Fracht (Franco / Non Franco) und einen etwaigen Nachnahmebetrag."
         },
-        {
+        "s4": {
           "n": "16–19",
           "title": "Frachtführer",
           "desc": "Die fett umrandeten Felder füllt der Frachtführer aus: Angaben zum Frachtführer, nachfolgende Frachtführer, Vorbehalte, TIR-Carnet und Kennzeichen."
         },
-        {
+        "s5": {
           "n": "20–21",
           "title": "Kosten",
           "desc": "Schlüsseln Sie Fracht, Abzüge, Saldo und Zuschläge auf und geben Sie den Ausstellungsort an."
         },
-        {
+        "s6": {
           "n": "22–24",
           "title": "Unterschriften",
           "desc": "Absender, Frachtführer und Empfänger unterschreiben und stempeln. Der Empfänger unterschreibt Feld 24 bei Warenannahme."
         }
-      ],
+      },
       "tip": "Tipp: Vergrößern Sie das Blatt mit den Zoom-Tasten und klicken Sie in ein Feld, um zu schreiben. „Drucken / PDF“ erzeugt ein sauberes A4-Blatt."
     },
     "form": {

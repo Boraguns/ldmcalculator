@@ -120,9 +120,9 @@ const CmrDocument = () => {
     // 6 empty goods rows
     const goodsRows = Array.from({ length: 6 });
 
-    // Guide steps come back from i18n as an array of { n, title, desc }.
-    const rawSteps = t('cmr.guide.steps');
-    const steps = Array.isArray(rawSteps) ? rawSteps : [];
+    // Guide steps are stored as flat keys (cmr.guide.steps.s1.title …) so each
+    // one is editable from the admin Site-Content panel and overridable per lang.
+    const stepKeys = ['s1', 's2', 's3', 's4', 's5', 's6'];
 
     const payRows = [
         ['carriage', t('cmr.form.payCarriage')],
@@ -166,12 +166,12 @@ const CmrDocument = () => {
                     <h2 className="cmr-guide-title">{t('cmr.guide.title')}</h2>
                     <p className="cmr-guide-intro">{t('cmr.guide.intro')}</p>
                     <ol className="cmr-guide-steps">
-                        {steps.map((s, i) => (
-                            <li key={i}>
-                                <span className="cmr-guide-num">{s.n}</span>
+                        {stepKeys.map(sk => (
+                            <li key={sk}>
+                                <span className="cmr-guide-num">{t(`cmr.guide.steps.${sk}.n`)}</span>
                                 <div className="cmr-guide-text">
-                                    <strong>{s.title}</strong>
-                                    <span>{s.desc}</span>
+                                    <strong>{t(`cmr.guide.steps.${sk}.title`)}</strong>
+                                    <span>{t(`cmr.guide.steps.${sk}.desc`)}</span>
                                 </div>
                             </li>
                         ))}
