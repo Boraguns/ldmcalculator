@@ -2,6 +2,7 @@
 // (background, max width, link to home, footer) without duplicating layout.
 import { Link } from 'react-router-dom';
 import { useT, LanguageSwitcher } from '../i18n/LanguageContext';
+import AccountMenu from '../components/AccountMenu';
 
 const StaticPage = ({ title, children }) => {
     const { t } = useT();
@@ -14,7 +15,8 @@ const StaticPage = ({ title, children }) => {
             paddingTop: 'calc(env(safe-area-inset-top, 0px) + 28px)',
             paddingBottom: '60px'
         }}>
-            <div style={{ position: 'fixed', top: 18, right: 18, zIndex: 200 }}>
+            <div style={{ position: 'fixed', top: 18, right: 18, zIndex: 200, display: 'flex', gap: 10, alignItems: 'center' }}>
+                <AccountMenu height={40} compact />
                 <LanguageSwitcher height={40} compact />
             </div>
             <div style={{ maxWidth: 880, margin: '0 auto', padding: '0 24px' }}>

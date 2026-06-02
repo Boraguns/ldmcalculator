@@ -316,7 +316,8 @@
       "payments_unavailable": "Les paiements sont indisponibles pour le moment.",
       "paytr_token_failed": "Impossible de démarrer le paiement. Veuillez réessayer.",
       "cannot_remove_self": "Vous ne pouvez pas vous retirer vous-même.",
-      "server_error": "Erreur serveur. Veuillez réessayer plus tard."
+      "server_error": "Erreur serveur. Veuillez réessayer plus tard.",
+      "unauthorized": "Votre session a expiré. Veuillez vous reconnecter."
     }
   },
   "paywall": {
@@ -396,5 +397,10 @@
     "subtitle": "Configurez votre compte pour accepter l'invitation.",
     "noToken": "Ce lien d'invitation est invalide.",
     "join": "Rejoindre"
+  },
+  "nav": {
+    "signIn": "Se connecter",
+    "signUp": "S'inscrire",
+    "myAccount": "Mon compte"
   }
 }

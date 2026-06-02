@@ -317,7 +317,8 @@
       "payments_unavailable": "Zahlungen sind derzeit nicht verfügbar.",
       "paytr_token_failed": "Zahlung konnte nicht gestartet werden. Bitte erneut versuchen.",
       "cannot_remove_self": "Sie können sich nicht selbst entfernen.",
-      "server_error": "Serverfehler. Bitte später erneut versuchen."
+      "server_error": "Serverfehler. Bitte später erneut versuchen.",
+      "unauthorized": "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an."
     }
   },
   "paywall": {
@@ -397,5 +398,10 @@
     "subtitle": "Richten Sie Ihr Konto ein, um die Einladung anzunehmen.",
     "noToken": "Dieser Einladungslink ist ungültig.",
     "join": "Beitreten"
+  },
+  "nav": {
+    "signIn": "Anmelden",
+    "signUp": "Registrieren",
+    "myAccount": "Mein Konto"
   }
 }

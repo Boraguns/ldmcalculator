@@ -316,7 +316,8 @@
       "payments_unavailable": "Ödemeler şu anda kullanılamıyor.",
       "paytr_token_failed": "Ödeme başlatılamadı. Lütfen tekrar deneyin.",
       "cannot_remove_self": "Kendinizi çıkaramazsınız.",
-      "server_error": "Sunucu hatası. Lütfen daha sonra tekrar deneyin."
+      "server_error": "Sunucu hatası. Lütfen daha sonra tekrar deneyin.",
+      "unauthorized": "Oturum süreniz doldu. Lütfen tekrar giriş yapın."
     }
   },
   "paywall": {
@@ -396,5 +397,10 @@
     "subtitle": "Daveti kabul etmek için hesabınızı oluşturun.",
     "noToken": "Bu davet bağlantısı geçersiz.",
     "join": "Katıl"
+  },
+  "nav": {
+    "signIn": "Giriş Yap",
+    "signUp": "Kayıt Ol",
+    "myAccount": "Hesabım"
   }
 }

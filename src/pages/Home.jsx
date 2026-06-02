@@ -4,6 +4,7 @@ import { useT, LanguageSwitcher } from '../i18n/LanguageContext';
 import { useSiteAsset } from '../hooks/useSiteAssets';
 import usePageMeta from '../hooks/usePageMeta';
 import ToolsMenu from '../components/ToolsMenu';
+import AccountMenu from '../components/AccountMenu';
 
 const Home = () => {
     const navigate = useNavigate();
@@ -157,6 +158,7 @@ const Home = () => {
                 doesn't crowd the centered logo) */}
             <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 200, display: 'flex', gap: '10px', alignItems: 'center' }}>
                 <ToolsMenu height={isDesktop ? 44 : 36} compact={!isDesktop} />
+                <AccountMenu height={isDesktop ? 44 : 36} compact={!isDesktop} />
                 <LanguageSwitcher height={isDesktop ? 44 : 36} compact={!isDesktop} />
             </div>
             {/*

@@ -316,7 +316,8 @@
       "payments_unavailable": "Payments are not available right now.",
       "paytr_token_failed": "Could not start the payment. Please try again.",
       "cannot_remove_self": "You cannot remove yourself.",
-      "server_error": "Server error. Please try again later."
+      "server_error": "Server error. Please try again later.",
+      "unauthorized": "Your session has expired. Please sign in again."
     }
   },
   "paywall": {
@@ -396,5 +397,10 @@
     "subtitle": "Set up your account to accept the invitation.",
     "noToken": "This invite link is invalid.",
     "join": "Join"
+  },
+  "nav": {
+    "signIn": "Sign in",
+    "signUp": "Sign up",
+    "myAccount": "My account"
   }
 }
