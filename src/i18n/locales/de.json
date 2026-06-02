@@ -547,25 +547,28 @@
       "invDate": "Rechnungsdatum",
       "issueDate": "Ausstellungsdatum",
       "totalQty": "Gesamtmenge",
-      "totalGoods": "Warenwert",
+      "totalGoods": "Zwischensumme",
       "discount": "Rabatt",
-      "vat": "MwSt.",
-      "vatIncl": "Preis inkl. MwSt.",
-      "taxable": "Steuerpflichtig",
+      "vat": "MwSt.-Satz (%)",
+      "vatIncl": "MwSt.-Betrag",
+      "taxable": "Steuerbasis",
       "rate": "Kurs",
-      "totalAmount": "Gesamtwarenwert",
+      "totalAmount": "Gesamtsumme",
       "uploadLogo": "Logo hochladen",
       "uploadStamp": "Stempel hochladen",
       "removeImage": "Entfernen",
       "clearSignature": "Unterschrift löschen",
-      "signHint": "Unterschrift"
+      "signHint": "Unterschrift",
+      "currency": "Währung",
+      "addRow": "Zeile hinzufügen",
+      "removeRow": "Zeile entfernen"
     },
     "table": {
       "hs": "HS-Code",
       "name": "Warenbezeichnung",
       "qty": "Menge",
-      "price": "Preis (EUR)",
-      "total": "Summe (EUR)"
+      "price": "Einzelpreis",
+      "total": "Summe"
     }
   },
   "references": {

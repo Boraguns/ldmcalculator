@@ -546,25 +546,28 @@
       "invDate": "Invoice date",
       "issueDate": "Issue date",
       "totalQty": "Total quantity",
-      "totalGoods": "Total goods",
+      "totalGoods": "Subtotal",
       "discount": "Discount",
-      "vat": "VAT",
-      "vatIncl": "Price incl. VAT",
-      "taxable": "Taxable",
+      "vat": "VAT rate (%)",
+      "vatIncl": "VAT amount",
+      "taxable": "Taxable base",
       "rate": "Rate",
-      "totalAmount": "Total goods value",
+      "totalAmount": "Grand total",
       "uploadLogo": "Upload logo",
       "uploadStamp": "Upload stamp",
       "removeImage": "Remove",
       "clearSignature": "Clear signature",
-      "signHint": "Signature"
+      "signHint": "Signature",
+      "currency": "Currency",
+      "addRow": "Add row",
+      "removeRow": "Remove row"
     },
     "table": {
       "hs": "HS Code",
       "name": "Description of Goods",
       "qty": "Qty",
-      "price": "Unit Price (EUR)",
-      "total": "Total (EUR)"
+      "price": "Unit Price",
+      "total": "Total"
     }
   },
   "references": {

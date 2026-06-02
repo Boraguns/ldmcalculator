@@ -161,10 +161,44 @@ const Invoice = () => {
     const [f, setF] = useState({});
     const [logo, setLogo] = useState('');
     const [stamp, setStamp] = useState('');
+    const [currency, setCurrency] = useState('EUR');
+    const emptyRow = () => ({ hs: '', name: '', qty: '', price: '' });
+    const [items, setItems] = useState(() => [emptyRow(), emptyRow(), emptyRow()]);
     const signRef = useRef(null);
 
     const set = (k) => (e) => setF(prev => ({ ...prev, [k]: e.target.value }));
     const val = (k) => f[k] ?? '';
+
+    // ----- repeater rows -----
+    const setItem = (i, k) => (e) =>
+        setItems(prev => prev.map((it, idx) => (idx === i ? { ...it, [k]: e.target.value } : it)));
+    const addRow = () => setItems(prev => [...prev, emptyRow()]);
+    const removeRow = (i) =>
+        setItems(prev => (prev.length > 1 ? prev.filter((_, idx) => idx !== i) : prev));
+
+    // ----- currency + numeric helpers -----
+    const CURRENCIES = [
+        { code: 'EUR', sym: '€' },
+        { code: 'USD', sym: '$' },
+        { code: 'TRY', sym: '₺' },
+        { code: 'RUB', sym: '₽' },
+        { code: 'GBP', sym: '£' },
+        { code: 'CNY', sym: '¥' },
+        { code: 'AED', sym: 'د.إ' },
+    ];
+    const sym = CURRENCIES.find(c => c.code === currency)?.sym || '';
+    const num = (s) => { const n = parseFloat(String(s ?? '').replace(',', '.')); return Number.isFinite(n) ? n : 0; };
+    const money = (n) => n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const lineTotal = (it) => num(it.qty) * num(it.price);
+
+    // ----- totals derived from the line items + the editable fields -----
+    const sumQty = items.reduce((s, it) => s + num(it.qty), 0);
+    const subtotal = items.reduce((s, it) => s + lineTotal(it), 0);
+    const discountAmt = num(f.discount);
+    const taxableBase = Math.max(0, subtotal - discountAmt);
+    const vatRate = num(f.vat);
+    const vatAmount = taxableBase * vatRate / 100;
+    const grandTotal = taxableBase + vatAmount;
 
     // ----- Zoom / fit-to-width (shared shell with CMR) -----
     const stageRef = useRef(null);
@@ -222,6 +256,7 @@ const Invoice = () => {
             setF({});
             setLogo('');
             setStamp('');
+            setItems([emptyRow(), emptyRow(), emptyRow()]);
             signRef.current?.clear();
         }
     };
@@ -235,7 +270,7 @@ const Invoice = () => {
                 body: {
                     type: 'invoice',
                     title: `Invoice ${f.docNo || ''}`.trim(),
-                    data: { ...f, logo, stamp, signature: signRef.current?.toDataURL() || '' },
+                    data: { ...f, currency, items, logo, stamp, signature: signRef.current?.toDataURL() || '' },
                 },
             }).catch(() => {});
         }
@@ -245,29 +280,41 @@ const Invoice = () => {
     const stepKeys = ['s1', 's2', 's3', 's4', 's5'];
 
     // Goods declaration columns — headers are localised (invoice.table.*).
+    // align: l = left, c = centre; money: append the active currency symbol;
+    // type: 'in' = editable input, 'calc' = auto-computed line total.
     const cols = [
-        { k: 'hs', label: 'invoice.table.hs', w: '16%', cls: 'ta-c' },
-        { k: 'name', label: 'invoice.table.name', w: '48%', cls: '' },
-        { k: 'qty', label: 'invoice.table.qty', w: '10%', cls: 'ta-c' },
-        { k: 'price', label: 'invoice.table.price', w: '13%', cls: 'ta-r' },
-        { k: 'total', label: 'invoice.table.total', w: '13%', cls: 'ta-r' },
+        { k: 'hs', label: 'invoice.table.hs', w: '16%', align: 'c', type: 'in' },
+        { k: 'name', label: 'invoice.table.name', w: '44%', align: 'l', type: 'in' },
+        { k: 'qty', label: 'invoice.table.qty', w: '10%', align: 'c', type: 'in' },
+        { k: 'price', label: 'invoice.table.price', w: '15%', align: 'c', type: 'in', money: true },
+        { k: 'total', label: 'invoice.table.total', w: '15%', align: 'c', type: 'calc', money: true },
     ];
-    const tableRows = Array.from({ length: 16 });
+    const alignCls = (a) => (a === 'l' ? 'ta-l' : a === 'r' ? 'ta-r' : 'ta-c');
 
-    // Invoice meta + totals rows (label/value pairs, localised captions).
+    // Invoice meta rows (label/value pairs, localised captions).
     const metaRows = [
         ['invType', 'invoice.form.invType'],
         ['docNo', 'invoice.form.docNo'],
         ['invDate', 'invoice.form.invDate'],
         ['issueDate', 'invoice.form.issueDate'],
     ];
+    // Totals rows. editable → user input; otherwise auto-computed from the
+    // line items (money rows are prefixed with the active currency symbol).
+    const computed = {
+        totalQty: { val: sumQty % 1 === 0 ? String(sumQty) : money(sumQty) },
+        totalGoods: { val: money(subtotal), money: true },
+        taxable: { val: money(taxableBase), money: true },
+        vatIncl: { val: money(vatAmount), money: true },
+        totalAmount: { val: money(grandTotal), money: true },
+    };
+    const editable = new Set(['discount', 'vat', 'rate']);
     const totalRows = [
         ['totalQty', 'invoice.form.totalQty'],
         ['totalGoods', 'invoice.form.totalGoods'],
         ['discount', 'invoice.form.discount'],
+        ['taxable', 'invoice.form.taxable'],
         ['vat', 'invoice.form.vat'],
         ['vatIncl', 'invoice.form.vatIncl'],
-        ['taxable', 'invoice.form.taxable'],
         ['rate', 'invoice.form.rate'],
         ['totalAmount', 'invoice.form.totalAmount'],
     ];
@@ -301,6 +348,21 @@ const Invoice = () => {
                 <button type="button" onClick={zoomOut} aria-label={t('tools.zoomOut')} title={t('tools.zoomOut')}>−</button>
                 <button type="button" className={autoFit ? 'is-active' : ''} onClick={zoomFit} aria-label={t('tools.zoomFit')} title={t('tools.zoomFit')}>⤢</button>
                 <button type="button" onClick={zoomReset} aria-label={t('tools.zoomReset')} title={t('tools.zoomReset')}>1:1</button>
+            </div>
+
+            {/* Currency selector — screen-only, never printed. */}
+            <div className="inv-currency-bar inv-screen-only">
+                <span className="inv-currency-label">{t('invoice.form.currency')}</span>
+                {CURRENCIES.map(c => (
+                    <button
+                        type="button"
+                        key={c.code}
+                        className={`inv-currency-opt${currency === c.code ? ' is-active' : ''}`}
+                        onClick={() => setCurrency(c.code)}
+                    >
+                        <span className="inv-currency-sym">{c.sym}</span>{c.code}
+                    </button>
+                ))}
             </div>
 
             {!guideOpen && (
@@ -347,45 +409,43 @@ const Invoice = () => {
                   <div className="cmr-zoomwrap" style={{ width: nat.w ? nat.w * zoom : '210mm', height: nat.h ? nat.h * zoom : 'auto' }}>
                     <div className="cmr-sheet inv-sheet" ref={sheetRef} style={{ transform: `scale(${zoom})`, transformOrigin: 'top left' }}>
                       <div className="inv-frame">
-                        {/* ===== TOP 2×2 GRID ===== */}
+                        {/* ===== TOP 2×2 GRID (flat children so grid rows align) ===== */}
                         <div className="inv-top">
-                            <div className="inv-top-left">
-                                <div className="inv-box inv-info">
-                                    <div className="inv-cap">{t('invoice.form.sender')}</div>
-                                    <textarea value={val('sender')} onChange={set('sender')} />
-                                </div>
-                                <div className="inv-box inv-info">
-                                    <div className="inv-cap">{t('invoice.form.recipient')}</div>
-                                    <textarea value={val('recipient')} onChange={set('recipient')} />
-                                </div>
+                            {/* row 1: sender | logo */}
+                            <div className="inv-box inv-info inv-cell-r1c1">
+                                <div className="inv-cap">{t('invoice.form.sender')}</div>
+                                <textarea value={val('sender')} onChange={set('sender')} />
                             </div>
-                            <div className="inv-top-right">
-                                <div className="inv-box">
-                                    <div className="inv-cap">{t('invoice.form.logo')}</div>
-                                    <ImageUpload
-                                        value={logo}
-                                        onChange={setLogo}
-                                        uploadLabel={t('invoice.form.uploadLogo')}
-                                        removeLabel={t('invoice.form.removeImage')}
-                                    />
-                                </div>
-                                <div className="inv-box">
-                                    <div className="inv-cap">{t('invoice.form.stamp')}</div>
-                                    <div className="inv-stamp-body">
-                                        <div className="inv-stamp-media">
-                                            <ImageUpload
-                                                value={stamp}
-                                                onChange={setStamp}
-                                                uploadLabel={t('invoice.form.uploadStamp')}
-                                                removeLabel={t('invoice.form.removeImage')}
-                                            />
-                                        </div>
-                                        <SignaturePad
-                                            ref={signRef}
-                                            hint={t('invoice.form.signHint')}
-                                            clearLabel={t('invoice.form.clearSignature')}
+                            <div className="inv-box inv-cell-r1c2">
+                                <div className="inv-cap">{t('invoice.form.logo')}</div>
+                                <ImageUpload
+                                    value={logo}
+                                    onChange={setLogo}
+                                    uploadLabel={t('invoice.form.uploadLogo')}
+                                    removeLabel={t('invoice.form.removeImage')}
+                                />
+                            </div>
+                            {/* row 2: recipient | stamp+signature (tops aligned by the grid) */}
+                            <div className="inv-box inv-info inv-cell-r2c1">
+                                <div className="inv-cap">{t('invoice.form.recipient')}</div>
+                                <textarea value={val('recipient')} onChange={set('recipient')} />
+                            </div>
+                            <div className="inv-box inv-cell-r2c2">
+                                <div className="inv-cap">{t('invoice.form.stamp')}</div>
+                                <div className="inv-stamp-body">
+                                    <div className="inv-stamp-media">
+                                        <ImageUpload
+                                            value={stamp}
+                                            onChange={setStamp}
+                                            uploadLabel={t('invoice.form.uploadStamp')}
+                                            removeLabel={t('invoice.form.removeImage')}
                                         />
                                     </div>
+                                    <SignaturePad
+                                        ref={signRef}
+                                        hint={t('invoice.form.signHint')}
+                                        clearLabel={t('invoice.form.clearSignature')}
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -400,38 +460,74 @@ const Invoice = () => {
                             ))}
                         </div>
 
-                        {/* ===== GOODS TABLE (grows to fill the page) ===== */}
+                        {/* ===== GOODS TABLE — repeater rows, auto line totals ===== */}
                         <div className="inv-table-wrap">
                             <table className="inv-table">
                                 <thead>
                                     <tr>
                                         {cols.map(c => (
-                                            <th key={c.k} style={{ width: c.w }}>{t(c.label)}</th>
+                                            <th key={c.k} style={{ width: c.w }}>
+                                                {t(c.label)}{c.money ? ` (${sym})` : ''}
+                                            </th>
                                         ))}
+                                        <th className="inv-ctrl-col inv-screen-only" aria-hidden="true"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {tableRows.map((_, i) => (
+                                    {items.map((it, i) => (
                                         <tr key={i}>
                                             {cols.map(c => (
-                                                <td key={c.k} className={c.cls}>
-                                                    <input value={val(`r_${c.k}_${i}`)} onChange={set(`r_${c.k}_${i}`)} />
+                                                <td key={c.k} className={alignCls(c.align)}>
+                                                    {c.type === 'in' ? (
+                                                        <input value={it[c.k] ?? ''} onChange={setItem(i, c.k)} />
+                                                    ) : (
+                                                        <span className="inv-calc">{lineTotal(it) ? money(lineTotal(it)) : ''}</span>
+                                                    )}
                                                 </td>
                                             ))}
+                                            <td className="inv-ctrl-col inv-screen-only">
+                                                <button
+                                                    type="button"
+                                                    className="inv-row-del"
+                                                    onClick={() => removeRow(i)}
+                                                    title={t('invoice.form.removeRow')}
+                                                    aria-label={t('invoice.form.removeRow')}
+                                                    disabled={items.length <= 1}
+                                                >×</button>
+                                            </td>
                                         </tr>
                                     ))}
+                                    {/* filler row absorbs the slack so the sheet still fills the A4 */}
+                                    <tr className="inv-filler">
+                                        {cols.map(c => <td key={c.k} className={alignCls(c.align)} />)}
+                                        <td className="inv-ctrl-col inv-screen-only" />
+                                    </tr>
                                 </tbody>
                             </table>
+                            <button type="button" className="inv-add-row inv-screen-only" onClick={addRow}>
+                                + {t('invoice.form.addRow')}
+                            </button>
                         </div>
 
-                        {/* ===== TOTALS (left half) ===== */}
+                        {/* ===== TOTALS (auto-computed from the line items) ===== */}
                         <div className="inv-totals">
-                            {totalRows.map(([k, key]) => (
-                                <div className="inv-row" key={k}>
-                                    <div className="lbl">{t(key)}</div>
-                                    <div className="val"><input value={val(k)} onChange={set(k)} /></div>
-                                </div>
-                            ))}
+                            {totalRows.map(([k, key]) => {
+                                const c = computed[k];
+                                return (
+                                    <div className="inv-row" key={k}>
+                                        <div className="lbl">{t(key)}</div>
+                                        <div className="val">
+                                            {editable.has(k) ? (
+                                                <input value={val(k)} onChange={set(k)} />
+                                            ) : (
+                                                <span className="inv-computed">
+                                                    {c?.money ? `${sym} ${c.val}` : (c?.val ?? '')}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
                       </div>
                     </div>

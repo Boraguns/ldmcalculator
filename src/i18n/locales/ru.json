@@ -546,25 +546,28 @@
       "invDate": "Дата счёта",
       "issueDate": "Дата оформления",
       "totalQty": "Общее количество",
-      "totalGoods": "Итого товар",
+      "totalGoods": "Промежуточный итог",
       "discount": "Скидка",
-      "vat": "НДС",
-      "vatIncl": "Цена с НДС",
-      "taxable": "Облагается налогом",
+      "vat": "Ставка НДС (%)",
+      "vatIncl": "Сумма НДС",
+      "taxable": "Налоговая база",
       "rate": "Курс",
-      "totalAmount": "Общая стоимость товара",
+      "totalAmount": "Итого к оплате",
       "uploadLogo": "Загрузить логотип",
       "uploadStamp": "Загрузить печать",
       "removeImage": "Удалить",
       "clearSignature": "Очистить подпись",
-      "signHint": "Подпись"
+      "signHint": "Подпись",
+      "currency": "Валюта",
+      "addRow": "Добавить строку",
+      "removeRow": "Удалить строку"
     },
     "table": {
       "hs": "ТН ВЭД",
       "name": "Наименование товара",
       "qty": "Кол-во",
-      "price": "Цена (EUR)",
-      "total": "Итого (EUR)"
+      "price": "Цена",
+      "total": "Итого"
     }
   },
   "references": {

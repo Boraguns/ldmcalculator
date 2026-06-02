@@ -538,25 +538,28 @@
       "invDate": "تاريخ الفاتورة",
       "issueDate": "تاريخ الإصدار",
       "totalQty": "إجمالي الكمية",
-      "totalGoods": "إجمالي البضاعة",
+      "totalGoods": "المجموع الفرعي",
       "discount": "الخصم",
-      "vat": "ضريبة القيمة المضافة",
-      "vatIncl": "السعر شامل الضريبة",
-      "taxable": "خاضع للضريبة",
+      "vat": "نسبة الضريبة (%)",
+      "vatIncl": "مبلغ الضريبة",
+      "taxable": "الوعاء الضريبي",
       "rate": "سعر الصرف",
-      "totalAmount": "إجمالي قيمة البضاعة",
+      "totalAmount": "المجموع الكلي",
       "uploadLogo": "رفع الشعار",
       "uploadStamp": "رفع الختم",
       "removeImage": "إزالة",
       "clearSignature": "مسح التوقيع",
-      "signHint": "التوقيع"
+      "signHint": "التوقيع",
+      "currency": "العملة",
+      "addRow": "إضافة صف",
+      "removeRow": "حذف الصف"
     },
     "table": {
       "hs": "رمز HS",
       "name": "وصف البضاعة",
       "qty": "الكمية",
-      "price": "السعر (EUR)",
-      "total": "الإجمالي (EUR)"
+      "price": "السعر",
+      "total": "الإجمالي"
     }
   },
   "references": {

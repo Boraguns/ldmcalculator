@@ -546,25 +546,28 @@
       "invDate": "Fatura tarihi",
       "issueDate": "Düzenlenme tarihi",
       "totalQty": "Toplam miktar",
-      "totalGoods": "Toplam mal",
+      "totalGoods": "Ara toplam",
       "discount": "İndirim",
-      "vat": "KDV",
-      "vatIncl": "KDV dahil fiyat",
-      "taxable": "Vergiye tabidir",
+      "vat": "KDV oranı (%)",
+      "vatIncl": "KDV tutarı",
+      "taxable": "Matrah",
       "rate": "Kur",
-      "totalAmount": "Toplam mal bedeli",
+      "totalAmount": "Genel toplam",
       "uploadLogo": "Logo yükle",
       "uploadStamp": "Kaşe yükle",
       "removeImage": "Kaldır",
       "clearSignature": "İmzayı temizle",
-      "signHint": "İmza"
+      "signHint": "İmza",
+      "currency": "Para birimi",
+      "addRow": "Satır ekle",
+      "removeRow": "Satırı sil"
     },
     "table": {
       "hs": "GTİP",
       "name": "Malın Cinsi",
       "qty": "Adet",
-      "price": "Birim Fiyat (EUR)",
-      "total": "Toplam (EUR)"
+      "price": "Birim Fiyat",
+      "total": "Toplam"
     }
   },
   "references": {

@@ -546,25 +546,28 @@
       "invDate": "Date de facture",
       "issueDate": "Date d'émission",
       "totalQty": "Quantité totale",
-      "totalGoods": "Total marchandises",
+      "totalGoods": "Sous-total",
       "discount": "Remise",
-      "vat": "TVA",
-      "vatIncl": "Prix TTC",
-      "taxable": "Imposable",
+      "vat": "Taux de TVA (%)",
+      "vatIncl": "Montant TVA",
+      "taxable": "Base imposable",
       "rate": "Taux",
-      "totalAmount": "Valeur totale des marchandises",
+      "totalAmount": "Total général",
       "uploadLogo": "Importer le logo",
       "uploadStamp": "Importer le cachet",
       "removeImage": "Supprimer",
       "clearSignature": "Effacer la signature",
-      "signHint": "Signature"
+      "signHint": "Signature",
+      "currency": "Devise",
+      "addRow": "Ajouter une ligne",
+      "removeRow": "Supprimer la ligne"
     },
     "table": {
       "hs": "Code SH",
       "name": "Désignation des marchandises",
       "qty": "Qté",
-      "price": "Prix (EUR)",
-      "total": "Total (EUR)"
+      "price": "Prix unitaire",
+      "total": "Total"
     }
   },
   "references": {

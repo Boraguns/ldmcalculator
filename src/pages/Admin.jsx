@@ -1065,6 +1065,89 @@ const MessageList = ({ type, columns, allowMarkRead = true }) => {
     );
 };
 
+// ---- Document logs (CMR / Invoice / Packing List) --------------------------
+const DOC_TYPES = [
+    ['', 'Tümü'],
+    ['cmr', 'CMR'],
+    ['invoice', 'Fatura'],
+    ['packing', 'Çeki Listesi'],
+];
+const DOC_LABEL = { cmr: 'CMR', invoice: 'Fatura', packing: 'Çeki Listesi' };
+const DOC_COLOR = { cmr: '#3b82f6', invoice: '#22c55e', packing: '#f59e0b' };
+
+const DocumentLogs = () => {
+    const [rows, setRows] = useState([]);
+    const [type, setType] = useState('');
+    const [loading, setLoading] = useState(true);
+
+    const load = async () => {
+        setLoading(true);
+        const q = type ? `?type=${type}` : '';
+        const r = await fetch(`/api/admin/documents${q}`, { headers: auth() });
+        const j = await r.json().catch(() => ({}));
+        setRows(j.items || []);
+        setLoading(false);
+    };
+    useEffect(() => { load(); }, [type]);
+
+    const del = async (id) => {
+        if (!window.confirm('Bu log kaydını sil?')) return;
+        await fetch(`/api/admin/documents?id=${id}`, { method: 'DELETE', headers: auth() });
+        load();
+    };
+
+    return (
+        <div>
+            <h2 style={{ color: '#f8fafc' }}>Belge Logları</h2>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+                {DOC_TYPES.map(([k, l]) => (
+                    <button
+                        key={k || 'all'}
+                        onClick={() => setType(k)}
+                        className="ai-btn"
+                        style={{ height: 32 }}
+                    >
+                        <div className="ai-btn-inner" style={{
+                            fontSize: '0.82rem',
+                            background: type === k ? '#3b82f6' : undefined,
+                            color: type === k ? '#fff' : undefined,
+                        }}>{l}</div>
+                    </button>
+                ))}
+                <span style={{ color: '#64748b', alignSelf: 'center', fontSize: '0.85rem' }}>
+                    {loading ? '…' : `${rows.length} kayıt`}
+                </span>
+            </div>
+
+            {!loading && rows.length === 0 && <div style={{ color: '#64748b' }}>Kayıt yok.</div>}
+            {rows.map(r => (
+                <div key={r.id} style={{ ...cardS, display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <span style={{
+                        flex: '0 0 auto', background: DOC_COLOR[r.type] || '#64748b', color: '#fff',
+                        borderRadius: 6, padding: '3px 8px', fontSize: '0.72rem', fontWeight: 700,
+                    }}>{DOC_LABEL[r.type] || r.type}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ color: '#f1f5f9', fontWeight: 600, fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {r.title || '(başlıksız)'}
+                        </div>
+                        <div style={{ color: '#94a3b8', fontSize: '0.8rem' }}>
+                            {r.email
+                                ? `${[r.first_name, r.last_name].filter(Boolean).join(' ')} · ${r.email}`.trim()
+                                : 'Misafir'}
+                        </div>
+                    </div>
+                    <span style={{ color: '#64748b', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
+                        {new Date(r.created_at).toLocaleString()}
+                    </span>
+                    <button onClick={() => del(r.id)} className="ai-btn ai-btn-danger" style={{ height: 30 }}>
+                        <div className="ai-btn-inner" style={{ fontSize: '0.8rem' }}>Sil</div>
+                    </button>
+                </div>
+            ))}
+        </div>
+    );
+};
+
 // ---- Pricing management ----------------------------------------------------
 const PLANS = ['individual', 'corporate'];
 const PERIODS = ['monthly', 'yearly'];
@@ -1355,6 +1438,7 @@ const Admin = () => {
         { group: 'Kullanıcılar', items: [
             ['users',     'Kullanıcılar'],
             ['names',     'Ürün İsim Logları'],
+            ['documents', 'Belge Logları'],
         ] },
         { group: 'Mesajlar', items: [
             ['contact',   'İletişim'],
@@ -1410,6 +1494,7 @@ const Admin = () => {
             {/* Main content */}
             <main style={{ flex: 1, minWidth: 0, padding: 24, boxSizing: 'border-box' }}>
                 {tab === 'references' && <ReferencesManager />}
+                {tab === 'documents' && <DocumentLogs />}
                 {tab === 'flags'   && <FlagCompanies />}
                 {tab === 'banners' && <Banners />}
                 {tab === 'assets'  && <SiteAssets />}

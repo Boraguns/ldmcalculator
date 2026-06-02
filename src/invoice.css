@@ -24,12 +24,15 @@
     box-sizing: border-box;
 }
 
-/* ----- top 2×2 grid: info (left) + logo/stamp (right) ----- */
-.inv-top { display: flex; min-height: 180px; }
-.inv-top-left { flex: 1 1 58%; display: flex; flex-direction: column; }
-.inv-top-right { flex: 1 1 42%; display: flex; flex-direction: column; border-left: 1px solid var(--inv-line); }
-.inv-top .inv-box { flex: 1 1 0; }
-
+/* ----- top 2×2 grid: info (left) + logo/stamp (right) -----
+   A real CSS grid (not two independent flex columns) so the two cells in
+   each row share a height — i.e. the recipient box and the stamp/signature
+   box start at exactly the same top border. */
+.inv-top {
+    display: grid;
+    grid-template-columns: 58% 42%;
+    grid-template-rows: minmax(86px, auto) minmax(86px, auto);
+}
 .inv-box {
     border-bottom: 1px solid var(--inv-line);
     padding: 6px 8px;
@@ -37,8 +40,12 @@
     position: relative;
     display: flex;
     flex-direction: column;
+    min-width: 0;
 }
-.inv-top-right .inv-box:last-child { border-bottom: 1px solid var(--inv-line); }
+/* right column gets the dividing left border; bottom row drops its bottom
+   border (the outer frame closes it). */
+.inv-cell-r1c2, .inv-cell-r2c2 { border-left: 1px solid var(--inv-line); }
+.inv-cell-r2c1, .inv-cell-r2c2 { border-bottom: none; }
 .inv-cap { font-size: 9px; font-weight: 700; margin-bottom: 4px; letter-spacing: .3px; }
 
 .inv-info textarea {
@@ -110,17 +117,65 @@
     border: 1px solid var(--inv-line); padding: 4px 3px; text-align: center; height: 1px;
     -webkit-print-color-adjust: exact; print-color-adjust: exact;
 }
-.inv-table td { border: 1px solid var(--inv-line); padding: 0; height: auto; vertical-align: top; }
+/* cells are centred both ways by default; the goods-description column is the
+   only left-aligned one (still vertically centred). */
+.inv-table td { border: 1px solid var(--inv-line); padding: 0; vertical-align: middle; text-align: center; }
+.inv-table td.ta-l { text-align: left; }
+.inv-table td.ta-r { text-align: right; }
 .inv-table td input {
-    width: 100%; min-height: 16px; border: none; outline: none; background: transparent;
+    width: 100%; height: 100%; min-height: 18px; border: none; outline: none; background: transparent;
     font-family: inherit; font-size: 10px; color: #111; padding: 1px 4px; box-sizing: border-box;
+    text-align: center;
 }
+.inv-table td.ta-l input { text-align: left; }
 .inv-table td.ta-r input { text-align: right; }
-.inv-table td.ta-c input { text-align: center; }
+.inv-calc { font-size: 10px; color: #111; }
 
-/* ----- print: hide upload affordances, keep images + ink ----- */
+/* shrink data rows to their content so the filler row soaks up the slack and
+   the table still fills the A4 sheet. */
+.inv-table tbody tr:not(.inv-filler) { height: 1px; }
+.inv-filler td { height: auto; }
+
+/* per-row delete control + add-row button (screen only) */
+.inv-ctrl-col { width: 26px; border: none !important; background: transparent !important; }
+.inv-row-del {
+    width: 18px; height: 18px; border-radius: 50%; border: none; cursor: pointer;
+    background: #fee2e2; color: #b91c1c; font-size: 12px; line-height: 1;
+    display: inline-flex; align-items: center; justify-content: center;
+}
+.inv-row-del:hover { background: #fecaca; }
+.inv-row-del:disabled { opacity: .4; cursor: not-allowed; }
+.inv-add-row {
+    margin-top: 6px; border: 1px dashed #93c5fd; background: #eff6ff; color: #2563eb;
+    border-radius: 6px; padding: 5px 12px; font-size: 9px; cursor: pointer; font-family: inherit;
+}
+.inv-add-row:hover { background: #dbeafe; }
+
+/* computed totals (read-only) shown as text, matching the input metrics */
+.inv-row .val .inv-computed {
+    display: block; padding: 3px 6px; font-size: 10px; color: #111; font-weight: 600;
+}
+
+/* ----- currency selector (screen only, above the sheet) ----- */
+.inv-currency-bar {
+    display: flex; align-items: center; justify-content: center; flex-wrap: wrap;
+    gap: 8px; max-width: 210mm; margin: 0 auto 14px; padding: 0 8px;
+}
+.inv-currency-label { color: #94a3b8; font-size: 0.85rem; margin-right: 2px; }
+.inv-currency-opt {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 6px 12px; border-radius: 999px; cursor: pointer;
+    border: 1px solid #334155; background: #1e293b; color: #cbd5e1;
+    font-family: inherit; font-size: 0.82rem; font-weight: 600; line-height: 1;
+}
+.inv-currency-opt:hover { border-color: #475569; }
+.inv-currency-opt.is-active { background: #3b82f6; border-color: #3b82f6; color: #fff; }
+.inv-currency-sym { font-size: 0.95rem; }
+
+/* ----- print: hide screen-only chrome, keep images + ink ----- */
 @media print {
     .inv-upload-label, .inv-media-clear, .inv-sign-clear { display: none !important; }
     .inv-sign-canvas { border-color: transparent !important; }
     .inv-sign-hint { display: none !important; }
+    .inv-currency-bar, .inv-screen-only { display: none !important; }
 }

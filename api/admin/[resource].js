@@ -4,6 +4,7 @@ import banners from '../_handlers/admin/banners.js';
 import faq from '../_handlers/admin/faq.js';
 import flagCompanies from '../_handlers/admin/flag-companies.js';
 import references from '../_handlers/admin/references.js';
+import documents from '../_handlers/admin/documents.js';
 import login from '../_handlers/admin/login.js';
 import messages from '../_handlers/admin/messages.js';
 import productNames from '../_handlers/admin/product-names.js';
@@ -20,6 +21,7 @@ const HANDLERS = {
     'faq': faq,
     'flag-companies': flagCompanies,
     'references': references,
+    'documents': documents,
     'login': login,
     'messages': messages,
     'product-names': productNames,
