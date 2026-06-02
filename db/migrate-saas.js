@@ -16,9 +16,12 @@ if (!process.env.DATABASE_URL) {
 const sql = neon(process.env.DATABASE_URL);
 const raw = fs.readFileSync(path.join(process.cwd(), 'db/saas-schema.sql'), 'utf8');
 
+// Strip both full-line and inline "--" comments. Inline comments can contain
+// semicolons (e.g. "-- NULL=individual; seat count"), which would otherwise
+// split a statement mid-way. No SQL string literal in this schema contains "--".
 const cleaned = raw
     .split('\n')
-    .filter((line) => !line.trim().startsWith('--'))
+    .map((line) => line.replace(/--.*$/, ''))
     .join('\n');
 
 const stmts = cleaned.split(';').map((s) => s.trim()).filter(Boolean);
