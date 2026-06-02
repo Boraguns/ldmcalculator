@@ -104,7 +104,6 @@ const AccountMenu = ({ style = {}, compact = false, height }) => {
             <div
                 className="ai-btn ai-language-switcher"
                 onClick={() => (loggedIn ? setOpen(o => !o) : go('/login'))}
-                title={ringTitle}
                 style={{
                     padding: '2px', height: `${h}px`, cursor: 'pointer',
                     borderRadius: 12,
@@ -173,6 +172,38 @@ const AccountMenu = ({ style = {}, compact = false, height }) => {
                     )}
                 </div>
             </div>
+
+            {/* Trial-count badge: a small button-style pill pinned to the
+                button's top-right corner, coloured green/orange/red as the free
+                allowance counts down. Replaces the old hover tooltip. Hidden for
+                premium (unlimited) users. */}
+            {ring && (
+                <span
+                    aria-label={ringTitle}
+                    title={ringTitle}
+                    style={{
+                        position: 'absolute',
+                        top: -8,
+                        right: -8,
+                        minWidth: 20,
+                        height: 20,
+                        padding: '0 6px',
+                        borderRadius: 999,
+                        background: ring,
+                        color: '#fff',
+                        fontSize: '0.72rem',
+                        fontWeight: 800,
+                        lineHeight: '20px',
+                        textAlign: 'center',
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.35)',
+                        border: '2px solid #0f0f0f',
+                        pointerEvents: 'none',
+                        zIndex: 2,
+                    }}
+                >
+                    {remaining}
+                </span>
+            )}
 
             {open && (
                 <div

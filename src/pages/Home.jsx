@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useT, LanguageSwitcher } from '../i18n/LanguageContext';
 import { useSiteAsset } from '../hooks/useSiteAssets';
@@ -28,6 +28,12 @@ const Home = () => {
     const thumbShip  = useSiteAsset('home_thumb_ship',  '/src/gemi.png');
     const [hoveredSection, setHoveredSection] = useState(null);
     const [isDesktop, setIsDesktop] = useState(true);
+    // G1: vertically align the top-right button row's top edge with the logo's
+    // top edge. Both share the hero wrapper as their offset parent, so we copy
+    // the logo's measured offsetTop onto the button row (desktop only — on
+    // mobile the row keeps its small fixed inset so it clears the logo above it).
+    const logoRef = useRef(null);
+    const [headerTop, setHeaderTop] = useState(16);
 
     const sections = [
         { id: 'truck', path: '/truck', img: thumbTruck, bg: bgTruck },
@@ -73,6 +79,23 @@ const Home = () => {
 
         return () => window.removeEventListener('resize', checkDevice);
     }, []);
+
+    // Measure the logo's top offset and mirror it onto the button row so the
+    // buttons sit at the same height as the top of the logo (desktop). Runs on
+    // mount, on every resize, and whenever the desktop flag flips (the logo
+    // size/margins differ between layouts).
+    useEffect(() => {
+        const align = () => {
+            if (isDesktop && logoRef.current) {
+                setHeaderTop(logoRef.current.offsetTop);
+            } else {
+                setHeaderTop(16);
+            }
+        };
+        align();
+        window.addEventListener('resize', align);
+        return () => window.removeEventListener('resize', align);
+    }, [isDesktop]);
 
     const [adminFaq, setAdminFaq] = useState({});
     useEffect(() => {
@@ -157,7 +180,7 @@ const Home = () => {
             }}>
             {/* Language switcher top-right (smaller height on mobile so it
                 doesn't crowd the centered logo) */}
-            <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 200, display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <div style={{ position: 'absolute', top: headerTop, right: 16, zIndex: 200, display: 'flex', gap: '10px', alignItems: 'center' }}>
                 <ToolsMenu height={isDesktop ? 44 : 36} compact={!isDesktop} />
                 <AccountMenu height={isDesktop ? 44 : 36} compact={!isDesktop} />
                 <LanguageSwitcher height={isDesktop ? 44 : 36} compact={!isDesktop} />
@@ -228,6 +251,7 @@ const Home = () => {
                 margin: '0 auto'
             }}>
                 <img
+                    ref={logoRef}
                     src={homeLogo}
                     alt="LDM Logo"
                     className="home-logo"
