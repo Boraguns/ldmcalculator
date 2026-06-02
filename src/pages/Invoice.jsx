@@ -416,6 +416,17 @@ const Invoice = () => {
                   <div className="cmr-zoomwrap" style={{ width: nat.w ? nat.w * zoom : '210mm', height: nat.h ? nat.h * zoom : 'auto' }}>
                     <div className="cmr-sheet inv-sheet" ref={sheetRef} style={{ transform: `scale(${zoom})`, transformOrigin: 'top left' }}>
                       <div className="inv-frame">
+                        {/* ===== EDITABLE DOCUMENT TITLE (top-left, prints as typed) ===== */}
+                        <div className="inv-title-row">
+                            <input
+                                className="inv-title-input"
+                                value={f.title ?? t('invoice.form.titleDefault')}
+                                onChange={set('title')}
+                                aria-label={t('invoice.form.titleDefault')}
+                            />
+                            <span className="inv-title-pencil inv-screen-only" aria-hidden="true">✎</span>
+                        </div>
+
                         {/* ===== TOP 2×2 GRID (flat children so grid rows align) ===== */}
                         <div className="inv-top">
                             {/* row 1: sender | logo */}
@@ -516,7 +527,8 @@ const Invoice = () => {
                             </button>
                         </div>
 
-                        {/* ===== TOTALS (auto-computed from the line items) ===== */}
+                        {/* ===== TOTALS (left) + NOTES (fills the right gap) ===== */}
+                        <div className="inv-bottom">
                         <div className="inv-totals">
                             {totalRows.map(([k, key]) => {
                                 const c = computed[k];
@@ -565,6 +577,15 @@ const Invoice = () => {
                                     </div>
                                 );
                             })}
+                        </div>
+                        <div className={`inv-notes${(f.notes || '').trim() ? '' : ' inv-notes-empty'}`}>
+                            <div className="inv-cap">{t('invoice.form.notes')}</div>
+                            <textarea
+                                value={val('notes')}
+                                onChange={set('notes')}
+                                placeholder={t('invoice.form.notesPlaceholder')}
+                            />
+                        </div>
                         </div>
                       </div>
                     </div>

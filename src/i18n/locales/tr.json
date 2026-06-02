@@ -563,7 +563,10 @@
       "removeRow": "Satırı sil",
       "discountType": "İndirim türü",
       "discountAmount": "Tutar",
-      "discountPercent": "Yüzde"
+      "discountPercent": "Yüzde",
+      "titleDefault": "FATURA",
+      "notes": "Notlar",
+      "notesPlaceholder": "Notlar (isteğe bağlı)"
     },
     "table": {
       "hs": "GTİP",

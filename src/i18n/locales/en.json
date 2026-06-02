@@ -563,7 +563,10 @@
       "removeRow": "Remove row",
       "discountType": "Discount type",
       "discountAmount": "Fixed amount",
-      "discountPercent": "Percentage"
+      "discountPercent": "Percentage",
+      "titleDefault": "INVOICE",
+      "notes": "Notes",
+      "notesPlaceholder": "Notes (optional)"
     },
     "table": {
       "hs": "HS Code",

@@ -563,7 +563,10 @@
       "removeRow": "Удалить строку",
       "discountType": "Тип скидки",
       "discountAmount": "Сумма",
-      "discountPercent": "Процент"
+      "discountPercent": "Процент",
+      "titleDefault": "СЧЁТ",
+      "notes": "Примечания",
+      "notesPlaceholder": "Примечания (необязательно)"
     },
     "table": {
       "hs": "ТН ВЭД",

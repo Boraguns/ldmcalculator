@@ -24,13 +24,25 @@
     box-sizing: border-box;
 }
 
+/* ----- editable document title (top-left, e.g. FATURA) ----- */
+.inv-title-row {
+    display: flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid var(--inv-line); padding: 8px 10px;
+}
+.inv-title-input {
+    border: none; outline: none; background: transparent;
+    font-family: inherit; font-size: 18px; font-weight: 800; letter-spacing: 1px;
+    color: #111; width: 300px; max-width: 70%; padding: 0;
+}
+.inv-title-pencil { color: #94a3b8; font-size: 13px; line-height: 1; }
+
 /* ----- top 2×2 grid: info (left) + logo/stamp (right) -----
    A real CSS grid (not two independent flex columns) so the two cells in
    each row share a height — i.e. the recipient box and the stamp/signature
    box start at exactly the same top border. */
 .inv-top {
     display: grid;
-    grid-template-columns: 58% 42%;
+    grid-template-columns: 60% 40%;
     grid-template-rows: minmax(86px, auto) minmax(86px, auto);
 }
 .inv-box {
@@ -91,19 +103,23 @@
     border: none; background: transparent; color: #2563eb; cursor: pointer; padding: 0;
 }
 
-/* ----- meta rows (invoice type / no / dates), left half ----- */
+/* ----- meta rows (invoice type / no / dates), left block -----
+   Width 60% so the right edge lines up with the goods table's GTİP+Malın
+   Cinsi boundary (16% + 44% = 60%) and the top grid divider. The label
+   column is 16% of the full sheet (= 26.667% of this 60% block) so its
+   divider sits exactly on the GTİP column edge. */
 .inv-meta, .inv-totals {
-    display: flex; flex-direction: column; width: 58%; box-sizing: border-box;
+    display: flex; flex-direction: column; width: 60%; box-sizing: border-box;
     border-top: 1px solid var(--inv-line);
-    border-right: 1px solid var(--inv-line); /* close the half-width box on the right */
+    border-right: 1px solid var(--inv-line); /* close the block on the right (aligns with goods col2) */
 }
 .inv-row { display: flex; border-bottom: 1px solid var(--inv-line); }
 .inv-row:last-child { border-bottom: none; }
 .inv-row .lbl {
-    flex: 0 0 40%; border-right: 1px solid var(--inv-line);
+    flex: 0 0 26.667%; border-right: 1px solid var(--inv-line);
     padding: 3px 6px; font-size: 9px; font-weight: 700;
 }
-.inv-row .val { flex: 1 1 60%; }
+.inv-row .val { flex: 1 1 73.333%; }
 .inv-row .val input {
     width: 100%; border: none; outline: none; background: transparent;
     font-family: inherit; font-size: 10px; color: #111; padding: 3px 6px; box-sizing: border-box;
@@ -136,9 +152,16 @@
 .inv-table tbody tr:not(.inv-filler) { height: 1px; }
 .inv-filler td { height: auto; }
 
-/* per-row delete control + add-row button (screen only) */
-.inv-ctrl-col { width: 26px; border: none !important; background: transparent !important; }
+/* per-row delete control + add-row button (screen only).
+   The control column is zero-width so it never shifts the percentage-based
+   data columns (which must line up with the meta/totals blocks); the delete
+   button is absolutely positioned and tucks into the right edge of the row. */
+.inv-ctrl-col {
+    width: 0 !important; padding: 0 !important;
+    border: none !important; background: transparent !important; position: relative;
+}
 .inv-row-del {
+    position: absolute; right: 3px; top: 50%; transform: translateY(-50%);
     width: 18px; height: 18px; border-radius: 50%; border: none; cursor: pointer;
     background: #fee2e2; color: #b91c1c; font-size: 12px; line-height: 1;
     display: inline-flex; align-items: center; justify-content: center;
@@ -154,6 +177,19 @@
 /* computed totals (read-only) shown as text, matching the input metrics */
 .inv-row .val .inv-computed {
     display: block; padding: 3px 6px; font-size: 10px; color: #111; font-weight: 600;
+}
+
+/* ----- bottom strip: totals (left 60%) + notes (fills right gap) ----- */
+.inv-bottom { display: flex; align-items: stretch; }
+.inv-notes {
+    flex: 1 1 auto; box-sizing: border-box;
+    border-top: 1px solid var(--inv-line); /* left edge comes from the totals' border-right */
+    padding: 6px 8px; display: flex; flex-direction: column;
+}
+.inv-notes textarea {
+    flex: 1 1 auto; width: 100%; border: none; outline: none; resize: none;
+    background: transparent; font-family: inherit; font-size: 10px; color: #111;
+    min-height: 80px;
 }
 
 /* ----- discount row: input + unit symbol (%, currency) + type toggle ----- */
@@ -196,4 +232,6 @@
     .inv-sign-canvas { border-color: transparent !important; }
     .inv-sign-hint { display: none !important; }
     .inv-currency-bar, .inv-screen-only { display: none !important; }
+    /* empty notes box leaves no trace on the printed sheet */
+    .inv-notes-empty { display: none !important; }
 }

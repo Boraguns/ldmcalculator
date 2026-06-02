@@ -564,7 +564,10 @@
       "removeRow": "Zeile entfernen",
       "discountType": "Rabattart",
       "discountAmount": "Fester Betrag",
-      "discountPercent": "Prozentsatz"
+      "discountPercent": "Prozentsatz",
+      "titleDefault": "RECHNUNG",
+      "notes": "Notizen",
+      "notesPlaceholder": "Notizen (optional)"
     },
     "table": {
       "hs": "HS-Code",

@@ -555,7 +555,10 @@
       "removeRow": "حذف الصف",
       "discountType": "نوع الخصم",
       "discountAmount": "مبلغ ثابت",
-      "discountPercent": "نسبة مئوية"
+      "discountPercent": "نسبة مئوية",
+      "titleDefault": "فاتورة",
+      "notes": "ملاحظات",
+      "notesPlaceholder": "ملاحظات (اختياري)"
     },
     "table": {
       "hs": "رمز HS",

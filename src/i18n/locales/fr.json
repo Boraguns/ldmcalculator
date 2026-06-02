@@ -563,7 +563,10 @@
       "removeRow": "Supprimer la ligne",
       "discountType": "Type de remise",
       "discountAmount": "Montant fixe",
-      "discountPercent": "Pourcentage"
+      "discountPercent": "Pourcentage",
+      "titleDefault": "FACTURE",
+      "notes": "Notes",
+      "notesPlaceholder": "Notes (facultatif)"
     },
     "table": {
       "hs": "Code SH",
