@@ -219,7 +219,8 @@
     "privacy": "Datenschutz",
     "reach": "Kontaktieren Sie uns",
     "admin": "Admin",
-    "pricing": "Preise"
+    "pricing": "Preise",
+    "references": "Referenzen"
   },
   "legal": {
     "termsTitle": "Nutzungsbedingungen",
@@ -559,5 +560,12 @@
       "clearSignature": "Unterschrift löschen",
       "signHint": "Unterschrift"
     }
+  },
+  "references": {
+    "title": "Unsere Referenzen",
+    "subtitle": "Unternehmen und Partner, die uns vertrauen.",
+    "empty": "Es wurden noch keine Referenzen hinzugefügt.",
+    "metaTitle": "Referenzen | LDMCalculator",
+    "metaDesc": "Unternehmen und Partner, die LDMCalculator vertrauen."
   }
 }

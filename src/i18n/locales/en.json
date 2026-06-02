@@ -218,7 +218,8 @@
     "privacy": "Privacy Policy",
     "reach": "Reach us",
     "admin": "Admin",
-    "pricing": "Pricing"
+    "pricing": "Pricing",
+    "references": "References"
   },
   "legal": {
     "termsTitle": "Terms of Use",
@@ -558,5 +559,12 @@
       "clearSignature": "Clear signature",
       "signHint": "Signature"
     }
+  },
+  "references": {
+    "title": "Our References",
+    "subtitle": "Companies and partners who trust us.",
+    "empty": "No references have been added yet.",
+    "metaTitle": "References | LDMCalculator",
+    "metaDesc": "Companies and partners who trust LDMCalculator."
   }
 }

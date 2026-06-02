@@ -3,12 +3,14 @@
 import config from '../_handlers/public/config.js';
 import faq from '../_handlers/public/faq.js';
 import translations from '../_handlers/public/translations.js';
+import references from '../_handlers/public/references.js';
 import { json } from '../_lib/db.js';
 
 const HANDLERS = {
     'config': config,
     'faq': faq,
     'translations': translations,
+    'references': references,
 };
 
 export default async function handler(req, res) {

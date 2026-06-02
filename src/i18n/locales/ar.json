@@ -210,7 +210,8 @@
     "privacy": "Privacy Policy",
     "reach": "Reach us",
     "admin": "Admin",
-    "pricing": "الأسعار"
+    "pricing": "الأسعار",
+    "references": "المراجع"
   },
   "legal": {
     "termsTitle": "Terms of Use",
@@ -550,5 +551,12 @@
       "clearSignature": "مسح التوقيع",
       "signHint": "التوقيع"
     }
+  },
+  "references": {
+    "title": "مراجعنا",
+    "subtitle": "الشركات والشركاء الذين يثقون بنا.",
+    "empty": "لم تتم إضافة أي مراجع بعد.",
+    "metaTitle": "المراجع | LDMCalculator",
+    "metaDesc": "الشركات والشركاء الذين يثقون بـ LDMCalculator."
   }
 }

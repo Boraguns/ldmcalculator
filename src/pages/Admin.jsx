@@ -229,6 +229,160 @@ const resizeImage = (file, targetW, targetH) => new Promise((resolve, reject) =>
     reader.readAsDataURL(file);
 });
 
+// Contain-fit resizer for logos: scales down within a max box while preserving
+// aspect ratio (no crop) and keeps transparency by exporting PNG.
+const resizeImageContain = (file, maxW, maxH) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error);
+    reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('Image decode failed'));
+        img.onload = () => {
+            const scale = Math.min(1, maxW / img.width, maxH / img.height);
+            const w = Math.max(1, Math.round(img.width * scale));
+            const h = Math.max(1, Math.round(img.height * scale));
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL('image/png'));
+        };
+        img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+});
+
+// Reference companies (public "Referanslar" gallery) — name + logo CRUD.
+const ReferencesManager = () => {
+    const [rows, setRows] = useState([]);
+    const [draft, setDraft] = useState({ name: '', logo_url: '', website: '', sort_order: 0, is_active: true });
+    const [busy, setBusy] = useState(false);
+    const [uploading, setUploading] = useState({});
+    const [feedback, setFeedback] = useState(null);
+
+    const load = async () => {
+        const r = await fetch('/api/admin/references', { headers: auth() });
+        if (!r.ok) { setRows([]); return; }
+        const j = await r.json();
+        setRows(j.items || []);
+    };
+    useEffect(() => { load(); }, []);
+
+    const pickLogo = (file, onDone) => {
+        if (!file) return;
+        resizeImageContain(file, 600, 400)
+            .then(onDone)
+            .catch(e => setFeedback({ type: 'err', text: e.message || 'Logo yüklenemedi' }));
+    };
+
+    const create = async () => {
+        if (!draft.name.trim()) { setFeedback({ type: 'err', text: 'Firma adı zorunlu' }); return; }
+        setBusy(true); setFeedback(null);
+        try {
+            const r = await fetch('/api/admin/references', {
+                method: 'POST', headers: { ...auth(), 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...draft, sort_order: parseInt(draft.sort_order) || 0 }),
+            });
+            const j = await r.json().catch(() => ({}));
+            if (!r.ok) { setFeedback({ type: 'err', text: j.error || `HTTP ${r.status}` }); return; }
+            setDraft({ name: '', logo_url: '', website: '', sort_order: 0, is_active: true });
+            await load();
+            setFeedback({ type: 'ok', text: `Eklendi: ${j.item?.name}` });
+            setTimeout(() => setFeedback(null), 3000);
+        } catch (e) {
+            setFeedback({ type: 'err', text: e.message || 'Network error' });
+        } finally { setBusy(false); }
+    };
+
+    const update = async (item) => {
+        await fetch('/api/admin/references', {
+            method: 'PATCH', headers: { ...auth(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...item, sort_order: parseInt(item.sort_order) || 0 }),
+        });
+        load();
+    };
+    const remove = async (id) => {
+        if (!confirm('Bu referansı silmek istediğinize emin misiniz?')) return;
+        await fetch(`/api/admin/references?id=${id}`, { method: 'DELETE', headers: auth() });
+        load();
+    };
+
+    const logoBox = { width: 90, height: 56, borderRadius: 8, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.12)', overflow: 'hidden', flex: '0 0 auto' };
+
+    return (
+        <div>
+            <div style={cardS}>
+                <h3 style={{ color: '#f1f5f9', marginTop: 0 }}>Yeni Referans Ekle</h3>
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <div style={logoBox}>
+                        {draft.logo_url
+                            ? <img src={draft.logo_url} alt="" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                            : <span style={{ color: '#94a3b8', fontSize: '0.7rem' }}>logo</span>}
+                    </div>
+                    <label className="ai-btn" style={{ height: 36, padding: 2, cursor: 'pointer' }}>
+                        <div className="ai-btn-inner" style={{ padding: '0 12px', height: '100%', fontSize: '0.82rem' }}>📤 Logo</div>
+                        <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" style={{ display: 'none' }}
+                            onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ''; pickLogo(f, (url) => setDraft(d => ({ ...d, logo_url: url }))); }} />
+                    </label>
+                    <input style={{ ...inputS, flex: '1 1 180px' }} placeholder="Firma adı" value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} />
+                    <input style={{ ...inputS, flex: '1 1 180px' }} placeholder="Website (opsiyonel)" value={draft.website} onChange={e => setDraft({ ...draft, website: e.target.value })} />
+                    <input style={{ ...inputS, width: 80 }} type="number" placeholder="Sıra" value={draft.sort_order} onChange={e => setDraft({ ...draft, sort_order: e.target.value })} />
+                    <label style={{ color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <input type="checkbox" checked={draft.is_active} onChange={e => setDraft({ ...draft, is_active: e.target.checked })} /> Aktif
+                    </label>
+                    <button onClick={create} disabled={busy} className="ai-btn ai-btn-primary" style={{ height: 36, opacity: busy ? 0.5 : 1 }}>
+                        <div className="ai-btn-inner" style={{ background: '#10b981', color: 'white' }}>{busy ? '...' : '+ Ekle'}</div>
+                    </button>
+                </div>
+                {feedback && (
+                    <div style={{
+                        marginTop: 10, padding: '8px 12px', borderRadius: 6, fontSize: '0.85rem',
+                        background: feedback.type === 'ok' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
+                        color: feedback.type === 'ok' ? '#10b981' : '#ef4444',
+                        border: `1px solid ${feedback.type === 'ok' ? 'rgba(16,185,129,0.4)' : 'rgba(239,68,68,0.4)'}`,
+                    }}>{feedback.type === 'ok' ? '✓ ' : '⚠ '}{feedback.text}</div>
+                )}
+                <div style={{ marginTop: 10, fontSize: '0.8rem', color: '#94a3b8' }}>
+                    Toplam referans: <b style={{ color: '#f1f5f9' }}>{rows.length}</b>
+                </div>
+            </div>
+
+            {rows.map(r => (
+                <div key={r.id} style={{ ...cardS, display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <div style={logoBox}>
+                        {r.logo_url
+                            ? <img src={r.logo_url} alt={r.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                            : <span style={{ color: '#94a3b8', fontSize: '0.7rem' }}>logo</span>}
+                    </div>
+                    <label className="ai-btn" style={{ height: 34, padding: 2, cursor: 'pointer' }}>
+                        <div className="ai-btn-inner" style={{ padding: '0 10px', height: '100%', fontSize: '0.78rem' }}>
+                            {uploading[r.id] ? '...' : '📤'}
+                        </div>
+                        <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" style={{ display: 'none' }}
+                            onChange={(e) => {
+                                const f = e.target.files && e.target.files[0]; e.target.value = '';
+                                setUploading(u => ({ ...u, [r.id]: true }));
+                                pickLogo(f, async (url) => {
+                                    await update({ ...r, logo_url: url });
+                                    setUploading(u => ({ ...u, [r.id]: false }));
+                                });
+                            }} />
+                    </label>
+                    <input style={{ ...inputS, flex: '1 1 180px' }} value={r.name} onChange={e => setRows(rs => rs.map(x => x.id === r.id ? { ...x, name: e.target.value } : x))} />
+                    <input style={{ ...inputS, flex: '1 1 180px' }} placeholder="Website" value={r.website || ''} onChange={e => setRows(rs => rs.map(x => x.id === r.id ? { ...x, website: e.target.value } : x))} />
+                    <input style={{ ...inputS, width: 80 }} type="number" value={r.sort_order || 0} onChange={e => setRows(rs => rs.map(x => x.id === r.id ? { ...x, sort_order: e.target.value } : x))} />
+                    <label style={{ color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <input type="checkbox" checked={!!r.is_active} onChange={e => setRows(rs => rs.map(x => x.id === r.id ? { ...x, is_active: e.target.checked } : x))} /> Aktif
+                    </label>
+                    <button onClick={() => update(r)} className="ai-btn" style={{ height: 34 }}><div className="ai-btn-inner">Kaydet</div></button>
+                    <button onClick={() => remove(r.id)} className="ai-btn ai-btn-danger" style={{ height: 34 }}><div className="ai-btn-inner">×</div></button>
+                </div>
+            ))}
+        </div>
+    );
+};
+
 const Banners = () => {
     const [rows, setRows] = useState({ left: '', right: '', top: '' });
     const [busy, setBusy] = useState({});
@@ -1184,35 +1338,78 @@ const Admin = () => {
 
     if (!user) return <div style={{ minHeight: '100vh', background: '#0b1220' }}><Login onAuthed={setUser} /></div>;
 
+    // Grouped, vertical navigation. Keys match the tab conditionals below.
+    const NAV = [
+        { group: 'İçerik', items: [
+            ['site',      'Site Yönetimi'],
+            ['faq',       'SSS (FAQ)'],
+            ['assets',    'Site Görselleri'],
+            ['banners',   'Brandalar'],
+            ['flags',     'Bayrak Firmaları'],
+            ['references','Referanslar'],
+        ] },
+        { group: 'Satış', items: [
+            ['pricing',   'Fiyatlandırma'],
+            ['subs',      'Abonelikler'],
+        ] },
+        { group: 'Kullanıcılar', items: [
+            ['users',     'Kullanıcılar'],
+            ['names',     'Ürün İsim Logları'],
+        ] },
+        { group: 'Mesajlar', items: [
+            ['contact',   'İletişim'],
+            ['advertise', 'Reklam'],
+            ['screenshot','Ekran Görüntüleri'],
+        ] },
+    ];
+
     return (
-        <div style={{ minHeight: '100vh', background: '#0b1220', color: '#e2e8f0', padding: 24 }}>
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
-                <h1 style={{ margin: 0, color: '#f8fafc' }}>LDM Admin</h1>
-                <button onClick={() => { localStorage.removeItem(TOKEN_KEY); setUser(null); }} className="ai-btn" style={{ height: 36 }}>
-                    <div className="ai-btn-inner">Logout</div>
+        <div style={{ minHeight: '100vh', background: '#0b1220', color: '#e2e8f0', display: 'flex', alignItems: 'flex-start' }}>
+            {/* Vertical sidebar */}
+            <aside style={{
+                flex: '0 0 210px', width: 210, alignSelf: 'stretch',
+                background: '#0d1526', borderRight: '1px solid rgba(255,255,255,0.08)',
+                position: 'sticky', top: 0, height: '100vh', overflowY: 'auto',
+                display: 'flex', flexDirection: 'column', padding: '16px 12px', boxSizing: 'border-box',
+            }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, paddingLeft: 4 }}>
+                    <h1 style={{ margin: 0, color: '#f8fafc', fontSize: '1.05rem', letterSpacing: '.3px' }}>LDM Admin</h1>
+                </div>
+                <nav style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    {NAV.map(({ group, items }) => (
+                        <div key={group}>
+                            <div style={{ color: '#475569', fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.6px', padding: '0 8px 6px' }}>{group}</div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                {items.map(([k, l]) => (
+                                    <button
+                                        key={k}
+                                        onClick={() => setTab(k)}
+                                        style={{
+                                            textAlign: 'left', border: 'none', cursor: 'pointer',
+                                            borderRadius: 8, padding: '8px 10px', fontSize: '0.85rem',
+                                            fontWeight: tab === k ? 600 : 500, fontFamily: 'inherit',
+                                            background: tab === k ? '#3b82f6' : 'transparent',
+                                            color: tab === k ? '#fff' : '#cbd5e1',
+                                            transition: 'background .12s',
+                                        }}
+                                    >{l}</button>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </nav>
+                <button
+                    onClick={() => { localStorage.removeItem(TOKEN_KEY); setUser(null); }}
+                    className="ai-btn"
+                    style={{ height: 34, marginTop: 'auto' }}
+                >
+                    <div className="ai-btn-inner" style={{ fontSize: '0.82rem' }}>Çıkış</div>
                 </button>
-            </header>
-            <nav style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-                {[
-                    ['flags',     'Flag companies'],
-                    ['banners',   'Banners'],
-                    ['assets',    'Site Görselleri'],
-                    ['site',      'Site Yönetimi'],
-                    ['faq',       'SSS (FAQ)'],
-                    ['names',     'Ürün İsim Logları'],
-                    ['pricing',   'Fiyatlandırma'],
-                    ['subs',      'Abonelikler'],
-                    ['users',     'Kullanıcılar'],
-                    ['contact',   'Contact'],
-                    ['advertise', 'Advertise'],
-                    ['screenshot','Screenshot logs']
-                ].map(([k, l]) => (
-                    <button key={k} onClick={() => setTab(k)} className="ai-btn" style={{ height: 34 }}>
-                        <div className="ai-btn-inner" style={{ background: tab === k ? '#3b82f6' : 'transparent', color: 'white' }}>{l}</div>
-                    </button>
-                ))}
-            </nav>
-            <main>
+            </aside>
+
+            {/* Main content */}
+            <main style={{ flex: 1, minWidth: 0, padding: 24, boxSizing: 'border-box' }}>
+                {tab === 'references' && <ReferencesManager />}
                 {tab === 'flags'   && <FlagCompanies />}
                 {tab === 'banners' && <Banners />}
                 {tab === 'assets'  && <SiteAssets />}

@@ -165,3 +165,18 @@ CREATE TABLE IF NOT EXISTS consents (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_consents_user ON consents(user_id);
+
+-- --- Reference companies (public "Referanslar" gallery) ---------------------
+-- Logo gallery of customers/partners. Managed from the admin panel; rendered
+-- as a grid on /references. logo_url stores a data URL or absolute URL.
+CREATE TABLE IF NOT EXISTS reference_companies (
+    id         SERIAL PRIMARY KEY,
+    name       TEXT NOT NULL,
+    logo_url   TEXT DEFAULT '',
+    website    TEXT DEFAULT '',
+    sort_order INTEGER DEFAULT 0,
+    is_active  BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_reference_companies_sort ON reference_companies(sort_order, id);

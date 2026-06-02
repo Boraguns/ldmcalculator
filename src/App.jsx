@@ -23,6 +23,7 @@ import Register from './pages/Register';
 import VerifyEmail from './pages/VerifyEmail';
 import ResetPassword from './pages/ResetPassword';
 import Pricing from './pages/Pricing';
+import References from './pages/References';
 import Account from './pages/Account';
 import AcceptInvite from './pages/AcceptInvite';
 import Kvkk from './pages/legal/Kvkk';
@@ -670,6 +671,7 @@ function App() {
                     <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/accept-invite" element={<AcceptInvite />} />
                     <Route path="/pricing" element={<Pricing />} />
+                    <Route path="/references" element={<References />} />
                     <Route path="/account" element={<Account />} />
                     <Route path="/account/:tab" element={<Account />} />
                     {/* Legal */}

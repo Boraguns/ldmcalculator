@@ -218,7 +218,8 @@
     "privacy": "Gizlilik Politikası",
     "reach": "Bize ulaşın",
     "admin": "Yönetim",
-    "pricing": "Fiyatlandırma"
+    "pricing": "Fiyatlandırma",
+    "references": "Referanslar"
   },
   "legal": {
     "termsTitle": "Kullanım Koşulları",
@@ -558,5 +559,12 @@
       "clearSignature": "İmzayı temizle",
       "signHint": "İmza"
     }
+  },
+  "references": {
+    "title": "Referanslarımız",
+    "subtitle": "Bize güvenen firmalar ve iş ortaklarımız.",
+    "empty": "Henüz referans eklenmedi.",
+    "metaTitle": "Referanslar | LDMCalculator",
+    "metaDesc": "LDMCalculator’a güvenen firmalar ve iş ortaklarımız."
   }
 }

@@ -406,6 +406,7 @@ const Home = () => {
                         <h4 style={{ color: '#f8fafc', margin: '0 0 10px', fontSize: '0.95rem' }}>{t('footer.company')}</h4>
                         <ul style={{ listStyle: 'none', padding: 0, margin: 0, lineHeight: 2 }}>
                             <li><Link to="/pricing" style={{ color: '#cbd5e1', textDecoration: 'none' }}>{t('footer.pricing')}</Link></li>
+                            <li><Link to="/references" style={{ color: '#cbd5e1', textDecoration: 'none' }}>{t('footer.references')}</Link></li>
                             <li><Link to="/about" style={{ color: '#cbd5e1', textDecoration: 'none' }}>{t('footer.about')}</Link></li>
                             <li><Link to="/contact" style={{ color: '#cbd5e1', textDecoration: 'none' }}>{t('footer.contact')}</Link></li>
                             <li><Link to="/advertise" style={{ color: '#cbd5e1', textDecoration: 'none' }}>{t('footer.advertise')}</Link></li>
