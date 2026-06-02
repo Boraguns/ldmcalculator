@@ -70,46 +70,39 @@
 .cmr-main {
     width: 100%;
     display: flex;
-    flex-direction: row;
-    align-items: flex-start;
-    justify-content: center;
-    gap: 24px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 22px;
 }
 
-/* ---------- Process guide (left on desktop) ---------- */
+/* ---------- Process guide (full-width banner on top) ----------
+   Sits above the sheet on every screen so it's always read first; laid out
+   as a wide, multi-column grid so the steps stay short and legible instead of
+   stacking into a tall, cramped sidebar. */
 .cmr-guide {
-    flex: 0 0 300px;
-    width: 300px;
-    max-width: 300px;
-    position: sticky;
-    top: 16px;
-    align-self: flex-start;
-    /* Top-aligned and self-scrolling so a tall guide is never clipped. */
-    max-height: calc(100vh - 32px);
-    overflow-y: auto;
-    overflow-x: hidden;
+    width: 100%;
+    max-width: 1000px;          /* roomier than the A4 sheet for comfortable reading */
+    align-self: center;
     background: #111c33;
     border: 1px solid #243352;
     border-radius: 14px;
-    padding: 18px 18px 16px;
+    padding: 20px 24px 18px;
     color: #cbd5e1;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
     box-sizing: border-box;
-    transition: flex-basis .3s ease, width .3s ease, max-width .3s ease,
-                padding .3s ease, border-width .3s ease,
-                opacity .25s ease, transform .3s ease;
+    overflow: hidden;
+    transition: max-height .3s ease, padding .3s ease,
+                border-width .3s ease, opacity .25s ease;
 }
-/* Collapsed: slide out to the left and reclaim the space for the sheet. */
+/* Collapsed: shrink to zero height and let the sheet rise up. */
 .cmr-main.guide-collapsed { gap: 0; }
 .cmr-main.guide-collapsed .cmr-guide {
-    flex-basis: 0;
-    width: 0;
-    max-width: 0;
-    padding-left: 0;
-    padding-right: 0;
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
     border-width: 0;
     opacity: 0;
-    transform: translateX(-16px);
     pointer-events: none;
 }
 .cmr-guide-head {
@@ -137,24 +130,23 @@
 }
 .cmr-guide-toggle:hover { background: #334155; }
 
-/* Reopen tab pinned to the left edge while the guide is hidden */
+/* Reopen pill, centred under the toolbar while the guide is hidden */
 .cmr-guide-reopen {
-    position: fixed;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
+    position: sticky;
+    top: 8px;
     z-index: 60;
-    display: flex;
+    align-self: center;
+    margin: 0 auto 4px;
+    display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 7px;
     background: #1d4ed8;
     color: #fff;
     border: none;
-    border-radius: 0 12px 12px 0;
-    padding: 14px 7px;
-    writing-mode: vertical-rl;
+    border-radius: 999px;
+    padding: 9px 18px;
     font-family: inherit;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     font-weight: 700;
     letter-spacing: 0.3px;
     cursor: pointer;
@@ -170,18 +162,20 @@
     color: #f1f5f9;
 }
 .cmr-guide-intro {
-    margin: 0 0 14px;
-    font-size: 0.82rem;
-    line-height: 1.5;
+    margin: 0 0 16px;
+    font-size: 0.9rem;
+    line-height: 1.55;
     color: #94a3b8;
 }
 .cmr-guide-steps {
     list-style: none;
     margin: 0;
     padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    /* Wide screens fan the steps out into 2–3 columns; narrow screens fall
+       back to a single column automatically. */
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 14px 24px;
 }
 .cmr-guide-steps li {
     display: flex;
@@ -200,15 +194,15 @@
     border-radius: 8px;
     margin-top: 1px;
 }
-.cmr-guide-text { display: flex; flex-direction: column; gap: 2px; }
-.cmr-guide-text strong { color: #e2e8f0; font-size: 0.86rem; }
-.cmr-guide-text span { color: #94a3b8; font-size: 0.79rem; line-height: 1.45; }
+.cmr-guide-text { display: flex; flex-direction: column; gap: 3px; }
+.cmr-guide-text strong { color: #e2e8f0; font-size: 0.92rem; }
+.cmr-guide-text span { color: #94a3b8; font-size: 0.85rem; line-height: 1.5; }
 .cmr-guide-tip {
-    margin: 14px 0 0;
+    margin: 16px 0 0;
     padding-top: 12px;
     border-top: 1px solid #243352;
-    font-size: 0.78rem;
-    line-height: 1.45;
+    font-size: 0.85rem;
+    line-height: 1.5;
     color: #7dd3fc;
 }
 
@@ -459,37 +453,8 @@
 }
 .cmr-sign .cap { font-size: 7px; border-top: 0.75px solid var(--cmr-line); padding-top: 2px; }
 
-/* ---------- Stack the guide under the sheet on narrow screens ---------- */
-@media (max-width: 980px) {
-    .cmr-main {
-        flex-direction: column;
-        align-items: center;
-        gap: 18px;
-    }
-    /* Guide above the sheet when stacked (was below → user wanted it on top). */
-    .cmr-stage { order: 2; width: 100%; }
-    .cmr-guide {
-        order: 1;
-        position: static;
-        flex: none;
-        width: 100%;
-        max-width: 210mm;
-        max-height: none;       /* full content below the sheet, no inner scroll */
-        overflow: visible;
-    }
-    /* Collapse vertically (height) instead of horizontally when stacked. */
-    .cmr-main.guide-collapsed .cmr-guide {
-        width: 100%;
-        max-width: 210mm;
-        flex-basis: auto;
-        max-height: 0;
-        padding-top: 0;
-        padding-bottom: 0;
-        border-width: 0;
-        overflow: hidden;
-        transform: none;
-    }
-}
+/* The guide is now a full-width banner on top at every width (see .cmr-main /
+   .cmr-guide above), so no narrow-screen stacking override is needed. */
 
 /* ---------- Mobile / small screens ---------- */
 @media (max-width: 640px) {
