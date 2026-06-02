@@ -6,16 +6,20 @@ export default function AuthShell({ title, subtitle, children, footer, wide = fa
     const { t } = useT();
     return (
         <div style={{
-            minHeight: '100vh', width: '100%',
+            // Own scroll container: the global `body` is locked to 100vh /
+            // overflow:hidden for the calculator, so the auth pages must scroll
+            // internally instead of relying on the body scrollbar.
+            height: '100vh', width: '100%', overflowY: 'auto', WebkitOverflowScrolling: 'touch',
             background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
             color: '#e2e8f0', display: 'flex', flexDirection: 'column', alignItems: 'center',
-            padding: '40px 20px',
+            // Top pad clears the fixed language switcher so it never overlaps the logo.
+            padding: 'calc(env(safe-area-inset-top, 0px) + 72px) 20px calc(env(safe-area-inset-bottom, 0px) + 40px)',
         }}>
-            <div style={{ position: 'fixed', top: 18, right: 18, zIndex: 200 }}>
+            <div style={{ position: 'fixed', top: 'calc(env(safe-area-inset-top, 0px) + 18px)', right: 18, zIndex: 200 }}>
                 <LanguageSwitcher height={40} compact />
             </div>
-            <Link to="/" style={{ marginBottom: 24 }}>
-                <img src="/src/ldm-calculator-beyaz-logo.png" alt="LDM" style={{ width: 190 }} />
+            <Link to="/" style={{ marginBottom: 24, maxWidth: '70%' }}>
+                <img src="/src/ldm-calculator-beyaz-logo.png" alt="LDM" style={{ width: 190, maxWidth: '100%', height: 'auto' }} />
             </Link>
             <div style={{
                 width: '100%', maxWidth: wide ? 640 : 420,
