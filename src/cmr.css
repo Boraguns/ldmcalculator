@@ -95,7 +95,13 @@
     color: #cbd5e1;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
     box-sizing: border-box;
-    overflow: hidden;
+    /* Cap to the viewport and scroll internally so a tall guide is never
+       clipped on short screens (sticky would otherwise pin the top and hide
+       the lower steps). X stays hidden so the collapse-to-zero-width animation
+       still clips cleanly. */
+    max-height: calc(100vh - 16px);
+    overflow-x: hidden;
+    overflow-y: auto;
     transition: max-width .3s ease, width .3s ease, flex-basis .3s ease,
                 padding .3s ease, border-width .3s ease, opacity .25s ease;
 }
@@ -470,6 +476,10 @@
         max-width: 1000px;
         position: static;
         top: auto;
+        /* Stacked on top → let it use its natural height and the page scroll
+           (no internal scrollbar needed). */
+        max-height: none;
+        overflow: visible;
     }
     .cmr-main.guide-collapsed .cmr-guide {
         width: 100%;
@@ -478,6 +488,7 @@
         padding-top: 0;
         padding-bottom: 0;
         flex-basis: auto;
+        overflow: hidden;
     }
     /* Roomier banner can fan the steps into a couple of columns again. */
     .cmr-guide-steps {
