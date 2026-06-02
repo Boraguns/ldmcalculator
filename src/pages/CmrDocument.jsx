@@ -39,6 +39,7 @@ const CmrDocument = () => {
     const [nat, setNat] = useState({ w: 0, h: 0 });   // unscaled sheet size (px)
     const [zoom, setZoom] = useState(1);
     const [autoFit, setAutoFit] = useState(true);     // follow viewport width until user zooms manually
+    const [guideOpen, setGuideOpen] = useState(true); // collapsible left guide (slide in/out)
 
     // Measure the true (unscaled) sheet size; transforms don't affect offset*.
     useEffect(() => {
@@ -160,10 +161,33 @@ const CmrDocument = () => {
                 <button type="button" onClick={zoomReset} aria-label={t('tools.zoomReset')} title={t('tools.zoomReset')}>1:1</button>
             </div>
 
+            {/* Reopen tab — shown only when the guide is collapsed (hidden in print) */}
+            {!guideOpen && (
+                <button
+                    type="button"
+                    className="cmr-guide-reopen"
+                    onClick={() => setGuideOpen(true)}
+                    aria-label={t('cmr.guide.show')}
+                    title={t('cmr.guide.show')}
+                >
+                    <span className="cmr-guide-reopen-icon" aria-hidden="true">›</span>
+                    <span className="cmr-guide-reopen-text">{t('cmr.guide.title')}</span>
+                </button>
+            )}
+
             {/* Desktop: guide on the left, sheet on the right. Mobile: sheet on top, guide below. */}
-            <div className="cmr-main">
-                <aside className="cmr-guide" aria-label={t('cmr.guide.title')}>
-                    <h2 className="cmr-guide-title">{t('cmr.guide.title')}</h2>
+            <div className={`cmr-main${guideOpen ? '' : ' guide-collapsed'}`}>
+                <aside className="cmr-guide" aria-label={t('cmr.guide.title')} aria-hidden={!guideOpen}>
+                    <div className="cmr-guide-head">
+                        <h2 className="cmr-guide-title">{t('cmr.guide.title')}</h2>
+                        <button
+                            type="button"
+                            className="cmr-guide-toggle"
+                            onClick={() => setGuideOpen(false)}
+                            aria-label={t('cmr.guide.hide')}
+                            title={t('cmr.guide.hide')}
+                        >‹</button>
+                    </div>
                     <p className="cmr-guide-intro">{t('cmr.guide.intro')}</p>
                     <ol className="cmr-guide-steps">
                         {stepKeys.map(sk => (

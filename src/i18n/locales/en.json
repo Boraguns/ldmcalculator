@@ -439,7 +439,9 @@
           "desc": "Sender, carrier and consignee sign and stamp. The consignee signs box 24 on receipt of the goods."
         }
       },
-      "tip": "Tip: use the zoom controls to enlarge the sheet, then click any field to type. “Print / PDF” produces a clean A4 sheet."
+      "tip": "Tip: use the zoom controls to enlarge the sheet, then click any field to type. “Print / PDF” produces a clean A4 sheet.",
+      "show": "Show guide",
+      "hide": "Hide guide"
     },
     "form": {
       "title": "International Consignment Note",

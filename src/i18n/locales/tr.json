@@ -439,7 +439,9 @@
           "desc": "Gönderen, taşıyıcı ve alıcı imzalayıp kaşeler. Alıcı, malı teslim aldığında 24 numaralı kutuyu imzalar."
         }
       },
-      "tip": "İpucu: Yakınlaştırma düğmeleriyle formu büyütüp herhangi bir alana tıklayarak yazabilirsiniz. “Yazdır / PDF” temiz bir A4 sayfası üretir."
+      "tip": "İpucu: Yakınlaştırma düğmeleriyle formu büyütüp herhangi bir alana tıklayarak yazabilirsiniz. “Yazdır / PDF” temiz bir A4 sayfası üretir.",
+      "show": "Kılavuzu göster",
+      "hide": "Kılavuzu gizle"
     },
     "form": {
       "title": "Uluslararası Taşıma Senedi",

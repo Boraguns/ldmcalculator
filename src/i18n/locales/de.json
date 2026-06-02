@@ -440,7 +440,9 @@
           "desc": "Absender, Frachtführer und Empfänger unterschreiben und stempeln. Der Empfänger unterschreibt Feld 24 bei Warenannahme."
         }
       },
-      "tip": "Tipp: Vergrößern Sie das Blatt mit den Zoom-Tasten und klicken Sie in ein Feld, um zu schreiben. „Drucken / PDF“ erzeugt ein sauberes A4-Blatt."
+      "tip": "Tipp: Vergrößern Sie das Blatt mit den Zoom-Tasten und klicken Sie in ein Feld, um zu schreiben. „Drucken / PDF“ erzeugt ein sauberes A4-Blatt.",
+      "show": "Anleitung anzeigen",
+      "hide": "Anleitung ausblenden"
     },
     "form": {
       "title": "Internationaler Frachtbrief",

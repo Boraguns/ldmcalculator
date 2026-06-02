@@ -439,7 +439,9 @@
           "desc": "L’expéditeur, le transporteur et le destinataire signent et apposent leur cachet. Le destinataire signe la case 24 à la réception."
         }
       },
-      "tip": "Astuce : agrandissez la feuille avec les commandes de zoom puis cliquez sur un champ pour saisir. « Imprimer / PDF » produit une feuille A4 nette."
+      "tip": "Astuce : agrandissez la feuille avec les commandes de zoom puis cliquez sur un champ pour saisir. « Imprimer / PDF » produit une feuille A4 nette.",
+      "show": "Afficher le guide",
+      "hide": "Masquer le guide"
     },
     "form": {
       "title": "Lettre de voiture internationale",
