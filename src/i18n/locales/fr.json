@@ -499,5 +499,64 @@
       "vstripSender": "À remplir sous la responsabilité de l’expéditeur.",
       "vstripDanger": "Pour les marchandises dangereuses, indiquez la classe, le numéro et la lettre éventuelle à la dernière ligne des colonnes 6 à 9."
     }
+  },
+  "invoice": {
+    "guide": {
+      "title": "Comment remplir la facture",
+      "intro": "Ce modèle concerne les factures d'export avec désignation des marchandises en russe. Saisissez les parties, importez votre logo et votre cachet, remplissez les lignes et imprimez.",
+      "steps": {
+        "s1": {
+          "n": "1",
+          "title": "Parties",
+          "desc": "Saisissez les coordonnées de l'expéditeur et du destinataire."
+        },
+        "s2": {
+          "n": "2",
+          "title": "Logo et cachet",
+          "desc": "Importez votre logo et votre cachet ; signez la zone de signature à la souris ou au doigt."
+        },
+        "s3": {
+          "n": "3",
+          "title": "Infos facture",
+          "desc": "Saisissez le type de facture, le n° de document et les dates de facture / d'émission."
+        },
+        "s4": {
+          "n": "4",
+          "title": "Lignes",
+          "desc": "Par ligne : code TN VED, désignation en russe, quantité, prix unitaire et total (EUR)."
+        },
+        "s5": {
+          "n": "5",
+          "title": "Totaux",
+          "desc": "Remplissez quantité, remise, TVA et taux, puis imprimez ou enregistrez en PDF."
+        }
+      },
+      "tip": "Astuce : utilisez les boutons de zoom pour agrandir le formulaire et cliquez sur un champ pour saisir. « Imprimer / PDF » produit une page A4 nette.",
+      "show": "Afficher le guide",
+      "hide": "Masquer le guide"
+    },
+    "form": {
+      "sender": "COORDONNÉES DE L'EXPÉDITEUR",
+      "recipient": "COORDONNÉES DU DESTINATAIRE",
+      "logo": "LOGO DE L'EXPÉDITEUR",
+      "stamp": "CACHET ET SIGNATURE",
+      "invType": "Type de facture",
+      "docNo": "N° de document",
+      "invDate": "Date de facture",
+      "issueDate": "Date d'émission",
+      "totalQty": "Quantité totale",
+      "totalGoods": "Total marchandises",
+      "discount": "Remise",
+      "vat": "TVA",
+      "vatIncl": "Prix TTC",
+      "taxable": "Imposable",
+      "rate": "Taux",
+      "totalAmount": "Valeur totale des marchandises",
+      "uploadLogo": "Importer le logo",
+      "uploadStamp": "Importer le cachet",
+      "removeImage": "Supprimer",
+      "clearSignature": "Effacer la signature",
+      "signHint": "Signature"
+    }
   }
 }

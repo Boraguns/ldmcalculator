@@ -499,5 +499,64 @@
       "vstripSender": "To be completed under the sender’s responsibility.",
       "vstripDanger": "For dangerous goods, state the class, number and letter (if any) in the last line of columns 6–9."
     }
+  },
+  "invoice": {
+    "guide": {
+      "title": "How to fill the invoice",
+      "intro": "This template is for export invoices with a Russian goods declaration. Enter party details, upload your logo and stamp, fill the line items and print.",
+      "steps": {
+        "s1": {
+          "n": "1",
+          "title": "Parties",
+          "desc": "Enter the sender and recipient details in the boxes."
+        },
+        "s2": {
+          "n": "2",
+          "title": "Logo & stamp",
+          "desc": "Upload your logo and stamp; sign the signature area with mouse or touch."
+        },
+        "s3": {
+          "n": "3",
+          "title": "Invoice info",
+          "desc": "Enter invoice type, document no and the invoice / issue dates."
+        },
+        "s4": {
+          "n": "4",
+          "title": "Line items",
+          "desc": "On each row add the TN VED code, Russian goods name, quantity, unit price and total (EUR)."
+        },
+        "s5": {
+          "n": "5",
+          "title": "Totals",
+          "desc": "Fill total quantity, discount, VAT and rate, then print or save as PDF."
+        }
+      },
+      "tip": "Tip: use the zoom buttons to enlarge the form and click any field to type. “Print / PDF” produces a clean A4 page.",
+      "show": "Show guide",
+      "hide": "Hide guide"
+    },
+    "form": {
+      "sender": "SENDER DETAILS",
+      "recipient": "RECIPIENT DETAILS",
+      "logo": "SENDER LOGO",
+      "stamp": "STAMP & SIGNATURE",
+      "invType": "Invoice type",
+      "docNo": "Document No",
+      "invDate": "Invoice date",
+      "issueDate": "Issue date",
+      "totalQty": "Total quantity",
+      "totalGoods": "Total goods",
+      "discount": "Discount",
+      "vat": "VAT",
+      "vatIncl": "Price incl. VAT",
+      "taxable": "Taxable",
+      "rate": "Rate",
+      "totalAmount": "Total goods value",
+      "uploadLogo": "Upload logo",
+      "uploadStamp": "Upload stamp",
+      "removeImage": "Remove",
+      "clearSignature": "Clear signature",
+      "signHint": "Signature"
+    }
   }
 }

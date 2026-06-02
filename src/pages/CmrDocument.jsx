@@ -118,8 +118,8 @@ const CmrDocument = () => {
         <div className="cmr-label">{num != null && <span className="num">{num}</span>}{num != null ? ' ' : ''}{t(key)}</div>
     );
 
-    // 6 empty goods rows
-    const goodsRows = Array.from({ length: 6 });
+    // Empty goods rows — enough ruled lines to fill the A4 sheet like cmr.pdf.
+    const goodsRows = Array.from({ length: 13 });
 
     // Guide steps are stored as flat keys (cmr.guide.steps.s1.title …) so each
     // one is editable from the admin Site-Content panel and overridable per lang.
@@ -294,8 +294,8 @@ const CmrDocument = () => {
                                 </div>
                             </div>
 
-                            {/* ===== GOODS TABLE ===== */}
-                            <div style={{ position: 'relative' }}>
+                            {/* ===== GOODS TABLE (grows to fill the page) ===== */}
+                            <div className="cmr-goods-wrap">
                                 <table className="cmr-goods">
                                     <thead>
                                         <tr>

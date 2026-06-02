@@ -500,5 +500,64 @@
       "vstripSender": "Auszufüllen unter der Verantwortung des Absenders.",
       "vstripDanger": "Bei Gefahrgut Klasse, Nummer und ggf. Buchstabe in der letzten Zeile der Spalten 6–9 angeben."
     }
+  },
+  "invoice": {
+    "guide": {
+      "title": "So füllen Sie die Rechnung aus",
+      "intro": "Diese Vorlage ist für Exportrechnungen mit russischer Warendeklaration. Geben Sie die Parteien ein, laden Sie Logo und Stempel hoch, füllen Sie die Positionen aus und drucken Sie.",
+      "steps": {
+        "s1": {
+          "n": "1",
+          "title": "Parteien",
+          "desc": "Tragen Sie Absender- und Empfängerdaten in die Felder ein."
+        },
+        "s2": {
+          "n": "2",
+          "title": "Logo & Stempel",
+          "desc": "Logo und Stempel hochladen; das Unterschriftsfeld mit Maus oder Touch signieren."
+        },
+        "s3": {
+          "n": "3",
+          "title": "Rechnungsdaten",
+          "desc": "Rechnungsart, Dokument-Nr. sowie Rechnungs- und Ausstellungsdatum eingeben."
+        },
+        "s4": {
+          "n": "4",
+          "title": "Positionen",
+          "desc": "Je Zeile TN-VED-Code, russischer Warenname, Menge, Einzelpreis und Summe (EUR)."
+        },
+        "s5": {
+          "n": "5",
+          "title": "Summen",
+          "desc": "Gesamtmenge, Rabatt, MwSt. und Kurs ausfüllen, dann drucken oder als PDF speichern."
+        }
+      },
+      "tip": "Tipp: Mit den Zoom-Tasten das Formular vergrößern und in beliebige Felder tippen. „Drucken / PDF“ erzeugt eine saubere A4-Seite.",
+      "show": "Anleitung anzeigen",
+      "hide": "Anleitung ausblenden"
+    },
+    "form": {
+      "sender": "ABSENDERDATEN",
+      "recipient": "EMPFÄNGERDATEN",
+      "logo": "ABSENDER-LOGO",
+      "stamp": "STEMPEL & UNTERSCHRIFT",
+      "invType": "Rechnungsart",
+      "docNo": "Dokument-Nr.",
+      "invDate": "Rechnungsdatum",
+      "issueDate": "Ausstellungsdatum",
+      "totalQty": "Gesamtmenge",
+      "totalGoods": "Warenwert",
+      "discount": "Rabatt",
+      "vat": "MwSt.",
+      "vatIncl": "Preis inkl. MwSt.",
+      "taxable": "Steuerpflichtig",
+      "rate": "Kurs",
+      "totalAmount": "Gesamtwarenwert",
+      "uploadLogo": "Logo hochladen",
+      "uploadStamp": "Stempel hochladen",
+      "removeImage": "Entfernen",
+      "clearSignature": "Unterschrift löschen",
+      "signHint": "Unterschrift"
+    }
   }
 }

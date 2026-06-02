@@ -1,0 +1,125 @@
+/* ============================================================
+   Invoice (Fatura) — fillable export-invoice template, A4.
+   Reuses the cmr.css shell (page, toolbar, guide, zoom, stage,
+   sheet). Black ruled boxes + a blue goods header, matching
+   invoice.pdf. Grows to fill the full A4 height when printing.
+   ============================================================ */
+
+:root {
+    --inv-line: #000;
+    --inv-head: #5b9bd5;
+}
+
+/* Override the blue CMR ink for the invoice sheet. */
+.cmr-sheet.inv-sheet {
+    color: #111;
+    font-size: 9px;
+}
+.cmr-sheet.inv-sheet > .inv-frame { flex: 1 1 auto; }
+
+.inv-frame {
+    border: 1px solid var(--inv-line);
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+}
+
+/* ----- top 2×2 grid: info (left) + logo/stamp (right) ----- */
+.inv-top { display: flex; min-height: 180px; }
+.inv-top-left { flex: 1 1 58%; display: flex; flex-direction: column; }
+.inv-top-right { flex: 1 1 42%; display: flex; flex-direction: column; border-left: 1px solid var(--inv-line); }
+.inv-top .inv-box { flex: 1 1 0; }
+
+.inv-box {
+    border-bottom: 1px solid var(--inv-line);
+    padding: 6px 8px;
+    box-sizing: border-box;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+.inv-top-right .inv-box:last-child { border-bottom: 1px solid var(--inv-line); }
+.inv-cap { font-size: 9px; font-weight: 700; margin-bottom: 4px; letter-spacing: .3px; }
+
+.inv-info textarea {
+    flex: 1 1 auto; width: 100%; border: none; outline: none; resize: none;
+    background: transparent; font-family: inherit; font-size: 10px; color: #111;
+    min-height: 60px;
+}
+
+/* ----- logo / stamp media ----- */
+.inv-media {
+    flex: 1 1 auto; position: relative;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 58px;
+}
+.inv-media img { max-width: 100%; max-height: 96px; object-fit: contain; }
+.inv-upload-label {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 9px; color: #2563eb; cursor: pointer;
+    border: 1px dashed #94a3b8; border-radius: 6px; padding: 6px 10px; background: #f8fafc;
+}
+.inv-upload-label input { display: none; }
+.inv-media-clear {
+    position: absolute; top: 2px; right: 2px;
+    width: 18px; height: 18px; border-radius: 50%;
+    border: none; background: rgba(0, 0, 0, 0.55); color: #fff; cursor: pointer;
+    font-size: 12px; line-height: 1; display: flex; align-items: center; justify-content: center;
+}
+
+/* ----- stamp + signature side by side ----- */
+.inv-stamp-body { flex: 1 1 auto; display: flex; gap: 8px; }
+.inv-stamp-media { flex: 1 1 45%; }
+.inv-sign-wrap { flex: 1 1 55%; position: relative; display: flex; flex-direction: column; }
+.inv-sign-canvas {
+    width: 100%; height: 72px; border: 1px solid #cbd5e1; border-radius: 4px;
+    background: #fff; touch-action: none; cursor: crosshair;
+}
+.inv-sign-hint {
+    position: absolute; top: 34px; left: 0; right: 0; transform: translateY(-50%);
+    text-align: center; font-size: 9px; color: #cbd5e1; pointer-events: none;
+}
+.inv-sign-clear {
+    margin-top: 3px; align-self: flex-start; font-size: 8.5px;
+    border: none; background: transparent; color: #2563eb; cursor: pointer; padding: 0;
+}
+
+/* ----- meta rows (invoice type / no / dates), left half ----- */
+.inv-meta, .inv-totals {
+    display: flex; flex-direction: column; width: 58%; box-sizing: border-box;
+    border-top: 1px solid var(--inv-line);
+}
+.inv-row { display: flex; border-bottom: 1px solid var(--inv-line); }
+.inv-row:last-child { border-bottom: none; }
+.inv-row .lbl {
+    flex: 0 0 40%; border-right: 1px solid var(--inv-line);
+    padding: 3px 6px; font-size: 9px; font-weight: 700;
+}
+.inv-row .val { flex: 1 1 60%; }
+.inv-row .val input {
+    width: 100%; border: none; outline: none; background: transparent;
+    font-family: inherit; font-size: 10px; color: #111; padding: 3px 6px; box-sizing: border-box;
+}
+
+/* ----- goods table (grows to fill the page) ----- */
+.inv-table-wrap { flex: 1 1 auto; display: flex; flex-direction: column; border-top: 1px solid var(--inv-line); min-height: 150px; }
+.inv-table { width: 100%; border-collapse: collapse; height: 100%; flex: 1 1 auto; table-layout: fixed; }
+.inv-table th {
+    background: var(--inv-head); color: #fff; font-weight: 700; font-size: 8.5px;
+    border: 1px solid var(--inv-line); padding: 4px 3px; text-align: center; height: 1px;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+.inv-table td { border: 1px solid var(--inv-line); padding: 0; height: auto; vertical-align: top; }
+.inv-table td input {
+    width: 100%; min-height: 16px; border: none; outline: none; background: transparent;
+    font-family: inherit; font-size: 10px; color: #111; padding: 1px 4px; box-sizing: border-box;
+}
+.inv-table td.ta-r input { text-align: right; }
+.inv-table td.ta-c input { text-align: center; }
+
+/* ----- print: hide upload affordances, keep images + ink ----- */
+@media print {
+    .inv-upload-label, .inv-media-clear, .inv-sign-clear { display: none !important; }
+    .inv-sign-canvas { border-color: transparent !important; }
+    .inv-sign-hint { display: none !important; }
+}

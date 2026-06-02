@@ -2,7 +2,7 @@
   "tools": {
     "label": "Tools",
     "cmr": "CMR Belgesi",
-    "invoice": "Invoice",
+    "invoice": "Fatura Belgesi",
     "packingList": "Çeki Listesi",
     "soon": "Bu belge şablonu yakında eklenecek.",
     "print": "Yazdır / PDF",
@@ -498,6 +498,65 @@
       "vstripCarrier": "Kalın çerçeveli alanlar taşıyıcı tarafından doldurulur.",
       "vstripSender": "Gönderenin sorumluluğunda doldurulur.",
       "vstripDanger": "Tehlikeli mallarda; sınıf, numara ve varsa harfi 6–9. sütunların son satırında belirtin."
+    }
+  },
+  "invoice": {
+    "guide": {
+      "title": "Fatura nasıl doldurulur",
+      "intro": "Bu şablon, Rusça mal beyanı içeren ihracat faturaları içindir. Taraf bilgilerini girin, logo ve kaşenizi yükleyin, kalemleri doldurup yazdırın.",
+      "steps": {
+        "s1": {
+          "n": "1",
+          "title": "Taraflar",
+          "desc": "Gönderici ve alıcı bilgilerini ilgili kutulara yazın."
+        },
+        "s2": {
+          "n": "2",
+          "title": "Logo ve kaşe",
+          "desc": "Logonuzu ve kaşenizi yükleyin; imza alanını fare veya dokunmatik ile imzalayın."
+        },
+        "s3": {
+          "n": "3",
+          "title": "Fatura bilgileri",
+          "desc": "Fatura tipi, doküman no, fatura ve düzenlenme tarihlerini girin."
+        },
+        "s4": {
+          "n": "4",
+          "title": "Mal kalemleri",
+          "desc": "Her satıra TN VED kodu, malın Rusça adı, adet, birim fiyat ve toplam (Euro) yazın."
+        },
+        "s5": {
+          "n": "5",
+          "title": "Toplamlar",
+          "desc": "Toplam miktar, indirim, KDV ve kur alanlarını doldurup yazdırın veya PDF kaydedin."
+        }
+      },
+      "tip": "İpucu: Yakınlaştırma düğmeleriyle formu büyütüp herhangi bir alana tıklayarak yazabilirsiniz. “Yazdır / PDF” temiz bir A4 sayfası üretir.",
+      "show": "Kılavuzu göster",
+      "hide": "Kılavuzu gizle"
+    },
+    "form": {
+      "sender": "GÖNDERİCİ BİLGİLERİ",
+      "recipient": "ALICI BİLGİLERİ",
+      "logo": "GÖNDERİCİ LOGOSU",
+      "stamp": "KAŞE VE İMZA",
+      "invType": "Fatura tipi",
+      "docNo": "Doküman No",
+      "invDate": "Fatura tarihi",
+      "issueDate": "Düzenlenme tarihi",
+      "totalQty": "Toplam miktar",
+      "totalGoods": "Toplam mal",
+      "discount": "İndirim",
+      "vat": "KDV",
+      "vatIncl": "KDV dahil fiyat",
+      "taxable": "Vergiye tabidir",
+      "rate": "Kur",
+      "totalAmount": "Toplam mal bedeli",
+      "uploadLogo": "Logo yükle",
+      "uploadStamp": "Kaşe yükle",
+      "removeImage": "Kaldır",
+      "clearSignature": "İmzayı temizle",
+      "signHint": "İmza"
     }
   }
 }
