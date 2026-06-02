@@ -146,8 +146,12 @@ const CmrDocument = () => {
                     <strong style={{ color: '#e2e8f0' }}>{t('tools.cmr')}</strong>
                 </div>
                 <div className="cmr-tb-actions">
-                    <button className="cmr-btn" onClick={() => navigate('/')}>{t('tools.back')}</button>
-                    <button className="cmr-btn" onClick={handleReset}>{t('tools.reset')}</button>
+                    <button className="cmr-btn" onClick={() => navigate('/')}>
+                        <span className="cmr-btn-icon" aria-hidden="true">←</span>{t('tools.back')}
+                    </button>
+                    <button className="cmr-btn" onClick={handleReset}>
+                        <span className="cmr-btn-icon" aria-hidden="true">🧼</span>{t('tools.reset')}
+                    </button>
                     <button className="cmr-btn cmr-btn-primary" onClick={handlePrint}>{t('tools.print')}</button>
                 </div>
             </div>

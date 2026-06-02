@@ -392,7 +392,11 @@
     "members": "Mitglieder",
     "admin": "Admin",
     "remove": "Entfernen",
-    "removeMemberConfirm": "Dieses Mitglied aus der Firma entfernen?"
+    "removeMemberConfirm": "Dieses Mitglied aus der Firma entfernen?",
+    "verifyResend": "Bestätigungs-E-Mail erneut senden",
+    "verifySending": "Senden…",
+    "verifySent": "Bestätigungs-E-Mail gesendet",
+    "verifyError": "Senden fehlgeschlagen. Erneut versuchen."
   },
   "invite": {
     "title": "Team beitreten",

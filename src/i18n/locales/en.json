@@ -391,7 +391,11 @@
     "members": "Members",
     "admin": "admin",
     "remove": "Remove",
-    "removeMemberConfirm": "Remove this member from the company?"
+    "removeMemberConfirm": "Remove this member from the company?",
+    "verifyResend": "Resend verification email",
+    "verifySending": "Sending…",
+    "verifySent": "Verification email sent",
+    "verifyError": "Could not send. Try again."
   },
   "invite": {
     "title": "Join your team",

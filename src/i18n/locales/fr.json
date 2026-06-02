@@ -391,7 +391,11 @@
     "members": "Membres",
     "admin": "admin",
     "remove": "Retirer",
-    "removeMemberConfirm": "Retirer ce membre de l'entreprise ?"
+    "removeMemberConfirm": "Retirer ce membre de l'entreprise ?",
+    "verifyResend": "Renvoyer l'e-mail de vérification",
+    "verifySending": "Envoi…",
+    "verifySent": "E-mail de vérification envoyé",
+    "verifyError": "Échec de l'envoi. Réessayez."
   },
   "invite": {
     "title": "Rejoindre votre équipe",

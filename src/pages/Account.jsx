@@ -71,6 +71,36 @@ export default function Account() {
     );
 }
 
+function VerifyNotice() {
+    const { t } = useT();
+    const [state, setState] = useState('idle'); // idle | sending | sent | error
+    const resend = async () => {
+        setState('sending');
+        try {
+            await api('/api/auth/resend-verify', { method: 'POST' });
+            setState('sent');
+        } catch {
+            setState('error');
+        }
+    };
+    return (
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12 }}>
+            <p style={{ color: '#fbbf24', fontSize: '0.9rem', margin: 0 }}>⚠ {t('account.verifyPending')}</p>
+            {state === 'sent' ? (
+                <span style={{ color: '#34d399', fontSize: '0.85rem' }}>✓ {t('account.verifySent')}</span>
+            ) : (
+                <button onClick={resend} disabled={state === 'sending'} style={{
+                    background: 'transparent', border: '1px solid #fbbf24', color: '#fbbf24',
+                    borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600,
+                }}>
+                    {state === 'sending' ? t('account.verifySending') : t('account.verifyResend')}
+                </button>
+            )}
+            {state === 'error' && <span style={{ color: '#fca5a5', fontSize: '0.85rem' }}>{t('account.verifyError')}</span>}
+        </div>
+    );
+}
+
 function Overview({ user, subscription }) {
     const { t } = useT();
     const navigate = useNavigate();
@@ -90,9 +120,7 @@ function Overview({ user, subscription }) {
         <>
             <Card>
                 <h2 style={{ margin: '0 0 4px', color: '#f8fafc' }}>{t('account.welcome', { name: user.firstName || user.email })}</h2>
-                {!user.emailVerified && (
-                    <p style={{ color: '#fbbf24', fontSize: '0.9rem' }}>⚠ {t('account.verifyPending')}</p>
-                )}
+                {!user.emailVerified && <VerifyNotice />}
             </Card>
             <Card>
                 <h3 style={{ marginTop: 0, color: '#f8fafc' }}>{t('account.subscription')}</h3>

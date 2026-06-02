@@ -105,6 +105,23 @@ async function verifyEmail(req, res) {
     return json(res, 200, { ok: true });
 }
 
+// --- resend-verify ---------------------------------------------------------
+// Re-issues a verification email for the logged-in user (if not yet verified).
+async function resendVerify(req, res) {
+    const u = await requireUser(req);
+    if (!u) return json(res, 401, { error: 'unauthorized' });
+    if (u.email_verified) return json(res, 200, { ok: true, alreadyVerified: true });
+
+    // Invalidate any outstanding verify tokens, then issue a fresh one (24h).
+    await sql`UPDATE email_tokens SET used_at = NOW()
+              WHERE user_id = ${u.id} AND type = 'verify' AND used_at IS NULL`;
+    const token = randomToken();
+    await sql`INSERT INTO email_tokens (user_id, token, type, expires_at)
+              VALUES (${u.id}, ${token}, 'verify', ${new Date(Date.now() + 24 * HOUR).toISOString()})`;
+    try { await sendVerificationEmail(u.email, token); } catch (e) { console.error('resend verify mail', e); }
+    return json(res, 200, { ok: true });
+}
+
 // --- request-reset ---------------------------------------------------------
 async function requestReset(req, res) {
     const b = await readJsonBody(req);
@@ -165,6 +182,7 @@ const ACTIONS = {
     'register': register,
     'login': login,
     'verify-email': verifyEmail,
+    'resend-verify': resendVerify,
     'request-reset': requestReset,
     'reset-password': resetPassword,
     'me': me,

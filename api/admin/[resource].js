@@ -10,6 +10,7 @@ import siteAssets from '../_handlers/admin/site-assets.js';
 import translations from '../_handlers/admin/translations.js';
 import pricing from '../_handlers/admin/pricing.js';
 import subscriptions from '../_handlers/admin/subscriptions.js';
+import users from '../_handlers/admin/users.js';
 import smtpTest from '../_handlers/admin/smtp-test.js';
 import { json } from '../_lib/db.js';
 
@@ -24,6 +25,7 @@ const HANDLERS = {
     'translations': translations,
     'pricing': pricing,
     'subscriptions': subscriptions,
+    'users': users,
     'smtp-test': smtpTest,
 };
 

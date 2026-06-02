@@ -391,7 +391,11 @@
     "members": "Üyeler",
     "admin": "yönetici",
     "remove": "Çıkar",
-    "removeMemberConfirm": "Bu üye firmadan çıkarılsın mı?"
+    "removeMemberConfirm": "Bu üye firmadan çıkarılsın mı?",
+    "verifyResend": "Doğrulama e-postasını yeniden gönder",
+    "verifySending": "Gönderiliyor…",
+    "verifySent": "Doğrulama e-postası gönderildi",
+    "verifyError": "Gönderilemedi. Tekrar deneyin."
   },
   "invite": {
     "title": "Ekibinize katılın",

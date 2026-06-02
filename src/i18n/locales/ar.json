@@ -383,7 +383,11 @@
     "members": "الأعضاء",
     "admin": "مسؤول",
     "remove": "إزالة",
-    "removeMemberConfirm": "إزالة هذا العضو من الشركة؟"
+    "removeMemberConfirm": "إزالة هذا العضو من الشركة؟",
+    "verifyResend": "إعادة إرسال بريد التأكيد",
+    "verifySending": "جارٍ الإرسال…",
+    "verifySent": "تم إرسال بريد التأكيد",
+    "verifyError": "تعذّر الإرسال. حاول مرة أخرى."
   },
   "invite": {
     "title": "انضم إلى فريقك",

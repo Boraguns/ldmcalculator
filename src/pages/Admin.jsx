@@ -1053,6 +1053,103 @@ const SubscriptionsManager = () => {
     );
 };
 
+// ---- User management & tracking --------------------------------------------
+const UsersManager = () => {
+    const [users, setUsers] = useState(null);
+    const [q, setQ] = useState('');
+    const [filter, setFilter] = useState('all'); // all | unverified | suspended
+    const [busy, setBusy] = useState(null);       // id currently acting on
+    const [note, setNote] = useState('');
+
+    const load = () => {
+        setUsers(null);
+        fetch('/api/admin/users', { headers: auth() })
+            .then(r => r.json()).then(j => setUsers(j.users || [])).catch(() => setUsers([]));
+    };
+    useEffect(load, []);
+
+    const act = async (id, action, confirmMsg) => {
+        if (confirmMsg && !window.confirm(confirmMsg)) return;
+        setBusy(id); setNote('');
+        try {
+            const r = await fetch('/api/admin/users', {
+                method: 'POST', headers: { ...auth(), 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, action }),
+            });
+            const j = await r.json();
+            if (action === 'resend-verify') setNote(j.ok ? 'Doğrulama e-postası gönderildi.' : 'E-posta gönderilemedi.');
+            load();
+        } finally { setBusy(null); }
+    };
+
+    const td = { padding: '6px 8px', borderTop: '1px solid #1f2937', verticalAlign: 'top' };
+    const th = { textAlign: 'left', color: '#94a3b8', padding: '6px 8px' };
+    const btn = (bg) => ({ background: bg, border: 'none', color: '#fff', borderRadius: 6, padding: '4px 8px', cursor: 'pointer', fontSize: '0.78rem', marginRight: 4, marginBottom: 4 });
+
+    const list = (users || []).filter(u => {
+        if (filter === 'unverified' && u.email_verified) return false;
+        if (filter === 'suspended' && u.status !== 'suspended') return false;
+        const s = q.trim().toLowerCase();
+        if (!s) return true;
+        return (u.email || '').toLowerCase().includes(s)
+            || `${u.first_name} ${u.last_name}`.toLowerCase().includes(s)
+            || (u.company_name || '').toLowerCase().includes(s);
+    });
+
+    return (
+        <div>
+            <h2 style={{ color: '#f8fafc' }}>Kullanıcı Yönetimi</h2>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+                <input value={q} onChange={e => setQ(e.target.value)} placeholder="Ara: e-posta / ad / firma"
+                    style={{ background: '#111827', border: '1px solid #1f2937', color: '#e2e8f0', borderRadius: 8, padding: '8px 12px', minWidth: 220 }} />
+                {[['all', 'Tümü'], ['unverified', 'Doğrulanmamış'], ['suspended', 'Askıda']].map(([k, l]) => (
+                    <button key={k} onClick={() => setFilter(k)} className="ai-btn" style={{ height: 30 }}>
+                        <div className="ai-btn-inner" style={{ background: filter === k ? '#3b82f6' : 'transparent', color: '#fff', fontSize: '0.8rem' }}>{l}</div>
+                    </button>
+                ))}
+                <button onClick={load} className="ai-btn" style={{ height: 30 }}><div className="ai-btn-inner" style={{ fontSize: '0.8rem' }}>Yenile</div></button>
+                <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>{list.length} kullanıcı</span>
+            </div>
+            {note && <p style={{ color: '#34d399', fontSize: '0.85rem' }}>{note}</p>}
+            {!users ? <p>…</p> : (
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                    <thead><tr>
+                        <th style={th}>Email</th><th style={th}>Ad</th><th style={th}>Tip</th><th style={th}>Firma</th>
+                        <th style={th}>Doğrulı</th><th style={th}>Durum</th><th style={th}>Abonelik</th>
+                        <th style={th}>Belge</th><th style={th}>Kullanım</th><th style={th}>Kayıt</th><th style={th}>İşlem</th>
+                    </tr></thead>
+                    <tbody>{list.map(u => (
+                        <tr key={u.id}>
+                            <td style={td}>{u.email}</td>
+                            <td style={td}>{u.first_name} {u.last_name}</td>
+                            <td style={td}>{u.account_type}</td>
+                            <td style={td}>{u.company_name || '—'}</td>
+                            <td style={td}>{u.email_verified ? '✓' : '—'}</td>
+                            <td style={{ ...td, color: u.status === 'suspended' ? '#fca5a5' : '#34d399' }}>{u.status}</td>
+                            <td style={td}>{u.sub_plan ? `${u.sub_plan} (${u.sub_status})` : '—'}</td>
+                            <td style={td}>{u.document_count}</td>
+                            <td style={td}>{u.usage_count}</td>
+                            <td style={td}>{new Date(u.created_at).toLocaleDateString()}</td>
+                            <td style={td}>
+                                {!u.email_verified && (
+                                    <button disabled={busy === u.id} style={btn('#0369a1')} onClick={() => act(u.id, 'resend-verify')}>Doğrulama gönder</button>
+                                )}
+                                {!u.email_verified && (
+                                    <button disabled={busy === u.id} style={btn('#334155')} onClick={() => act(u.id, 'verify', 'Bu kullanıcıyı doğrulanmış olarak işaretle?')}>Doğrula</button>
+                                )}
+                                {u.status === 'suspended'
+                                    ? <button disabled={busy === u.id} style={btn('#15803d')} onClick={() => act(u.id, 'activate')}>Aktifleştir</button>
+                                    : <button disabled={busy === u.id} style={btn('#a16207')} onClick={() => act(u.id, 'suspend', 'Bu kullanıcıyı askıya al?')}>Askıya al</button>}
+                                <button disabled={busy === u.id} style={btn('#7f1d1d')} onClick={() => act(u.id, 'delete', `${u.email} kullanıcısını ve tüm verilerini kalıcı olarak sil?`)}>Sil</button>
+                            </td>
+                        </tr>
+                    ))}</tbody>
+                </table>
+            )}
+        </div>
+    );
+};
+
 const Admin = () => {
     const [user, setUser] = useState(null);
     const [tab, setTab] = useState('flags');
@@ -1105,6 +1202,7 @@ const Admin = () => {
                     ['names',     'Ürün İsim Logları'],
                     ['pricing',   'Fiyatlandırma'],
                     ['subs',      'Abonelikler'],
+                    ['users',     'Kullanıcılar'],
                     ['contact',   'Contact'],
                     ['advertise', 'Advertise'],
                     ['screenshot','Screenshot logs']
@@ -1123,6 +1221,7 @@ const Admin = () => {
                 {tab === 'names'   && <ProductNameLogs />}
                 {tab === 'pricing' && <PricingManager />}
                 {tab === 'subs'    && <SubscriptionsManager />}
+                {tab === 'users'   && <UsersManager />}
                 {tab === 'contact' && <MessageList type="contact" columns={{
                     title: r => `${r.name} <${r.email}>${r.subject ? ' — ' + r.subject : ''}`,
                     body: r => r.message
