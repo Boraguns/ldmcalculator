@@ -40,6 +40,19 @@
 .logoloop__list {
   display: flex;
   align-items: center;
+  /* Reset default <ul>/<li> styling so no disc bullet circles appear between
+     the logos. */
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.logoloop__item {
+  list-style: none;
+}
+
+.logoloop__item::marker {
+  content: '';
 }
 
 .logoloop--vertical .logoloop__list {

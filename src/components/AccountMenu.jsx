@@ -183,8 +183,8 @@ const AccountMenu = ({ style = {}, compact = false, height }) => {
                     title={ringTitle}
                     style={{
                         position: 'absolute',
-                        top: -8,
-                        right: -8,
+                        top: -12,
+                        right: -6,
                         minWidth: 20,
                         height: 20,
                         padding: '0 6px',
@@ -193,7 +193,7 @@ const AccountMenu = ({ style = {}, compact = false, height }) => {
                         color: '#fff',
                         fontSize: '0.72rem',
                         fontWeight: 800,
-                        lineHeight: '20px',
+                        lineHeight: '18px',
                         textAlign: 'center',
                         boxShadow: '0 2px 6px rgba(0,0,0,0.35)',
                         border: '2px solid #0f0f0f',
