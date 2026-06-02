@@ -402,5 +402,95 @@
     "signIn": "Sign in",
     "signUp": "Sign up",
     "myAccount": "My account"
+  },
+  "cmr": {
+    "guide": {
+      "title": "How to complete a CMR",
+      "intro": "The CMR is the international consignment note for road freight. Fill it in before the goods are handed to the carrier — three signed copies travel with the shipment (sender, consignee, carrier).",
+      "steps": [
+        {
+          "n": "1–5",
+          "title": "Sender & route",
+          "desc": "Enter the sender, consignee, the place/date the goods are taken over, the place of delivery and any attached documents."
+        },
+        {
+          "n": "6–12",
+          "title": "The goods",
+          "desc": "Per line, list marks & numbers, number of packages, packing method, nature of the goods, statistical number and gross/net weight."
+        },
+        {
+          "n": "13–15",
+          "title": "Instructions & payment",
+          "desc": "Add the sender’s instructions, how carriage is paid (Franco / Non Franco) and any cash-on-delivery amount."
+        },
+        {
+          "n": "16–19",
+          "title": "Carrier",
+          "desc": "The carrier fills the heavy-bordered boxes: carrier details, successive carriers, reservations, TIR carnet and plate number."
+        },
+        {
+          "n": "20–21",
+          "title": "Charges",
+          "desc": "Break down carriage charges, deductions, balance and supplementary costs, and state where the note was established."
+        },
+        {
+          "n": "22–24",
+          "title": "Signatures",
+          "desc": "Sender, carrier and consignee sign and stamp. The consignee signs box 24 on receipt of the goods."
+        }
+      ],
+      "tip": "Tip: use the zoom controls to enlarge the sheet, then click any field to type. “Print / PDF” produces a clean A4 sheet."
+    },
+    "form": {
+      "title": "International Consignment Note",
+      "titleAlt": "Truck waybill",
+      "convention": "This carriage is subject, notwithstanding any clause to the contrary, to the Convention on the Contract for the International Carriage of Goods by Road (CMR).",
+      "carrierNo": "Carrier’s no.",
+      "carnet": "TIR Carnet No.",
+      "plate": "Plate No.",
+      "f1": "Sender (name, address, country)",
+      "f2": "Consignee (name, address, country)",
+      "f3": "Place and date of taking over the goods (place, country)",
+      "f4": "Place of delivery of the goods (place, country)",
+      "f5": "Documents attached",
+      "f16": "Carrier (name, address, country)",
+      "f17": "Successive carriers (name, address, country)",
+      "f18": "Carrier’s reservations and observations",
+      "f13": "Sender’s instructions",
+      "f14": "Instructions as to payment for carriage",
+      "f15": "Reimbursement / Cash on delivery",
+      "f19": "Special agreements",
+      "f21": "Established in",
+      "f22": "Signature and stamp of the sender",
+      "f23": "Signature and stamp of the carrier",
+      "f24": "Signature and stamp of the consignee",
+      "f24Good": "Goods received",
+      "class": "Class",
+      "number": "Number",
+      "letter": "Letter (ADR)",
+      "franco": "Carriage paid (Franco)",
+      "nonFranco": "Carriage forward (Non Franco)",
+      "demurrage": "Damage caused by faulty loading, stowage or packing is the sender’s responsibility. Free time for loading/unloading is 48 hours; thereafter demurrage of EUR 200 per day applies.",
+      "goods6": "Marks and Nos.",
+      "goods7": "Number of packages",
+      "goods8": "Method of packing",
+      "goods9": "Nature of the goods",
+      "goods10": "Statistical number",
+      "goods11": "Gross weight (kg)",
+      "goods12": "Net weight (kg)",
+      "payBy": "To be paid by",
+      "paySender": "Sender",
+      "payCurrency": "Currency",
+      "payConsignee": "Consignee",
+      "payCarriage": "Carriage charges",
+      "payDeductions": "Deductions",
+      "payBalance": "Balance",
+      "paySupplem": "Supplementary charges",
+      "payOther": "Other charges",
+      "payTotal": "TOTAL",
+      "vstripCarrier": "Spaces with heavy borders must be filled in by the carrier.",
+      "vstripSender": "To be completed under the sender’s responsibility.",
+      "vstripDanger": "For dangerous goods, state the class, number and letter (if any) in the last line of columns 6–9."
+    }
   }
 }

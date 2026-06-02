@@ -403,5 +403,95 @@
     "signIn": "Anmelden",
     "signUp": "Registrieren",
     "myAccount": "Mein Konto"
+  },
+  "cmr": {
+    "guide": {
+      "title": "So füllen Sie einen CMR aus",
+      "intro": "Der CMR ist der internationale Frachtbrief für den Straßengüterverkehr. Füllen Sie ihn vor der Übergabe der Ware an den Frachtführer aus; drei unterschriebene Exemplare begleiten die Sendung (Absender, Empfänger, Frachtführer).",
+      "steps": [
+        {
+          "n": "1–5",
+          "title": "Absender & Route",
+          "desc": "Tragen Sie Absender, Empfänger, Ort/Datum der Übernahme, den Lieferort und beigefügte Dokumente ein."
+        },
+        {
+          "n": "6–12",
+          "title": "Die Ware",
+          "desc": "Geben Sie je Zeile Zeichen und Nummern, Anzahl der Packstücke, Verpackungsart, Art der Ware, statistische Nummer sowie Brutto-/Nettogewicht an."
+        },
+        {
+          "n": "13–15",
+          "title": "Weisungen & Zahlung",
+          "desc": "Ergänzen Sie die Weisungen des Absenders, die Zahlungsart der Fracht (Franco / Non Franco) und einen etwaigen Nachnahmebetrag."
+        },
+        {
+          "n": "16–19",
+          "title": "Frachtführer",
+          "desc": "Die fett umrandeten Felder füllt der Frachtführer aus: Angaben zum Frachtführer, nachfolgende Frachtführer, Vorbehalte, TIR-Carnet und Kennzeichen."
+        },
+        {
+          "n": "20–21",
+          "title": "Kosten",
+          "desc": "Schlüsseln Sie Fracht, Abzüge, Saldo und Zuschläge auf und geben Sie den Ausstellungsort an."
+        },
+        {
+          "n": "22–24",
+          "title": "Unterschriften",
+          "desc": "Absender, Frachtführer und Empfänger unterschreiben und stempeln. Der Empfänger unterschreibt Feld 24 bei Warenannahme."
+        }
+      ],
+      "tip": "Tipp: Vergrößern Sie das Blatt mit den Zoom-Tasten und klicken Sie in ein Feld, um zu schreiben. „Drucken / PDF“ erzeugt ein sauberes A4-Blatt."
+    },
+    "form": {
+      "title": "Internationaler Frachtbrief",
+      "titleAlt": "Straßenfrachtbrief",
+      "convention": "Diese Beförderung unterliegt ungeachtet entgegenstehender Abmachungen dem Übereinkommen über den Beförderungsvertrag im internationalen Straßengüterverkehr (CMR).",
+      "carrierNo": "Frachtführer-Nr.",
+      "carnet": "TIR-Carnet-Nr.",
+      "plate": "Kennzeichen-Nr.",
+      "f1": "Absender (Name, Anschrift, Land)",
+      "f2": "Empfänger (Name, Anschrift, Land)",
+      "f3": "Ort und Datum der Übernahme des Gutes (Ort, Land)",
+      "f4": "Ort der Auslieferung des Gutes (Ort, Land)",
+      "f5": "Beigefügte Dokumente",
+      "f16": "Frachtführer (Name, Anschrift, Land)",
+      "f17": "Nachfolgende Frachtführer (Name, Anschrift, Land)",
+      "f18": "Vorbehalte und Bemerkungen des Frachtführers",
+      "f13": "Weisungen des Absenders",
+      "f14": "Anweisungen zur Frachtzahlung",
+      "f15": "Nachnahme",
+      "f19": "Besondere Vereinbarungen",
+      "f21": "Ausgefertigt in",
+      "f22": "Unterschrift und Stempel des Absenders",
+      "f23": "Unterschrift und Stempel des Frachtführers",
+      "f24": "Unterschrift und Stempel des Empfängers",
+      "f24Good": "Gut empfangen",
+      "class": "Klasse",
+      "number": "Nummer",
+      "letter": "Buchstabe (ADR)",
+      "franco": "Fracht bezahlt (Franco)",
+      "nonFranco": "Fracht unfrei (Non Franco)",
+      "demurrage": "Schäden durch fehlerhaftes Verladen, Stauen oder Verpacken gehen zulasten des Absenders. Die freie Zeit für Be-/Entladung beträgt 48 Stunden; danach werden 200 Euro Standgeld pro Tag berechnet.",
+      "goods6": "Zeichen und Nummern",
+      "goods7": "Anzahl der Packstücke",
+      "goods8": "Art der Verpackung",
+      "goods9": "Art des Gutes",
+      "goods10": "Statistische Nummer",
+      "goods11": "Bruttogewicht (kg)",
+      "goods12": "Nettogewicht (kg)",
+      "payBy": "Zu zahlen von",
+      "paySender": "Absender",
+      "payCurrency": "Währung",
+      "payConsignee": "Empfänger",
+      "payCarriage": "Frachtkosten",
+      "payDeductions": "Abzüge",
+      "payBalance": "Saldo",
+      "paySupplem": "Zuschläge",
+      "payOther": "Sonstige Kosten",
+      "payTotal": "GESAMT",
+      "vstripCarrier": "Fett umrandete Felder sind vom Frachtführer auszufüllen.",
+      "vstripSender": "Auszufüllen unter der Verantwortung des Absenders.",
+      "vstripDanger": "Bei Gefahrgut Klasse, Nummer und ggf. Buchstabe in der letzten Zeile der Spalten 6–9 angeben."
+    }
   }
 }

@@ -402,5 +402,95 @@
     "signIn": "Giriş Yap",
     "signUp": "Kayıt Ol",
     "myAccount": "Hesabım"
+  },
+  "cmr": {
+    "guide": {
+      "title": "CMR nasıl doldurulur",
+      "intro": "CMR, karayolu taşımacılığı için uluslararası taşıma senedidir. Mal taşıyıcıya teslim edilmeden önce doldurulur; imzalı üç nüsha sevkiyatla birlikte gider (gönderen, alıcı, taşıyıcı).",
+      "steps": [
+        {
+          "n": "1–5",
+          "title": "Gönderen ve güzergâh",
+          "desc": "Gönderen ve alıcıyı, malın teslim alındığı yer/tarihi, teslim yerini ve ekli belgeleri yazın."
+        },
+        {
+          "n": "6–12",
+          "title": "Mallar",
+          "desc": "Her satırda marka ve numara, koli adedi, ambalaj şekli, malın cinsi, istatistik numarası ve brüt/net ağırlığı belirtin."
+        },
+        {
+          "n": "13–15",
+          "title": "Talimatlar ve ödeme",
+          "desc": "Gönderenin talimatlarını, navlunun ödeme şeklini (Franco / Non Franco) ve varsa teslimde tahsil tutarını ekleyin."
+        },
+        {
+          "n": "16–19",
+          "title": "Taşıyıcı",
+          "desc": "Kalın çerçeveli kutuları taşıyıcı doldurur: taşıyıcı bilgileri, müteakip taşıyıcılar, mülahazalar, TIR karnesi ve plaka."
+        },
+        {
+          "n": "20–21",
+          "title": "Masraflar",
+          "desc": "Navlun, iskonto, bakiye ve munzam masrafları ayrıntılandırın; senedin düzenlendiği yeri yazın."
+        },
+        {
+          "n": "22–24",
+          "title": "İmzalar",
+          "desc": "Gönderen, taşıyıcı ve alıcı imzalayıp kaşeler. Alıcı, malı teslim aldığında 24 numaralı kutuyu imzalar."
+        }
+      ],
+      "tip": "İpucu: Yakınlaştırma düğmeleriyle formu büyütüp herhangi bir alana tıklayarak yazabilirsiniz. “Yazdır / PDF” temiz bir A4 sayfası üretir."
+    },
+    "form": {
+      "title": "Uluslararası Taşıma Senedi",
+      "titleAlt": "Karayolu hamule senedi",
+      "convention": "Bu taşıma, aksine herhangi bir hüküm bulunsa dahi, Eşyaların Karayolundan Uluslararası Nakliyatı için Mukavele Sözleşmesi (CMR) hükümlerine tabidir.",
+      "carrierNo": "Taşıyıcı no.",
+      "carnet": "TIR Karne No.",
+      "plate": "Plaka No.",
+      "f1": "Gönderen (isim, adres, ülke)",
+      "f2": "Alıcı (isim, adres, ülke)",
+      "f3": "Malın teslim alındığı yer ve tarih (yer, ülke)",
+      "f4": "Malın teslim yeri (yer, ülke)",
+      "f5": "Ekli belgeler",
+      "f16": "Taşıyıcı (isim, adres, ülke)",
+      "f17": "Müteakip taşıyıcılar (isim, adres, ülke)",
+      "f18": "Taşıyıcının mülahaza ve müşahedeleri",
+      "f13": "Gönderenin talimatları",
+      "f14": "Navlunun ödeme şekli",
+      "f15": "Teslimde ödenecek meblağ",
+      "f19": "Özel şartlar / anlaşma",
+      "f21": "Tanzim yeri",
+      "f22": "Gönderenin imzası ve kaşesi",
+      "f23": "Taşıyıcının imzası ve kaşesi",
+      "f24": "Alıcının imzası ve kaşesi",
+      "f24Good": "Alınan yük",
+      "class": "Klas",
+      "number": "Numara",
+      "letter": "Harf (ADR)",
+      "franco": "Navlun peşin (Franco)",
+      "nonFranco": "Navlun teslimde (Non Franco)",
+      "demurrage": "Yükleme, istifleme ve ambalaj hatasından doğacak zarar gönderene aittir. Yükleme/boşaltmada serbest süre 48 saattir; sonrasında günlük 200 Euro bekleme ücreti alınır.",
+      "goods6": "Marka ve numara",
+      "goods7": "Koli/paket adedi",
+      "goods8": "Ambalaj şekli",
+      "goods9": "Malın cinsi",
+      "goods10": "İstatistik numarası",
+      "goods11": "Brüt ağırlık (kg)",
+      "goods12": "Net ağırlık (kg)",
+      "payBy": "Ödeyecek",
+      "paySender": "Gönderen",
+      "payCurrency": "Para cinsi",
+      "payConsignee": "Alıcı",
+      "payCarriage": "Navlun tutarı",
+      "payDeductions": "İskonto / tenzilat",
+      "payBalance": "Bakiye",
+      "paySupplem": "Munzam masraflar",
+      "payOther": "Diğer masraflar",
+      "payTotal": "TOPLAM",
+      "vstripCarrier": "Kalın çerçeveli alanlar taşıyıcı tarafından doldurulur.",
+      "vstripSender": "Gönderenin sorumluluğunda doldurulur.",
+      "vstripDanger": "Tehlikeli mallarda; sınıf, numara ve varsa harfi 6–9. sütunların son satırında belirtin."
+    }
   }
 }

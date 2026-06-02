@@ -402,5 +402,95 @@
     "signIn": "Se connecter",
     "signUp": "S'inscrire",
     "myAccount": "Mon compte"
+  },
+  "cmr": {
+    "guide": {
+      "title": "Comment remplir une CMR",
+      "intro": "La CMR est la lettre de voiture internationale pour le transport routier. Remplissez-la avant la remise des marchandises au transporteur ; trois exemplaires signés accompagnent l’envoi (expéditeur, destinataire, transporteur).",
+      "steps": [
+        {
+          "n": "1–5",
+          "title": "Expéditeur et trajet",
+          "desc": "Indiquez l’expéditeur, le destinataire, le lieu/date de prise en charge, le lieu de livraison et les documents joints."
+        },
+        {
+          "n": "6–12",
+          "title": "Les marchandises",
+          "desc": "Pour chaque ligne, précisez marques et numéros, nombre de colis, mode d’emballage, nature des marchandises, numéro statistique et poids brut/net."
+        },
+        {
+          "n": "13–15",
+          "title": "Instructions et paiement",
+          "desc": "Ajoutez les instructions de l’expéditeur, le mode de paiement du transport (Franco / Non Franco) et un éventuel montant de remboursement."
+        },
+        {
+          "n": "16–19",
+          "title": "Transporteur",
+          "desc": "Le transporteur remplit les cases à bordure épaisse : coordonnées du transporteur, transporteurs successifs, réserves, carnet TIR et plaque."
+        },
+        {
+          "n": "20–21",
+          "title": "Frais",
+          "desc": "Détaillez le prix de transport, les déductions, le solde et les frais supplémentaires, et indiquez le lieu d’établissement."
+        },
+        {
+          "n": "22–24",
+          "title": "Signatures",
+          "desc": "L’expéditeur, le transporteur et le destinataire signent et apposent leur cachet. Le destinataire signe la case 24 à la réception."
+        }
+      ],
+      "tip": "Astuce : agrandissez la feuille avec les commandes de zoom puis cliquez sur un champ pour saisir. « Imprimer / PDF » produit une feuille A4 nette."
+    },
+    "form": {
+      "title": "Lettre de voiture internationale",
+      "titleAlt": "Lettre de voiture routière",
+      "convention": "Ce transport est soumis, nonobstant toute clause contraire, à la Convention relative au contrat de transport international de marchandises par route (CMR).",
+      "carrierNo": "N° du transporteur",
+      "carnet": "Carnet TIR n°",
+      "plate": "N° de plaque",
+      "f1": "Expéditeur (nom, adresse, pays)",
+      "f2": "Destinataire (nom, adresse, pays)",
+      "f3": "Lieu et date de prise en charge des marchandises (lieu, pays)",
+      "f4": "Lieu de livraison des marchandises (lieu, pays)",
+      "f5": "Documents annexés",
+      "f16": "Transporteur (nom, adresse, pays)",
+      "f17": "Transporteurs successifs (nom, adresse, pays)",
+      "f18": "Réserves et observations du transporteur",
+      "f13": "Instructions de l’expéditeur",
+      "f14": "Instructions de paiement du transport",
+      "f15": "Remboursement à la livraison",
+      "f19": "Conventions particulières",
+      "f21": "Établie à",
+      "f22": "Signature et cachet de l’expéditeur",
+      "f23": "Signature et cachet du transporteur",
+      "f24": "Signature et cachet du destinataire",
+      "f24Good": "Marchandises reçues",
+      "class": "Classe",
+      "number": "Numéro",
+      "letter": "Lettre (ADR)",
+      "franco": "Port payé (Franco)",
+      "nonFranco": "Port dû (Non Franco)",
+      "demurrage": "Les dommages dus à un chargement, un arrimage ou un emballage défectueux incombent à l’expéditeur. Le temps libre de chargement/déchargement est de 48 heures ; au-delà, des surestaries de 200 euros par jour s’appliquent.",
+      "goods6": "Marques et numéros",
+      "goods7": "Nombre de colis",
+      "goods8": "Mode d’emballage",
+      "goods9": "Nature des marchandises",
+      "goods10": "Numéro statistique",
+      "goods11": "Poids brut (kg)",
+      "goods12": "Poids net (kg)",
+      "payBy": "À payer par",
+      "paySender": "Expéditeur",
+      "payCurrency": "Devise",
+      "payConsignee": "Destinataire",
+      "payCarriage": "Prix de transport",
+      "payDeductions": "Déductions",
+      "payBalance": "Solde",
+      "paySupplem": "Frais supplémentaires",
+      "payOther": "Autres frais",
+      "payTotal": "TOTAL",
+      "vstripCarrier": "Les cases à bordure épaisse sont à remplir par le transporteur.",
+      "vstripSender": "À remplir sous la responsabilité de l’expéditeur.",
+      "vstripDanger": "Pour les marchandises dangereuses, indiquez la classe, le numéro et la lettre éventuelle à la dernière ligne des colonnes 6 à 9."
+    }
   }
 }
