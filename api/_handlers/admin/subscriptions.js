@@ -4,7 +4,7 @@
 //   GET /api/admin/subscriptions?view=users → registered users list
 //   GET /api/admin/subscriptions?view=payments → recent payments
 import { sql, json, requireAdmin, readJsonBody } from '../../_lib/db.js';
-import { periodEnd } from '../../_lib/pricing.js';
+import { periodEnd, getPrice, vatBreakdown } from '../../_lib/pricing.js';
 
 export default async function handler(req, res) {
     if (!requireAdmin(req)) return json(res, 401, { error: 'unauthorized' });
@@ -17,7 +17,9 @@ export default async function handler(req, res) {
             const id = parseInt(b.id, 10);
             const action = (b.action || '').toString();
             if (!id) return json(res, 400, { error: 'id_required' });
-            const rows = await sql`SELECT id, period, status FROM subscriptions WHERE id = ${id} LIMIT 1`;
+            const rows = await sql`
+                SELECT id, owner_type, plan, period, tier, currency, amount, status, user_id, company_id
+                FROM subscriptions WHERE id = ${id} LIMIT 1`;
             const sub = rows[0];
             if (!sub) return json(res, 404, { error: 'not_found' });
 
@@ -30,6 +32,29 @@ export default async function handler(req, res) {
                         current_period_end = ${end.toISOString()}, cancel_at_period_end = FALSE,
                         updated_at = NOW()
                     WHERE id = ${id}`;
+
+                // Record a "collected" (paid) invoice for the manual approval so it
+                // shows up in revenue + the user's payment history. provider='manual'
+                // is rendered as "IBAN/EFT"; PayTR-paid rows are "Kredi Kartı".
+                // Idempotent: skip if a paid manual payment already exists for this sub.
+                const existing = await sql`
+                    SELECT id FROM payments
+                    WHERE subscription_id = ${id} AND status = 'paid' AND provider = 'manual'
+                    LIMIT 1`;
+                if (!existing[0]) {
+                    const price = await getPrice({
+                        plan: sub.plan, tier: sub.tier ?? null, period: sub.period, currency: sub.currency,
+                    });
+                    const vatRate = price ? Number(price.vat_rate) : 20;
+                    const { vat } = vatBreakdown(sub.amount, vatRate);
+                    await sql`
+                        INSERT INTO payments
+                            (subscription_id, user_id, company_id, amount, currency, vat_rate, vat_amount,
+                             status, provider, kind, paid_at)
+                        VALUES
+                            (${id}, ${sub.user_id || null}, ${sub.company_id || null}, ${sub.amount},
+                             ${sub.currency || 'TRY'}, ${vatRate}, ${vat}, 'paid', 'manual', 'subscription', NOW())`;
+                }
                 return json(res, 200, { ok: true });
             }
             if (action === 'reject') {
@@ -79,7 +104,7 @@ export default async function handler(req, res) {
 
         if (view === 'payments') {
             const rows = await sql`
-                SELECT p.id, p.amount, p.currency, p.vat_amount, p.status, p.kind,
+                SELECT p.id, p.amount, p.currency, p.vat_amount, p.status, p.kind, p.provider,
                        p.provider_ref, p.invoice_no, p.paid_at, p.created_at,
                        u.email AS user_email, c.name AS company_name
                 FROM payments p

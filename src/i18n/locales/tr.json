@@ -401,7 +401,10 @@
     "tierFree": "Ücretsiz Hesap",
     "tierPremium": "👑 Premium Hesap",
     "trialsLeft": "{n} deneme hakkınız kaldı",
-    "subPending": "Abonelik talebiniz onay bekliyor. Onaylandığı anda erişiminiz açılacaktır."
+    "subPending": "Abonelik talebiniz onay bekliyor. Onaylandığı anda erişiminiz açılacaktır.",
+    "method": "Yöntem",
+    "method_manual": "Havale/EFT (IBAN)",
+    "method_card": "Kredi kartı"
   },
   "invite": {
     "title": "Ekibinize katılın",

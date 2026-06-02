@@ -401,7 +401,10 @@
     "tierFree": "Free Account",
     "tierPremium": "👑 Premium Account",
     "trialsLeft": "{n} free trials left",
-    "subPending": "Your subscription request is awaiting approval. You'll get access as soon as it's confirmed."
+    "subPending": "Your subscription request is awaiting approval. You'll get access as soon as it's confirmed.",
+    "method": "Method",
+    "method_manual": "Bank transfer (IBAN/EFT)",
+    "method_card": "Credit card"
   },
   "invite": {
     "title": "Join your team",

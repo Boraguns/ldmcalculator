@@ -401,7 +401,10 @@
     "tierFree": "Compte gratuit",
     "tierPremium": "👑 Compte Premium",
     "trialsLeft": "{n} essais restants",
-    "subPending": "Votre demande d'abonnement est en attente d'approbation. Vous aurez accès dès sa confirmation."
+    "subPending": "Votre demande d'abonnement est en attente d'approbation. Vous aurez accès dès sa confirmation.",
+    "method": "Méthode",
+    "method_manual": "Virement bancaire (IBAN/EFT)",
+    "method_card": "Carte de crédit"
   },
   "invite": {
     "title": "Rejoindre votre équipe",

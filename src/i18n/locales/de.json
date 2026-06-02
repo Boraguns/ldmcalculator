@@ -402,7 +402,10 @@
     "tierFree": "Kostenloses Konto",
     "tierPremium": "👑 Premium-Konto",
     "trialsLeft": "{n} Versuche übrig",
-    "subPending": "Ihre Abo-Anfrage wartet auf Freigabe. Sobald sie bestätigt ist, erhalten Sie Zugriff."
+    "subPending": "Ihre Abo-Anfrage wartet auf Freigabe. Sobald sie bestätigt ist, erhalten Sie Zugriff.",
+    "method": "Methode",
+    "method_manual": "Banküberweisung (IBAN/EFT)",
+    "method_card": "Kreditkarte"
   },
   "invite": {
     "title": "Team beitreten",

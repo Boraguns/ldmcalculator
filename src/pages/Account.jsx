@@ -262,11 +262,12 @@ function Payments() {
             <h3 style={{ marginTop: 0, color: '#f8fafc' }}>{t('account.payments')}</h3>
             {!rows ? <p style={{ color: '#94a3b8' }}>…</p> : rows.length === 0 ? <p style={{ color: '#94a3b8' }}>{t('account.empty')}</p> : (
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
-                    <thead><tr style={{ color: '#94a3b8', textAlign: 'left' }}><th style={{ padding: '6px 4px' }}>{t('account.date')}</th><th>{t('account.amount')}</th><th>{t('account.status')}</th></tr></thead>
+                    <thead><tr style={{ color: '#94a3b8', textAlign: 'left' }}><th style={{ padding: '6px 4px' }}>{t('account.date')}</th><th>{t('account.amount')}</th><th>{t('account.method')}</th><th>{t('account.status')}</th></tr></thead>
                     <tbody>{rows.map((r) => (
                         <tr key={r.id} style={{ borderTop: '1px solid #1f2937' }}>
                             <td style={{ padding: '8px 4px' }}>{fmtDate(r.paid_at || r.created_at)}</td>
                             <td>{money(r.amount, r.currency)}</td>
+                            <td>{r.provider === 'manual' ? t('account.method_manual') : r.provider === 'paytr' ? t('account.method_card') : (r.provider || '—')}</td>
                             <td style={{ textTransform: 'capitalize' }}>{t(`account.pay_${r.status}`) || r.status}</td>
                         </tr>
                     ))}</tbody>

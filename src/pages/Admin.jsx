@@ -1249,6 +1249,7 @@ const SubscriptionsManager = () => {
     };
 
     const money = (a, c) => `${c} ${(Number(a) || 0).toLocaleString()}`;
+    const payMethod = (p) => (p === 'manual' ? 'IBAN/EFT' : p === 'paytr' ? 'Kredi Kartı' : (p || '—'));
     const td = { padding: '6px 8px', borderTop: '1px solid #1f2937' };
     const th = { textAlign: 'left', color: '#94a3b8', padding: '6px 8px' };
 
@@ -1288,9 +1289,9 @@ const SubscriptionsManager = () => {
                 </table>
             ) : view === 'payments' ? (
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-                    <thead><tr><th style={th}>Tarih</th><th style={th}>Tutar</th><th style={th}>KDV</th><th style={th}>Durum</th><th style={th}>Tür</th><th style={th}>Kullanıcı/Firma</th></tr></thead>
+                    <thead><tr><th style={th}>Tarih</th><th style={th}>Tutar</th><th style={th}>KDV</th><th style={th}>Yöntem</th><th style={th}>Durum</th><th style={th}>Tür</th><th style={th}>Kullanıcı/Firma</th></tr></thead>
                     <tbody>{(data.payments || []).map(p => (
-                        <tr key={p.id}><td style={td}>{new Date(p.paid_at || p.created_at).toLocaleDateString()}</td><td style={td}>{money(p.amount, p.currency)}</td><td style={td}>{money(p.vat_amount, p.currency)}</td><td style={td}>{p.status}</td><td style={td}>{p.kind}</td><td style={td}>{p.company_name || p.user_email || '—'}</td></tr>
+                        <tr key={p.id}><td style={td}>{new Date(p.paid_at || p.created_at).toLocaleDateString()}</td><td style={td}>{money(p.amount, p.currency)}</td><td style={td}>{money(p.vat_amount, p.currency)}</td><td style={td}>{payMethod(p.provider)}</td><td style={td}>{p.status === 'paid' ? 'Tahsil edildi' : p.status}</td><td style={td}>{p.kind}</td><td style={td}>{p.company_name || p.user_email || '—'}</td></tr>
                     ))}</tbody>
                 </table>
             ) : (
