@@ -13,6 +13,7 @@ import Advertise from './pages/Advertise';
 import Admin from './pages/Admin';
 import CmrDocument from './pages/CmrDocument';
 import Invoice from './pages/Invoice';
+import PackingList from './pages/PackingList';
 import ToolPlaceholder from './pages/ToolPlaceholder';
 import { useT } from './i18n/LanguageContext';
 import { useSiteAsset } from './hooks/useSiteAssets';
@@ -663,7 +664,7 @@ function App() {
                     <Route path="/advertise" element={<Advertise />} />
                     <Route path="/tools/cmr" element={<CmrDocument />} />
                     <Route path="/tools/invoice" element={<Invoice />} />
-                    <Route path="/tools/packing-list" element={<ToolPlaceholder titleKey="tools.packingList" />} />
+                    <Route path="/tools/packing-list" element={<PackingList />} />
                     {/* Auth + account */}
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />

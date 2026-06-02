@@ -573,7 +573,8 @@
       "name": "Désignation des marchandises",
       "qty": "Qté",
       "price": "Prix unitaire",
-      "total": "Total"
+      "total": "Total",
+      "itemNo": "N° d'article"
     }
   },
   "references": {
@@ -582,5 +583,57 @@
     "empty": "Aucune référence ajoutée pour le moment.",
     "metaTitle": "Références | LDMCalculator",
     "metaDesc": "Les entreprises et partenaires qui font confiance à LDMCalculator."
+  },
+  "packing": {
+    "metaTitle": "Liste de colisage — Modèle de liste de colisage à remplir | LDMCalculator",
+    "metaDesc": "Modèle gratuit de liste de colisage d'export à remplir avec codes SH, poids net et brut. Téléchargez votre cachet, signez à la main, puis imprimez ou enregistrez en PDF.",
+    "table": {
+      "itemNo": "N° d'article",
+      "hs": "Code SH",
+      "name": "Désignation des marchandises",
+      "qty": "Qté",
+      "netKg": "Net (kg)",
+      "grossKg": "Brut (kg)"
+    },
+    "form": {
+      "titleDefault": "LISTE DE COLISAGE",
+      "plNo": "N° de liste de colisage",
+      "invNo": "N° de facture",
+      "invDate": "Date de facture",
+      "issueDate": "Date d'émission",
+      "totalPallets": "Total palette(s)",
+      "totalUnits": "Total unités",
+      "totalNet": "Poids net total (kg)",
+      "totalGross": "Poids brut total (kg)"
+    },
+    "guide": {
+      "title": "Comment remplir la liste de colisage",
+      "intro": "Saisissez les parties, téléchargez votre cachet et signez, remplissez les articles avec leurs poids, puis imprimez.",
+      "steps": {
+        "s1": {
+          "n": "1",
+          "title": "Parties",
+          "desc": "Saisissez les coordonnées de l'expéditeur et du destinataire dans les cases."
+        },
+        "s2": {
+          "n": "2",
+          "title": "Cachet et signature",
+          "desc": "Téléchargez votre cachet et signez la case avec la souris ou le tactile."
+        },
+        "s3": {
+          "n": "3",
+          "title": "Détails du document",
+          "desc": "Saisissez le n° de liste de colisage, le n° de facture et les dates."
+        },
+        "s4": {
+          "n": "4",
+          "title": "Articles et totaux",
+          "desc": "Ajoutez par article le code SH, la désignation, la qté, le poids net et brut ; les totaux se calculent automatiquement."
+        }
+      },
+      "tip": "Astuce : utilisez les boutons de zoom pour agrandir le formulaire et cliquez sur un champ pour saisir. « Imprimer / PDF » produit une page A4 propre.",
+      "show": "Afficher le guide",
+      "hide": "Masquer le guide"
+    }
   }
 }

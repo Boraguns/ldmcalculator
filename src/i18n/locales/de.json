@@ -574,7 +574,8 @@
       "name": "Warenbezeichnung",
       "qty": "Menge",
       "price": "Einzelpreis",
-      "total": "Summe"
+      "total": "Summe",
+      "itemNo": "Pos.-Nr."
     }
   },
   "references": {
@@ -583,5 +584,57 @@
     "empty": "Es wurden noch keine Referenzen hinzugefügt.",
     "metaTitle": "Referenzen | LDMCalculator",
     "metaDesc": "Unternehmen und Partner, die LDMCalculator vertrauen."
+  },
+  "packing": {
+    "metaTitle": "Packliste — Ausfüllbare Export-Packlisten-Vorlage | LDMCalculator",
+    "metaDesc": "Kostenlose ausfüllbare Export-Packlisten-Vorlage mit HS-Codes, Netto- und Bruttogewicht. Stempel hochladen, von Hand unterschreiben, dann drucken oder als PDF speichern.",
+    "table": {
+      "itemNo": "Pos.-Nr.",
+      "hs": "HS-Code",
+      "name": "Warenbezeichnung",
+      "qty": "Menge",
+      "netKg": "Netto (kg)",
+      "grossKg": "Brutto (kg)"
+    },
+    "form": {
+      "titleDefault": "PACKLISTE",
+      "plNo": "Packlisten-Nummer",
+      "invNo": "Rechnungsnummer",
+      "invDate": "Rechnungsdatum",
+      "issueDate": "Ausstellungsdatum",
+      "totalPallets": "Paletten gesamt",
+      "totalUnits": "Einheiten gesamt",
+      "totalNet": "Nettogewicht gesamt (kg)",
+      "totalGross": "Bruttogewicht gesamt (kg)"
+    },
+    "guide": {
+      "title": "So füllen Sie die Packliste aus",
+      "intro": "Geben Sie die Parteien ein, laden Sie Ihren Stempel hoch und unterschreiben Sie, füllen Sie die Positionen mit Gewichten aus und drucken Sie.",
+      "steps": {
+        "s1": {
+          "n": "1",
+          "title": "Parteien",
+          "desc": "Geben Sie Absender- und Empfängerdaten in die Felder ein."
+        },
+        "s2": {
+          "n": "2",
+          "title": "Stempel & Unterschrift",
+          "desc": "Laden Sie Ihren Stempel hoch und unterschreiben Sie mit Maus oder Touch."
+        },
+        "s3": {
+          "n": "3",
+          "title": "Belegdaten",
+          "desc": "Geben Sie Packlistennummer, Rechnungsnummer und Daten ein."
+        },
+        "s4": {
+          "n": "4",
+          "title": "Positionen & Summen",
+          "desc": "Fügen Sie je Position HS-Code, Bezeichnung, Menge, Netto- und Bruttogewicht hinzu; die Summen werden automatisch berechnet."
+        }
+      },
+      "tip": "Tipp: Mit den Zoom-Tasten vergrößern Sie das Formular und können in jedes Feld tippen. „Drucken / PDF“ erzeugt eine saubere A4-Seite.",
+      "show": "Anleitung anzeigen",
+      "hide": "Anleitung ausblenden"
+    }
   }
 }

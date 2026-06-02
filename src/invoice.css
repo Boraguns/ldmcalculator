@@ -125,6 +125,16 @@
     font-family: inherit; font-size: 10px; color: #111; padding: 3px 6px; box-sizing: border-box;
 }
 
+/* ----- packing list overrides (Çeki Listesi) -----
+   The packing sheet reuses every invoice class; only three things differ:
+   a full-width sender box across the top grid, and a wider meta/totals label
+   column. The packing goods table puts the HS-code edge at 20% of the frame
+   (Item No 8% + HS 12%), so the label divider must sit at 20% too — i.e.
+   20 / 60 = 33.333% of the 60%-wide meta block. */
+.pl-sender { grid-column: 1 / -1; }
+.pl-frame .inv-row .lbl { flex: 0 0 33.333%; }
+.pl-frame .inv-row .val { flex: 1 1 66.667%; }
+
 /* ----- goods table (grows to fill the page) ----- */
 .inv-table-wrap { flex: 1 1 auto; display: flex; flex-direction: column; border-top: 1px solid var(--inv-line); min-height: 150px; }
 .inv-table { width: 100%; border-collapse: collapse; height: 100%; flex: 1 1 auto; table-layout: fixed; }

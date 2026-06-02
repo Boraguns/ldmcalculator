@@ -573,7 +573,8 @@
       "name": "Description of Goods",
       "qty": "Qty",
       "price": "Unit Price",
-      "total": "Total"
+      "total": "Total",
+      "itemNo": "Item No"
     }
   },
   "references": {
@@ -582,5 +583,57 @@
     "empty": "No references have been added yet.",
     "metaTitle": "References | LDMCalculator",
     "metaDesc": "Companies and partners who trust LDMCalculator."
+  },
+  "packing": {
+    "metaTitle": "Packing List — Fillable Export Packing List Template | LDMCalculator",
+    "metaDesc": "Free fillable export packing list template with HS codes, net and gross weights. Upload your stamp, sign by hand, then print or save as PDF.",
+    "table": {
+      "itemNo": "Item No",
+      "hs": "HS Code",
+      "name": "Description of Goods",
+      "qty": "Qty",
+      "netKg": "Net (kg)",
+      "grossKg": "Gross (kg)"
+    },
+    "form": {
+      "titleDefault": "PACKING LIST",
+      "plNo": "Packing list number",
+      "invNo": "Invoice number",
+      "invDate": "Invoice date",
+      "issueDate": "Issue date",
+      "totalPallets": "Total pallet(s)",
+      "totalUnits": "Total units",
+      "totalNet": "Total net weight (kg)",
+      "totalGross": "Total gross weight (kg)"
+    },
+    "guide": {
+      "title": "How to fill the packing list",
+      "intro": "Enter the parties, upload your stamp and sign, fill in the items with their weights, then print.",
+      "steps": {
+        "s1": {
+          "n": "1",
+          "title": "Parties",
+          "desc": "Enter the sender and recipient details in their boxes."
+        },
+        "s2": {
+          "n": "2",
+          "title": "Stamp & signature",
+          "desc": "Upload your stamp and sign the box with a mouse or touch."
+        },
+        "s3": {
+          "n": "3",
+          "title": "Document details",
+          "desc": "Enter the packing list number, invoice number and dates."
+        },
+        "s4": {
+          "n": "4",
+          "title": "Items & totals",
+          "desc": "Add each item with HS code, description, qty, net and gross weight; the totals add up automatically."
+        }
+      },
+      "tip": "Tip: Use the zoom buttons to enlarge the form and click any field to type. “Print / PDF” produces a clean A4 page.",
+      "show": "Show guide",
+      "hide": "Hide guide"
+    }
   }
 }

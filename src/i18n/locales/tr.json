@@ -569,11 +569,12 @@
       "notesPlaceholder": "Notlar (isteğe bağlı)"
     },
     "table": {
-      "hs": "GTİP",
-      "name": "Malın Cinsi",
+      "hs": "HS Code",
+      "name": "Mal Cinsi",
       "qty": "Adet",
       "price": "Birim Fiyat",
-      "total": "Toplam"
+      "total": "Toplam",
+      "itemNo": "Sıra No"
     }
   },
   "references": {
@@ -582,5 +583,57 @@
     "empty": "Henüz referans eklenmedi.",
     "metaTitle": "Referanslar | LDMCalculator",
     "metaDesc": "LDMCalculator’a güvenen firmalar ve iş ortaklarımız."
+  },
+  "packing": {
+    "metaTitle": "Çeki Listesi — Doldurulabilir İhracat Çeki Listesi Şablonu | LDMCalculator",
+    "metaDesc": "HS kodları, net ve brüt ağırlıklarla ücretsiz doldurulabilir ihracat çeki listesi şablonu. Kaşenizi yükleyin, elle imzalayın, yazdırın veya PDF kaydedin.",
+    "table": {
+      "itemNo": "Sıra No",
+      "hs": "HS Code",
+      "name": "Mal Cinsi",
+      "qty": "Adet",
+      "netKg": "Net KG",
+      "grossKg": "Brüt KG"
+    },
+    "form": {
+      "titleDefault": "ÇEKİ LİSTESİ",
+      "plNo": "Çeki listesi numarası",
+      "invNo": "Fatura numarası",
+      "invDate": "Fatura tarihi",
+      "issueDate": "Düzenlenme tarihi",
+      "totalPallets": "Toplam palet",
+      "totalUnits": "Toplam adet",
+      "totalNet": "Toplam net ağırlık (kg)",
+      "totalGross": "Toplam brüt ağırlık (kg)"
+    },
+    "guide": {
+      "title": "Çeki listesi nasıl doldurulur",
+      "intro": "Taraf bilgilerini girin, kaşenizi yükleyip imzalayın, kalemleri ağırlıklarıyla doldurun ve yazdırın.",
+      "steps": {
+        "s1": {
+          "n": "1",
+          "title": "Taraflar",
+          "desc": "Gönderici ve alıcı bilgilerini ilgili kutulara yazın."
+        },
+        "s2": {
+          "n": "2",
+          "title": "Kaşe ve imza",
+          "desc": "Kaşenizi yükleyin; imza alanını fare veya dokunmatik ile imzalayın."
+        },
+        "s3": {
+          "n": "3",
+          "title": "Belge bilgileri",
+          "desc": "Çeki listesi numarası, fatura numarası ve tarihleri girin."
+        },
+        "s4": {
+          "n": "4",
+          "title": "Kalemler ve toplamlar",
+          "desc": "Her kaleme HS kodu, mal cinsi, adet, net ve brüt ağırlık yazın; toplamlar otomatik hesaplanır."
+        }
+      },
+      "tip": "İpucu: Yakınlaştırma düğmeleriyle formu büyütüp herhangi bir alana tıklayarak yazabilirsiniz. “Yazdır / PDF” temiz bir A4 sayfası üretir.",
+      "show": "Kılavuzu göster",
+      "hide": "Kılavuzu gizle"
+    }
   }
 }
