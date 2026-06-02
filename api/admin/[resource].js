@@ -10,6 +10,7 @@ import siteAssets from '../_handlers/admin/site-assets.js';
 import translations from '../_handlers/admin/translations.js';
 import pricing from '../_handlers/admin/pricing.js';
 import subscriptions from '../_handlers/admin/subscriptions.js';
+import smtpTest from '../_handlers/admin/smtp-test.js';
 import { json } from '../_lib/db.js';
 
 const HANDLERS = {
@@ -23,6 +24,7 @@ const HANDLERS = {
     'translations': translations,
     'pricing': pricing,
     'subscriptions': subscriptions,
+    'smtp-test': smtpTest,
 };
 
 export default async function handler(req, res) {
