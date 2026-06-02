@@ -156,6 +156,24 @@
     display: block; padding: 3px 6px; font-size: 10px; color: #111; font-weight: 600;
 }
 
+/* ----- discount row: input + unit symbol (%, currency) + type toggle ----- */
+.inv-row .val .inv-discount {
+    display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+}
+.inv-row .val .inv-discount input {
+    flex: 0 1 auto; width: 70px; min-width: 0;
+}
+.inv-unit { font-size: 10px; color: #111; font-weight: 600; }
+.inv-disc-toggle { display: inline-flex; border: 1px solid #cbd5e1; border-radius: 5px; overflow: hidden; }
+.inv-disc-toggle button {
+    border: none; background: #fff; color: #475569; cursor: pointer;
+    font-family: inherit; font-size: 10px; font-weight: 700; line-height: 1;
+    padding: 3px 7px; min-width: 20px;
+}
+.inv-disc-toggle button + button { border-left: 1px solid #cbd5e1; }
+.inv-disc-toggle button.is-active { background: #3b82f6; color: #fff; }
+.inv-disc-amt { font-size: 9px; color: #64748b; font-weight: 600; }
+
 /* ----- currency selector (screen only, above the sheet) ----- */
 .inv-currency-bar {
     display: flex; align-items: center; justify-content: center; flex-wrap: wrap;

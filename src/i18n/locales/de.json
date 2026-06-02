@@ -561,7 +561,10 @@
       "signHint": "Unterschrift",
       "currency": "Währung",
       "addRow": "Zeile hinzufügen",
-      "removeRow": "Zeile entfernen"
+      "removeRow": "Zeile entfernen",
+      "discountType": "Rabattart",
+      "discountAmount": "Fester Betrag",
+      "discountPercent": "Prozentsatz"
     },
     "table": {
       "hs": "HS-Code",

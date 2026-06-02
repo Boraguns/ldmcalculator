@@ -28,22 +28,23 @@ export default function References() {
         return () => { cancelled = true; };
     }, []);
 
-    const Card = ({ r }) => {
-        const inner = r.logo_url
-            ? <img src={r.logo_url} alt={r.name}
-                style={{ maxWidth: '100%', maxHeight: 80, objectFit: 'contain' }} />
-            : <span style={{ color: '#e2e8f0', fontWeight: 600, fontSize: '0.95rem', textAlign: 'center' }}>{r.name}</span>;
-        const box = (
-            <div title={r.name} style={{
+    // Logo card with the company name underneath. Not a link — the website is
+    // intentionally not navigable from this gallery.
+    const Card = ({ r }) => (
+        <div title={r.name} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{
                 background: '#fff', borderRadius: 12, border: '1px solid rgba(255,255,255,0.08)',
                 height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center',
                 padding: 16, boxSizing: 'border-box',
-            }}>{inner}</div>
-        );
-        return r.website
-            ? <a href={r.website} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>{box}</a>
-            : box;
-    };
+            }}>
+                {r.logo_url
+                    ? <img src={r.logo_url} alt={r.name}
+                        style={{ maxWidth: '100%', maxHeight: 80, objectFit: 'contain' }} />
+                    : <span style={{ color: '#334155', fontWeight: 600, fontSize: '0.95rem', textAlign: 'center' }}>{r.name}</span>}
+            </div>
+            <span style={{ color: '#e2e8f0', fontSize: '0.85rem', fontWeight: 500, textAlign: 'center' }}>{r.name}</span>
+        </div>
+    );
 
     return (
         <div style={{

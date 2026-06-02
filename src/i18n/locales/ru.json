@@ -560,7 +560,10 @@
       "signHint": "Подпись",
       "currency": "Валюта",
       "addRow": "Добавить строку",
-      "removeRow": "Удалить строку"
+      "removeRow": "Удалить строку",
+      "discountType": "Тип скидки",
+      "discountAmount": "Сумма",
+      "discountPercent": "Процент"
     },
     "table": {
       "hs": "ТН ВЭД",

@@ -162,6 +162,7 @@ const Invoice = () => {
     const [logo, setLogo] = useState('');
     const [stamp, setStamp] = useState('');
     const [currency, setCurrency] = useState('EUR');
+    const [discountType, setDiscountType] = useState('amount'); // 'amount' | 'percent'
     const emptyRow = () => ({ hs: '', name: '', qty: '', price: '' });
     const [items, setItems] = useState(() => [emptyRow(), emptyRow(), emptyRow()]);
     const signRef = useRef(null);
@@ -194,7 +195,8 @@ const Invoice = () => {
     // ----- totals derived from the line items + the editable fields -----
     const sumQty = items.reduce((s, it) => s + num(it.qty), 0);
     const subtotal = items.reduce((s, it) => s + lineTotal(it), 0);
-    const discountAmt = num(f.discount);
+    const discountInput = num(f.discount);
+    const discountAmt = discountType === 'percent' ? subtotal * discountInput / 100 : discountInput;
     const taxableBase = Math.max(0, subtotal - discountAmt);
     const vatRate = num(f.vat);
     const vatAmount = taxableBase * vatRate / 100;
@@ -257,6 +259,7 @@ const Invoice = () => {
             setLogo('');
             setStamp('');
             setItems([emptyRow(), emptyRow(), emptyRow()]);
+            setDiscountType('amount');
             signRef.current?.clear();
         }
     };
@@ -270,7 +273,7 @@ const Invoice = () => {
                 body: {
                     type: 'invoice',
                     title: `Invoice ${f.docNo || ''}`.trim(),
-                    data: { ...f, currency, items, logo, stamp, signature: signRef.current?.toDataURL() || '' },
+                    data: { ...f, currency, discountType, items, logo, stamp, signature: signRef.current?.toDataURL() || '' },
                 },
             }).catch(() => {});
         }
@@ -517,6 +520,36 @@ const Invoice = () => {
                         <div className="inv-totals">
                             {totalRows.map(([k, key]) => {
                                 const c = computed[k];
+                                if (k === 'discount') {
+                                    return (
+                                        <div className="inv-row" key={k}>
+                                            <div className="lbl">{t(key)}</div>
+                                            <div className="val">
+                                                <div className="inv-discount">
+                                                    <input value={val(k)} onChange={set(k)} />
+                                                    <span className="inv-unit">{discountType === 'percent' ? '%' : sym}</span>
+                                                    <div className="inv-disc-toggle inv-screen-only" role="group" aria-label={t('invoice.form.discountType')}>
+                                                        <button
+                                                            type="button"
+                                                            className={discountType === 'amount' ? 'is-active' : ''}
+                                                            onClick={() => setDiscountType('amount')}
+                                                            title={t('invoice.form.discountAmount')}
+                                                        >{sym}</button>
+                                                        <button
+                                                            type="button"
+                                                            className={discountType === 'percent' ? 'is-active' : ''}
+                                                            onClick={() => setDiscountType('percent')}
+                                                            title={t('invoice.form.discountPercent')}
+                                                        >%</button>
+                                                    </div>
+                                                    {discountType === 'percent' && discountAmt > 0 && (
+                                                        <span className="inv-disc-amt">= {sym} {money(discountAmt)}</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                }
                                 return (
                                     <div className="inv-row" key={k}>
                                         <div className="lbl">{t(key)}</div>

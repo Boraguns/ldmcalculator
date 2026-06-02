@@ -560,7 +560,10 @@
       "signHint": "Signature",
       "currency": "Devise",
       "addRow": "Ajouter une ligne",
-      "removeRow": "Supprimer la ligne"
+      "removeRow": "Supprimer la ligne",
+      "discountType": "Type de remise",
+      "discountAmount": "Montant fixe",
+      "discountPercent": "Pourcentage"
     },
     "table": {
       "hs": "Code SH",

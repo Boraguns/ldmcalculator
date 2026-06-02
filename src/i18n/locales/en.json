@@ -560,7 +560,10 @@
       "signHint": "Signature",
       "currency": "Currency",
       "addRow": "Add row",
-      "removeRow": "Remove row"
+      "removeRow": "Remove row",
+      "discountType": "Discount type",
+      "discountAmount": "Fixed amount",
+      "discountPercent": "Percentage"
     },
     "table": {
       "hs": "HS Code",

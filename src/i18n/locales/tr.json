@@ -560,7 +560,10 @@
       "signHint": "İmza",
       "currency": "Para birimi",
       "addRow": "Satır ekle",
-      "removeRow": "Satırı sil"
+      "removeRow": "Satırı sil",
+      "discountType": "İndirim türü",
+      "discountAmount": "Tutar",
+      "discountPercent": "Yüzde"
     },
     "table": {
       "hs": "GTİP",

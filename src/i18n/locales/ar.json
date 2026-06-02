@@ -552,7 +552,10 @@
       "signHint": "التوقيع",
       "currency": "العملة",
       "addRow": "إضافة صف",
-      "removeRow": "حذف الصف"
+      "removeRow": "حذف الصف",
+      "discountType": "نوع الخصم",
+      "discountAmount": "مبلغ ثابت",
+      "discountPercent": "نسبة مئوية"
     },
     "table": {
       "hs": "رمز HS",
