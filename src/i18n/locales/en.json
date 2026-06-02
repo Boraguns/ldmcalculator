@@ -1,7 +1,7 @@
 {
   "tools": {
     "label": "Tools",
-    "cmr": "CMR Note",
+    "cmr": "CMR",
     "invoice": "Invoice",
     "packingList": "Packing List",
     "soon": "This document template will be added soon.",
@@ -558,6 +558,13 @@
       "removeImage": "Remove",
       "clearSignature": "Clear signature",
       "signHint": "Signature"
+    },
+    "table": {
+      "hs": "HS Code",
+      "name": "Description of Goods",
+      "qty": "Qty",
+      "price": "Unit Price (EUR)",
+      "total": "Total (EUR)"
     }
   },
   "references": {

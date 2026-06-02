@@ -1,8 +1,8 @@
 {
   "tools": {
     "label": "Tools",
-    "cmr": "CMR Belgesi",
-    "invoice": "Fatura Belgesi",
+    "cmr": "CMR",
+    "invoice": "Fatura",
     "packingList": "Çeki Listesi",
     "soon": "Bu belge şablonu yakında eklenecek.",
     "print": "Yazdır / PDF",
@@ -558,6 +558,13 @@
       "removeImage": "Kaldır",
       "clearSignature": "İmzayı temizle",
       "signHint": "İmza"
+    },
+    "table": {
+      "hs": "GTİP",
+      "name": "Malın Cinsi",
+      "qty": "Adet",
+      "price": "Birim Fiyat (EUR)",
+      "total": "Toplam (EUR)"
     }
   },
   "references": {

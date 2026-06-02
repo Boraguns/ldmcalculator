@@ -88,6 +88,7 @@
 .inv-meta, .inv-totals {
     display: flex; flex-direction: column; width: 58%; box-sizing: border-box;
     border-top: 1px solid var(--inv-line);
+    border-right: 1px solid var(--inv-line); /* close the half-width box on the right */
 }
 .inv-row { display: flex; border-bottom: 1px solid var(--inv-line); }
 .inv-row:last-child { border-bottom: none; }

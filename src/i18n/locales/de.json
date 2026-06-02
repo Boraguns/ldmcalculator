@@ -1,7 +1,7 @@
 {
   "tools": {
     "label": "Tools",
-    "cmr": "CMR-Frachtbrief",
+    "cmr": "CMR",
     "invoice": "Rechnung",
     "packingList": "Packliste",
     "soon": "Diese Dokumentvorlage wird bald hinzugefügt.",
@@ -559,6 +559,13 @@
       "removeImage": "Entfernen",
       "clearSignature": "Unterschrift löschen",
       "signHint": "Unterschrift"
+    },
+    "table": {
+      "hs": "HS-Code",
+      "name": "Warenbezeichnung",
+      "qty": "Menge",
+      "price": "Preis (EUR)",
+      "total": "Summe (EUR)"
     }
   },
   "references": {

@@ -1,7 +1,7 @@
 {
   "tools": {
     "label": "Tools",
-    "cmr": "وثيقة CMR",
+    "cmr": "CMR",
     "invoice": "فاتورة",
     "packingList": "قائمة التعبئة",
     "soon": "سيتم إضافة قالب هذا المستند قريبًا.",
@@ -550,6 +550,13 @@
       "removeImage": "إزالة",
       "clearSignature": "مسح التوقيع",
       "signHint": "التوقيع"
+    },
+    "table": {
+      "hs": "رمز HS",
+      "name": "وصف البضاعة",
+      "qty": "الكمية",
+      "price": "السعر (EUR)",
+      "total": "الإجمالي (EUR)"
     }
   },
   "references": {

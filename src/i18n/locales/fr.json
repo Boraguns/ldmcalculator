@@ -1,7 +1,7 @@
 {
   "tools": {
     "label": "Tools",
-    "cmr": "Lettre de voiture CMR",
+    "cmr": "CMR",
     "invoice": "Facture",
     "packingList": "Liste de colisage",
     "soon": "Ce modèle de document sera ajouté prochainement.",
@@ -558,6 +558,13 @@
       "removeImage": "Supprimer",
       "clearSignature": "Effacer la signature",
       "signHint": "Signature"
+    },
+    "table": {
+      "hs": "Code SH",
+      "name": "Désignation des marchandises",
+      "qty": "Qté",
+      "price": "Prix (EUR)",
+      "total": "Total (EUR)"
     }
   },
   "references": {

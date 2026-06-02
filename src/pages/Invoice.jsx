@@ -244,13 +244,13 @@ const Invoice = () => {
 
     const stepKeys = ['s1', 's2', 's3', 's4', 's5'];
 
-    // Russian goods declaration columns (kept verbatim, as on invoice.pdf).
+    // Goods declaration columns — headers are localised (invoice.table.*).
     const cols = [
-        { k: 'hs', label: 'ТН ВЭД', w: '16%', cls: 'ta-c' },
-        { k: 'name', label: 'НАИМЕНОВАНИЕ ТОВАРА (НА РУССКОМ)', w: '48%', cls: '' },
-        { k: 'qty', label: 'ШТ', w: '10%', cls: 'ta-c' },
-        { k: 'price', label: 'ЦЕНА ЕВРО', w: '13%', cls: 'ta-r' },
-        { k: 'total', label: 'ИТОГО ЕВРО', w: '13%', cls: 'ta-r' },
+        { k: 'hs', label: 'invoice.table.hs', w: '16%', cls: 'ta-c' },
+        { k: 'name', label: 'invoice.table.name', w: '48%', cls: '' },
+        { k: 'qty', label: 'invoice.table.qty', w: '10%', cls: 'ta-c' },
+        { k: 'price', label: 'invoice.table.price', w: '13%', cls: 'ta-r' },
+        { k: 'total', label: 'invoice.table.total', w: '13%', cls: 'ta-r' },
     ];
     const tableRows = Array.from({ length: 16 });
 
@@ -406,7 +406,7 @@ const Invoice = () => {
                                 <thead>
                                     <tr>
                                         {cols.map(c => (
-                                            <th key={c.k} style={{ width: c.w }}>{c.label}</th>
+                                            <th key={c.k} style={{ width: c.w }}>{t(c.label)}</th>
                                         ))}
                                     </tr>
                                 </thead>
