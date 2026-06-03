@@ -6,6 +6,11 @@
 import { sql, json, requireAdmin, readJsonBody } from '../../_lib/db.js';
 import { periodEnd, getPrice, vatBreakdown } from '../../_lib/pricing.js';
 
+// Launch campaign: paid plans are free. While true, manual approvals record a
+// collected amount of 0 (the list price is stashed in payments.raw so the UI can
+// show it struck-through). Mirror of src/utils/promo.js — keep them in sync.
+const PROMO_FREE = true;
+
 export default async function handler(req, res) {
     if (!requireAdmin(req)) return json(res, 401, { error: 'unauthorized' });
 
@@ -46,14 +51,23 @@ export default async function handler(req, res) {
                         plan: sub.plan, tier: sub.tier ?? null, period: sub.period, currency: sub.currency,
                     });
                     const vatRate = price ? Number(price.vat_rate) : 20;
-                    const { vat } = vatBreakdown(sub.amount, vatRate);
+                    const listAmount = Number(sub.amount) || 0;
+                    const { vat: listVat } = vatBreakdown(listAmount, vatRate);
+                    // During the free campaign nothing is collected: store 0 as the
+                    // paid amount and keep the list price in raw for "struck-through 0".
+                    const paidAmount = PROMO_FREE ? 0 : listAmount;
+                    const paidVat = PROMO_FREE ? 0 : listVat;
+                    const raw = PROMO_FREE
+                        ? JSON.stringify({ promo: true, listAmount, listVat, currency: sub.currency || 'TRY' })
+                        : null;
                     await sql`
                         INSERT INTO payments
                             (subscription_id, user_id, company_id, amount, currency, vat_rate, vat_amount,
-                             status, provider, kind, paid_at)
+                             status, provider, kind, raw, paid_at)
                         VALUES
-                            (${id}, ${sub.user_id || null}, ${sub.company_id || null}, ${sub.amount},
-                             ${sub.currency || 'TRY'}, ${vatRate}, ${vat}, 'paid', 'manual', 'subscription', NOW())`;
+                            (${id}, ${sub.user_id || null}, ${sub.company_id || null}, ${paidAmount},
+                             ${sub.currency || 'TRY'}, ${vatRate}, ${paidVat}, 'paid', 'manual', 'subscription',
+                             ${raw}, NOW())`;
                 }
                 return json(res, 200, { ok: true });
             }
@@ -105,7 +119,7 @@ export default async function handler(req, res) {
         if (view === 'payments') {
             const rows = await sql`
                 SELECT p.id, p.amount, p.currency, p.vat_amount, p.status, p.kind, p.provider,
-                       p.provider_ref, p.invoice_no, p.paid_at, p.created_at,
+                       p.provider_ref, p.invoice_no, p.raw, p.paid_at, p.created_at,
                        u.email AS user_email, c.name AS company_name
                 FROM payments p
                 LEFT JOIN users u ON u.id = p.user_id

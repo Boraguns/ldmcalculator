@@ -4,10 +4,23 @@ import { useAuth } from '../auth/AuthContext';
 import { api } from '../utils/api';
 import { useT, LanguageSwitcher } from '../i18n/LanguageContext';
 import usePageMeta from '../hooks/usePageMeta';
+import { PROMO_FREE } from '../utils/promo';
 
 const CUR = { TRY: '₺', USD: '$', EUR: '€' };
 const money = (a, c) => `${CUR[c] || ''}${(Number(a) || 0).toLocaleString()}`;
 const fmtDate = (d) => (d ? new Date(d).toLocaleDateString() : '—');
+
+// JSONB may arrive as an object or a string depending on the driver.
+const rawObj = (r) => { try { return typeof r === 'string' ? JSON.parse(r) : (r || null); } catch { return null; } };
+
+// Launch campaign price: original struck-through next to a free (0) amount so the
+// user clearly sees they paid nothing.
+const FreePrice = ({ amount, currency }) => (
+    <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 6 }}>
+        {Number(amount) > 0 && <span style={{ color: '#94a3b8', textDecoration: 'line-through' }}>{money(amount, currency)}</span>}
+        <span style={{ color: '#6ee7b7', fontWeight: 700 }}>{money(0, currency)}</span>
+    </span>
+);
 
 const Card = ({ children, style }) => (
     <div style={{ background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: '20px 22px', ...style }}>{children}</div>
@@ -138,7 +151,7 @@ function Overview({ user, subscription }) {
                             <strong style={{ textTransform: 'capitalize' }}>{subscription.plan}</strong>
                             {subscription.tier ? ` · ${subscription.tier} ${t('pricing.seats')}` : ''} · {t(`pricing.${subscription.period}`)}
                         </p>
-                        <p style={{ margin: '6px 0', color: '#94a3b8' }}>{money(subscription.amount, subscription.currency)} · {t('account.renews')}: {fmtDate(subscription.current_period_end)}</p>
+                        <p style={{ margin: '6px 0', color: '#94a3b8' }}>{PROMO_FREE ? <FreePrice amount={subscription.amount} currency={subscription.currency} /> : money(subscription.amount, subscription.currency)} · {t('account.renews')}: {fmtDate(subscription.current_period_end)}</p>
                         {seats && <p style={{ margin: '6px 0', color: '#94a3b8' }}>{t('account.seatUsage', { used: seats.used, total: seats.total })}</p>}
                         {subscription.cancel_at_period_end
                             ? <p style={{ color: '#fbbf24' }}>{t('account.willCancel')}</p>
@@ -270,14 +283,17 @@ function Payments() {
             {!rows ? <p style={{ color: '#94a3b8' }}>…</p> : rows.length === 0 ? <p style={{ color: '#94a3b8' }}>{t('account.empty')}</p> : (
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
                     <thead><tr style={{ color: '#94a3b8', textAlign: 'left' }}><th style={{ padding: '6px 4px' }}>{t('account.date')}</th><th>{t('account.amount')}</th><th>{t('account.method')}</th><th>{t('account.status')}</th></tr></thead>
-                    <tbody>{rows.map((r) => (
+                    <tbody>{rows.map((r) => {
+                        const promo = rawObj(r.raw)?.promo;
+                        return (
                         <tr key={r.id} style={{ borderTop: '1px solid #1f2937' }}>
                             <td style={{ padding: '8px 4px' }}>{fmtDate(r.paid_at || r.created_at)}</td>
-                            <td>{money(r.amount, r.currency)}</td>
+                            <td>{promo ? <FreePrice amount={rawObj(r.raw).listAmount} currency={r.currency} /> : money(r.amount, r.currency)}</td>
                             <td>{r.provider === 'manual' ? t('account.method_manual') : r.provider === 'paytr' ? t('account.method_card') : (r.provider || '—')}</td>
                             <td style={{ textTransform: 'capitalize' }}>{t(`account.pay_${r.status}`) || r.status}</td>
                         </tr>
-                    ))}</tbody>
+                        );
+                    })}</tbody>
                 </table>
             )}
         </Card>

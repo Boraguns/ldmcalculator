@@ -62,7 +62,7 @@ async function subscription(req, res, user) {
 async function payments(req, res, user) {
     const rows = await sql`
         SELECT id, amount, currency, vat_rate, vat_amount, status, provider, provider_ref,
-               invoice_no, kind, paid_at, created_at
+               invoice_no, kind, raw, paid_at, created_at
         FROM payments
         WHERE user_id = ${user.id} ${user.company_id ? sql`OR company_id = ${user.company_id}` : sql``}
         ORDER BY created_at DESC LIMIT 100`;

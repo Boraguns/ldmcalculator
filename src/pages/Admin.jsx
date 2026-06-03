@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
+import { PROMO_FREE } from '../utils/promo';
 // Bundled JSON dictionaries — used as the "default" column in the site
 // content editor so admins can see what they're overriding.
 import enDict from '../i18n/locales/en.json';
@@ -1259,6 +1260,14 @@ const SubscriptionsManager = () => {
 
     const money = (a, c) => `${c} ${(Number(a) || 0).toLocaleString()}`;
     const payMethod = (p) => (p === 'manual' ? 'IBAN/EFT' : p === 'paytr' ? 'Kredi Kartı' : (p || '—'));
+    const rawObj = (r) => { try { return typeof r === 'string' ? JSON.parse(r) : (r || null); } catch { return null; } };
+    // List price struck-through next to a free (0) amount during the campaign.
+    const freePrice = (amount, currency) => (
+        <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 6 }}>
+            {Number(amount) > 0 && <span style={{ color: '#94a3b8', textDecoration: 'line-through' }}>{money(amount, currency)}</span>}
+            <span style={{ color: '#6ee7b7', fontWeight: 700 }}>{money(0, currency)}</span>
+        </span>
+    );
     const td = { padding: '6px 8px', borderTop: '1px solid #1f2937' };
     const th = { textAlign: 'left', color: '#94a3b8', padding: '6px 8px' };
 
@@ -1318,9 +1327,12 @@ const SubscriptionsManager = () => {
             ) : view === 'payments' ? (
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                     <thead><tr><th style={th}>Tarih</th><th style={th}>Tutar</th><th style={th}>KDV</th><th style={th}>Yöntem</th><th style={th}>Durum</th><th style={th}>Tür</th><th style={th}>Kullanıcı/Firma</th></tr></thead>
-                    <tbody>{(data.payments || []).map(p => (
-                        <tr key={p.id}><td style={td}>{new Date(p.paid_at || p.created_at).toLocaleDateString()}</td><td style={td}>{money(p.amount, p.currency)}</td><td style={td}>{money(p.vat_amount, p.currency)}</td><td style={td}>{payMethod(p.provider)}</td><td style={td}>{p.status === 'paid' ? 'Tahsil edildi' : p.status}</td><td style={td}>{p.kind}</td><td style={td}>{p.company_name || p.user_email || '—'}</td></tr>
-                    ))}</tbody>
+                    <tbody>{(data.payments || []).map(p => {
+                        const promo = rawObj(p.raw)?.promo;
+                        return (
+                        <tr key={p.id}><td style={td}>{new Date(p.paid_at || p.created_at).toLocaleDateString()}</td><td style={td}>{promo ? freePrice(rawObj(p.raw).listAmount, p.currency) : money(p.amount, p.currency)}</td><td style={td}>{money(p.vat_amount, p.currency)}</td><td style={td}>{payMethod(p.provider)}</td><td style={td}>{p.status === 'paid' ? 'Tahsil edildi' : p.status}</td><td style={td}>{p.kind}</td><td style={td}>{p.company_name || p.user_email || '—'}</td></tr>
+                        );
+                    })}</tbody>
                 </table>
             ) : (
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
@@ -1333,7 +1345,7 @@ const SubscriptionsManager = () => {
                             <td style={td}>{s.plan}</td>
                             <td style={td}>{s.period}</td>
                             <td style={td}>{s.tier ?? '—'}</td>
-                            <td style={td}>{money(s.amount, s.currency)}</td>
+                            <td style={td}>{PROMO_FREE ? freePrice(s.amount, s.currency) : money(s.amount, s.currency)}</td>
                             <td style={{ ...td, color: isPending ? '#fbbf24' : s.status === 'active' ? '#34d399' : '#94a3b8', fontWeight: 600 }}>
                                 {isPending ? 'Onay bekliyor' : s.status}{s.cancel_at_period_end ? ' (iptal)' : ''}
                             </td>

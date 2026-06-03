@@ -107,7 +107,9 @@ const AccountMenu = ({ style = {}, compact = false, height }) => {
                 style={{
                     padding: '2px', height: `${h}px`, cursor: 'pointer',
                     borderRadius: 12,
-                    boxShadow: ring ? `0 0 0 2px ${ring}` : undefined,
+                    // Trial users get a countdown ring; premium users get a gold
+                    // border matching the "Premium" tier text colour.
+                    boxShadow: ring ? `0 0 0 2px ${ring}` : (isPremium ? `0 0 0 2px ${tierColor}` : undefined),
                     transition: 'box-shadow .2s',
                 }}
             >

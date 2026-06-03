@@ -5,6 +5,7 @@ import { useAuth } from '../auth/AuthContext';
 import { useT, LanguageSwitcher } from '../i18n/LanguageContext';
 import AccountMenu from '../components/AccountMenu';
 import usePageMeta from '../hooks/usePageMeta';
+import { PROMO_FREE } from '../utils/promo';
 
 const CUR_SYMBOL = { TRY: '₺', USD: '$', EUR: '€' };
 const CORP_TIERS = [3, 5, 10, 20, 30, 50, 100];
@@ -47,7 +48,7 @@ export default function Pricing() {
 
     // Limited-time launch promo: all paid plans are currently free. Original
     // prices are shown struck-through next to a "free now" badge.
-    const PROMO = true;
+    const PROMO = PROMO_FREE;
     const PriceTag = ({ amount, compact }) => {
         const original = Number(amount) || 0;
         return (
