@@ -348,7 +348,11 @@
     "seats": "sièges",
     "choose": "Choisir",
     "corporateOnlyAdmin": "Seul un administrateur d'entreprise peut acheter un forfait entreprise.",
-    "requestReceived": "Votre demande d'abonnement a été reçue. Nous l'examinerons et l'activerons sous peu."
+    "requestReceived": "Votre demande d'abonnement a été reçue. Nous l'examinerons et l'activerons sous peu.",
+    "promoTitle": "Durée limitée : tous les forfaits sont gratuits !",
+    "promoDesc": "Abonnez-vous maintenant et votre accès s'ouvre instantanément. Cette offre n'est valable que pour une courte durée.",
+    "freeNow": "Gratuit maintenant",
+    "startFree": "Commencer gratuitement"
   },
   "account": {
     "overview": "Aperçu",

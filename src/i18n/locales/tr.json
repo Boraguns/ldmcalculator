@@ -348,7 +348,11 @@
     "seats": "koltuk",
     "choose": "Seç",
     "corporateOnlyAdmin": "Kurumsal paketi yalnızca firma yöneticisi satın alabilir.",
-    "requestReceived": "Abonelik talebiniz alındı. En kısa sürede inceleyip etkinleştireceğiz."
+    "requestReceived": "Abonelik talebiniz alındı. En kısa sürede inceleyip etkinleştireceğiz.",
+    "promoTitle": "Kısa süreliğine: tüm planlar ücretsiz!",
+    "promoDesc": "Hemen abone olun, erişiminiz anında açılsın. Bu fırsat yalnızca kısa bir süre için geçerlidir.",
+    "freeNow": "Şimdi ücretsiz",
+    "startFree": "Ücretsiz başla"
   },
   "account": {
     "overview": "Genel bakış",

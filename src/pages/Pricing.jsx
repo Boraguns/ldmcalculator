@@ -45,6 +45,32 @@ export default function Pricing() {
 
     const fmt = (n) => `${CUR_SYMBOL[currency] || ''}${(Number(n) || 0).toLocaleString()}`;
 
+    // Limited-time launch promo: all paid plans are currently free. Original
+    // prices are shown struck-through next to a "free now" badge.
+    const PROMO = true;
+    const PriceTag = ({ amount, compact }) => {
+        const original = Number(amount) || 0;
+        return (
+            <div style={{ marginBottom: compact ? 8 : 10 }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: compact ? '1.25rem' : '1.6rem', fontWeight: 700, color: PROMO ? '#6ee7b7' : '#fff' }}>
+                        {PROMO ? fmt(0) : fmt(original)}
+                    </span>
+                    {PROMO && original > 0 && (
+                        <span style={{ fontSize: compact ? '0.85rem' : '1rem', color: '#94a3b8', textDecoration: 'line-through' }}>{fmt(original)}</span>
+                    )}
+                    <span style={{ fontSize: compact ? '0.72rem' : '0.82rem', color: '#94a3b8', fontWeight: 400 }}>/ {t(`pricing.${period}`)}</span>
+                </div>
+                {PROMO && (
+                    <span style={{ display: 'inline-block', marginTop: 4, fontSize: compact ? '0.66rem' : '0.7rem', fontWeight: 800,
+                        color: '#052e16', background: '#6ee7b7', borderRadius: 999, padding: '2px 9px', letterSpacing: '0.02em' }}>
+                        {t('pricing.freeNow')}
+                    </span>
+                )}
+            </div>
+        );
+    };
+
     const subscribe = async (plan, tier) => {
         if (!user) { navigate('/register'); return; }
         if (plan === 'corporate' && (user.accountType !== 'corporate_admin')) {
@@ -112,6 +138,21 @@ export default function Pricing() {
                     <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.9rem' }}>{t('pricing.subtitle')}</p>
                 </div>
 
+                {PROMO && (
+                    <div style={{
+                        display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
+                        padding: '12px 16px', borderRadius: 12,
+                        background: 'linear-gradient(135deg, rgba(16,185,129,0.18), rgba(59,130,246,0.14))',
+                        border: '1px solid rgba(110,231,183,0.45)',
+                    }}>
+                        <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>🎉</span>
+                        <div>
+                            <div style={{ color: '#6ee7b7', fontWeight: 800, fontSize: '1rem' }}>{t('pricing.promoTitle')}</div>
+                            <div style={{ color: '#cbd5e1', fontSize: '0.85rem' }}>{t('pricing.promoDesc')}</div>
+                        </div>
+                    </div>
+                )}
+
                 <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center' }}>
                     <Toggle value={period} onChange={setPeriod} options={[
                         { id: 'monthly', label: t('pricing.monthly') },
@@ -145,11 +186,8 @@ export default function Pricing() {
                         <>
                             <h3 style={{ color: '#f8fafc', margin: '0 0 4px' }}>{t('pricing.individual')}</h3>
                             <p style={{ color: '#94a3b8', fontSize: '0.82rem', margin: '0 0 8px' }}>{t('pricing.individualDesc')}</p>
-                            <div style={{ fontSize: '1.6rem', fontWeight: 700, color: '#fff', marginBottom: 10 }}>
-                                {fmt(priceFor[`individual|x|${period}`] || 0)}
-                                <span style={{ fontSize: '0.82rem', color: '#94a3b8', fontWeight: 400 }}> / {t(`pricing.${period}`)}</span>
-                            </div>
-                            <Btn plan="individual" tier={null} label={t('pricing.subscribe')} />
+                            <PriceTag amount={priceFor[`individual|x|${period}`] || 0} />
+                            <Btn plan="individual" tier={null} label={PROMO ? t('pricing.startFree') : t('pricing.subscribe')} />
                         </>,
                         true
                     )}
@@ -166,10 +204,7 @@ export default function Pricing() {
                             card(
                                 <>
                                     <h3 style={{ color: '#f8fafc', margin: '0 0 2px', fontSize: '1rem' }}>{tier} {t('pricing.seats')}</h3>
-                                    <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#fff' }}>
-                                        {fmt(priceFor[`corporate|${tier}|${period}`] || 0)}
-                                    </div>
-                                    <div style={{ fontSize: '0.74rem', color: '#94a3b8', marginBottom: 10 }}>/ {t(`pricing.${period}`)}</div>
+                                    <PriceTag amount={priceFor[`corporate|${tier}|${period}`] || 0} compact />
                                     <Btn plan="corporate" tier={tier} label={t('pricing.choose')} compact />
                                 </>,
                                 false, '13px 13px', tier

@@ -348,7 +348,11 @@
     "seats": "seats",
     "choose": "Choose",
     "corporateOnlyAdmin": "Only a company admin can purchase a corporate plan.",
-    "requestReceived": "Your subscription request has been received. We'll review and activate it shortly."
+    "requestReceived": "Your subscription request has been received. We'll review and activate it shortly.",
+    "promoTitle": "Limited time: all plans are free!",
+    "promoDesc": "Subscribe now and your access opens instantly. This offer is available for a short time only.",
+    "freeNow": "Free now",
+    "startFree": "Start free"
   },
   "account": {
     "overview": "Overview",

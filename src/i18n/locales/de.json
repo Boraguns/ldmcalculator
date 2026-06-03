@@ -349,7 +349,11 @@
     "seats": "Plätze",
     "choose": "Wählen",
     "corporateOnlyAdmin": "Nur ein Firmenadministrator kann ein Firmenpaket kaufen.",
-    "requestReceived": "Ihre Abo-Anfrage ist eingegangen. Wir prüfen und aktivieren sie in Kürze."
+    "requestReceived": "Ihre Abo-Anfrage ist eingegangen. Wir prüfen und aktivieren sie in Kürze.",
+    "promoTitle": "Begrenzte Zeit: alle Pakete kostenlos!",
+    "promoDesc": "Jetzt abonnieren und Ihr Zugang wird sofort freigeschaltet. Dieses Angebot gilt nur für kurze Zeit.",
+    "freeNow": "Jetzt kostenlos",
+    "startFree": "Kostenlos starten"
   },
   "account": {
     "overview": "Übersicht",
