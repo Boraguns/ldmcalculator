@@ -39,7 +39,14 @@ export default function Account() {
     return (
         <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#0f172a,#1e293b 60%,#334155)', color: '#e2e8f0' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 24px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                <Link to="/"><img src="/src/ldm-calculator-beyaz-logo.png" alt="LDM" style={{ width: 150 }} /></Link>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                    <Link to="/"><img src="/src/ldm-calculator-beyaz-logo.png" alt="LDM" style={{ width: 150 }} /></Link>
+                    <Link to="/" style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none',
+                        background: 'transparent', border: '1px solid #334155', color: '#cbd5e1',
+                        borderRadius: 8, padding: '8px 14px', fontSize: '0.85rem', fontWeight: 600,
+                    }}>← {t('viewer.backHome')}</Link>
+                </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                     <LanguageSwitcher height={38} compact />
                     <button onClick={() => { logout(); navigate('/'); }} style={{ background: 'transparent', border: '1px solid #334155', color: '#cbd5e1', borderRadius: 8, padding: '8px 14px', cursor: 'pointer' }}>

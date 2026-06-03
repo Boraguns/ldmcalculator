@@ -1224,16 +1224,25 @@ const PricingManager = () => {
 
 // ---- Subscriptions / users / payments overview -----------------------------
 const SubscriptionsManager = () => {
-    const [view, setView] = useState('stats');
+    const [view, setView] = useState('list');
     const [data, setData] = useState(null);
     const [tick, setTick] = useState(0);
     const [busy, setBusy] = useState(null);
+    const [pendingCount, setPendingCount] = useState(0);
     useEffect(() => {
         setData(null);
         const q = view === 'list' ? '' : `?view=${view}`;
         fetch(`/api/admin/subscriptions${q}`, { headers: auth() })
             .then(r => r.json()).then(setData).catch(() => setData({}));
     }, [view, tick]);
+    // Always keep a live count of pending requests so the "Abonelikler" tab can
+    // surface a badge even while the admin is viewing another tab.
+    useEffect(() => {
+        fetch('/api/admin/subscriptions', { headers: auth() })
+            .then(r => r.json())
+            .then(d => setPendingCount((d.subscriptions || []).filter(s => s.status === 'pending').length))
+            .catch(() => {});
+    }, [tick]);
 
     const act = async (id, action) => {
         if (action === 'reject' && !window.confirm('Bu abonelik talebini reddet?')) return;
@@ -1259,10 +1268,29 @@ const SubscriptionsManager = () => {
             <nav style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
                 {[['stats', 'Özet'], ['list', 'Abonelikler'], ['users', 'Kullanıcılar'], ['payments', 'Ödemeler']].map(([k, l]) => (
                     <button key={k} onClick={() => setView(k)} className="ai-btn" style={{ height: 32 }}>
-                        <div className="ai-btn-inner" style={{ background: view === k ? '#3b82f6' : 'transparent', color: '#fff' }}>{l}</div>
+                        <div className="ai-btn-inner" style={{ background: view === k ? '#3b82f6' : 'transparent', color: '#fff', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                            {l}
+                            {k === 'list' && pendingCount > 0 && (
+                                <span style={{ background: '#f59e0b', color: '#1f1300', fontSize: '0.7rem', fontWeight: 800,
+                                    borderRadius: 999, padding: '1px 7px', lineHeight: '16px' }}>{pendingCount}</span>
+                            )}
+                        </div>
                     </button>
                 ))}
             </nav>
+            {pendingCount > 0 && (
+                <div style={{ marginBottom: 14, padding: '10px 14px', borderRadius: 9,
+                    background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.45)', color: '#fbbf24',
+                    display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                    <span style={{ fontWeight: 700 }}>⚠ {pendingCount} bekleyen abonelik talebi</span>
+                    {view !== 'list' && (
+                        <button onClick={() => setView('list')} style={{ background: '#f59e0b', color: '#1f1300',
+                            border: 'none', borderRadius: 7, padding: '5px 12px', fontWeight: 700, cursor: 'pointer' }}>
+                            Talepleri gör
+                        </button>
+                    )}
+                </div>
+            )}
             {!data ? <p>…</p> : view === 'stats' ? (
                 <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
                     {[['Kullanıcı', data.stats?.users], ['Firma', data.stats?.companies], ['Aktif abonelik', data.stats?.activeSubs]].map(([l, v]) => (
@@ -1530,10 +1558,18 @@ const Admin = () => {
                         </div>
                     ))}
                 </nav>
+                <a
+                    href="/"
+                    style={{
+                        marginTop: 'auto', textAlign: 'center', textDecoration: 'none',
+                        border: '1px solid rgba(255,255,255,0.14)', color: '#cbd5e1',
+                        borderRadius: 8, padding: '8px 10px', fontSize: '0.82rem', fontWeight: 600,
+                    }}
+                >← Siteye dön</a>
                 <button
                     onClick={() => { localStorage.removeItem(TOKEN_KEY); setUser(null); }}
                     className="ai-btn"
-                    style={{ height: 34, marginTop: 'auto' }}
+                    style={{ height: 34, marginTop: 10 }}
                 >
                     <div className="ai-btn-inner" style={{ fontSize: '0.82rem' }}>Çıkış</div>
                 </button>
