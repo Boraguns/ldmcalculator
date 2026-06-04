@@ -227,7 +227,14 @@ const ChatWidget = () => {
                     boxShadow: '0 10px 28px rgba(37,99,235,0.5)',
                 }}
             >
-                {open ? '×' : '💬'}
+                {open ? '×' : (
+                    <img
+                        src="/chat.png"
+                        alt=""
+                        aria-hidden="true"
+                        style={{ width: 34, height: 34, objectFit: 'contain', display: 'block' }}
+                    />
+                )}
                 {!open && unread > 0 && (
                     <span style={{
                         position: 'absolute', top: -2, right: -2, minWidth: 20, height: 20, padding: '0 5px',
