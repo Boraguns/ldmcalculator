@@ -1693,7 +1693,7 @@ const ChatManager = () => {
                                     </div>
                                     {conv && (
                                         <div style={{ color: '#64748b', fontSize: '0.72rem' }}>
-                                            {conv.visitor_email ? conv.visitor_email + ' • ' : ''}{conv.user_id ? 'Üye #' + conv.user_id + ' • ' : ''}IP: {conv.ip || '—'} • {fmtDateTime(conv.created_at)}
+                                            {conv.visitor_email ? conv.visitor_email + ' • ' : ''}{conv.visitor_phone ? conv.visitor_phone + ' • ' : ''}{conv.user_id ? 'Üye #' + conv.user_id + ' • ' : ''}IP: {conv.ip || '—'} • {fmtDateTime(conv.created_at)}
                                         </div>
                                     )}
                                 </div>

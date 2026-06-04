@@ -35,7 +35,9 @@ const ChatWidget = () => {
     const [messages, setMessages] = useState([]);
     const [history, setHistory] = useState([]);
     const [input, setInput] = useState('');
-    const [name, setName] = useState('');
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [phone, setPhone] = useState('');
     const [email, setEmail] = useState('');
     const [unread, setUnread] = useState(0);
     const [sending, setSending] = useState(false);
@@ -60,7 +62,9 @@ const ChatWidget = () => {
     // Prefill (and lock) the contact fields for logged-in users.
     useEffect(() => {
         if (user) {
-            setName([user.firstName, user.lastName].filter(Boolean).join(' ').trim());
+            setFirstName(user.firstName || '');
+            setLastName(user.lastName || '');
+            setPhone(user.phone || '');
             setEmail(user.email || '');
         }
     }, [user]);
@@ -198,9 +202,11 @@ const ChatWidget = () => {
     const send = async () => {
         const body = input.trim();
         if (!body || sending) return;
-        // Name + email are mandatory for anonymous visitors before the first message.
+        // First/last name, phone + email are mandatory for anonymous visitors.
         if (showLead) {
-            if (!name.trim() || !email.trim()) { setLeadErr(t('chat.leadRequired')); return; }
+            if (!firstName.trim() || !lastName.trim() || !phone.trim() || !email.trim()) {
+                setLeadErr(t('chat.leadRequired')); return;
+            }
             if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) { setLeadErr(t('chat.invalidEmail')); return; }
         }
         setLeadErr('');
@@ -217,8 +223,9 @@ const ChatWidget = () => {
                 auth: true,
                 body: {
                     body,
-                    name: name.trim(),
+                    name: [firstName.trim(), lastName.trim()].filter(Boolean).join(' '),
                     email: email.trim(),
+                    phone: phone.trim(),
                     lang,
                     conversationId: convIdRef.current || undefined,
                     newSession: forceNew.current || undefined,
@@ -414,9 +421,11 @@ const ChatWidget = () => {
                                 <div style={{ padding: 10 }}>
                                     {showLead && (
                                         <>
-                                            <div style={{ display: 'flex', gap: 6, marginBottom: leadErr ? 6 : 8 }}>
-                                                <input value={name} onChange={(e) => { setName(e.target.value); if (leadErr) setLeadErr(''); }} placeholder={`${t('chat.name')} *`} style={inS} />
-                                                <input value={email} onChange={(e) => { setEmail(e.target.value); if (leadErr) setLeadErr(''); }} type="email" placeholder={`${t('chat.email')} *`} style={inS} />
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 6 }}>
+                                                <input value={firstName} onChange={(e) => { setFirstName(e.target.value); if (leadErr) setLeadErr(''); }} placeholder={`${t('auth.firstName')} *`} autoComplete="given-name" style={inS} />
+                                                <input value={lastName} onChange={(e) => { setLastName(e.target.value); if (leadErr) setLeadErr(''); }} placeholder={`${t('auth.lastName')} *`} autoComplete="family-name" style={inS} />
+                                                <input value={phone} onChange={(e) => { setPhone(e.target.value); if (leadErr) setLeadErr(''); }} type="tel" placeholder={`${t('auth.phone')} *`} autoComplete="tel" style={inS} />
+                                                <input value={email} onChange={(e) => { setEmail(e.target.value); if (leadErr) setLeadErr(''); }} type="email" placeholder={`${t('chat.email')} *`} autoComplete="email" style={inS} />
                                             </div>
                                             {leadErr && (
                                                 <div style={{ color: '#fca5a5', fontSize: '0.74rem', marginBottom: 8 }}>{leadErr}</div>

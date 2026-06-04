@@ -193,6 +193,7 @@ CREATE TABLE IF NOT EXISTS chat_conversations (
     user_id        INTEGER,                               -- set when logged in
     visitor_name   TEXT DEFAULT '',
     visitor_email  TEXT DEFAULT '',
+    visitor_phone  TEXT DEFAULT '',
     status         TEXT DEFAULT 'open',                   -- open | closed
     lang           TEXT DEFAULT '',                       -- visitor UI language (en|tr|de|ru|fr|ar)
     admin_unread   INTEGER DEFAULT 0,                     -- visitor msgs admin hasn't read

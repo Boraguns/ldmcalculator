@@ -1,5 +1,5 @@
 // Public live-chat endpoint (polling based). One serverless function.
-//   POST /api/chat/send  { body, name?, email?, conversationId?, newSession?, lang? }
+//   POST /api/chat/send  { body, name?, email?, phone?, conversationId?, newSession?, lang? }
 //   GET  /api/chat/poll?after=<id>&seen=<0|1>&id=<conv?>   → fetch new messages
 //   GET  /api/chat/list                                    → visitor's conversations
 //   POST /api/chat/close { conversationId }                → visitor closes a chat
@@ -45,6 +45,7 @@ async function handleSend(req, res, { visitorKey, user }) {
 
     const name = (b?.name || '').toString().slice(0, 120).trim();
     const email = (b?.email || '').toString().slice(0, 200).trim();
+    const phone = (b?.phone || '').toString().slice(0, 40).trim();
     const lang = (b?.lang || '').toString().slice(0, 8).trim();
     const newSession = b?.newSession === true || b?.newSession === 'true';
     const wantId = parseInt(b?.conversationId, 10) || 0;
@@ -53,6 +54,7 @@ async function handleSend(req, res, { visitorKey, user }) {
 
     const fullName = name || (user ? [user.first_name, user.last_name].filter(Boolean).join(' ') : '');
     const mail = email || user?.email || '';
+    const tel = phone || user?.phone || '';
 
     // Refuse messages from a blocked IP or email (spam/abuse control).
     if (await isBlocked(ip, mail)) return json(res, 403, { error: 'blocked' });
@@ -72,9 +74,9 @@ async function handleSend(req, res, { visitorKey, user }) {
     if (!conv) {
         const rows = await sql`
             INSERT INTO chat_conversations
-                (visitor_key, user_id, visitor_name, visitor_email, status, lang,
+                (visitor_key, user_id, visitor_name, visitor_email, visitor_phone, status, lang,
                  admin_unread, visitor_unread, last_message, last_sender, ip, user_agent)
-            VALUES (${visitorKey}, ${user?.id || null}, ${fullName}, ${mail}, 'open', ${lang},
+            VALUES (${visitorKey}, ${user?.id || null}, ${fullName}, ${mail}, ${tel}, 'open', ${lang},
                     1, 0, ${preview(body)}, 'visitor', ${ip}, ${ua})
             RETURNING *`;
         conv = rows[0];
@@ -89,6 +91,7 @@ async function handleSend(req, res, { visitorKey, user }) {
                 last_message_at = NOW(),
                 visitor_name  = CASE WHEN visitor_name = '' THEN ${fullName} ELSE visitor_name END,
                 visitor_email = CASE WHEN visitor_email = '' THEN ${mail} ELSE visitor_email END,
+                visitor_phone = CASE WHEN visitor_phone = '' THEN ${tel} ELSE visitor_phone END,
                 lang          = CASE WHEN lang = '' THEN ${lang} ELSE lang END,
                 user_id       = COALESCE(user_id, ${user?.id || null})
             WHERE id = ${conv.id}`;
