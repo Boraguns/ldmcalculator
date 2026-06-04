@@ -215,3 +215,14 @@ CREATE TABLE IF NOT EXISTS chat_messages (
     created_at      TIMESTAMPTZ DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_chat_msg_conv ON chat_messages(conversation_id, id);
+
+-- Spam/abuse blocklist: an admin can ban an IP or email so the public chat
+-- endpoint refuses further messages from that source.
+CREATE TABLE IF NOT EXISTS chat_blocks (
+    id          SERIAL PRIMARY KEY,
+    type        TEXT NOT NULL,                            -- ip | email
+    value       TEXT NOT NULL,
+    reason      TEXT DEFAULT '',
+    created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_chat_block_uniq ON chat_blocks(type, value);

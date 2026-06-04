@@ -40,6 +40,7 @@ const ChatWidget = () => {
     const [unread, setUnread] = useState(0);
     const [sending, setSending] = useState(false);
     const [idleLeft, setIdleLeft] = useState(null);  // seconds left before auto-close, or null
+    const [blocked, setBlocked] = useState(false);   // admin blocked this IP/email
 
     const lastId = useRef(0);
     const timer = useRef(null);
@@ -152,6 +153,16 @@ const ChatWidget = () => {
 
     const stayOpen = () => { lastActivity.current = Date.now(); setIdleLeft(null); };
 
+    // Visitor ends their own conversation.
+    const endConversation = async () => {
+        const id = convIdRef.current;
+        if (!id) return;
+        setIdleLeft(null);
+        try { await api('/api/chat/close', { method: 'POST', auth: true, body: { conversationId: id } }); }
+        catch { /* ignore */ }
+        setConvStatus('closed');
+    };
+
     const startNew = () => {
         forceNew.current = true;
         lastActivity.current = Date.now();
@@ -161,6 +172,7 @@ const ChatWidget = () => {
         setConvStatus(null);
         setMessages([]);
         setIdleLeft(null);
+        setBlocked(false);
         viewRef.current = 'chat';
         setView('chat');
     };
@@ -215,10 +227,11 @@ const ChatWidget = () => {
                 lastId.current = next.reduce((a, m) => Math.max(a, m.id), lastId.current);
                 return next;
             });
-        } catch {
+        } catch (e) {
             // Roll back the optimistic message on failure.
             setMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
-            setInput(body);
+            if (e?.status === 403) setBlocked(true);  // admin blocked this IP/email
+            else setInput(body);
         } finally {
             setSending(false);
         }
@@ -353,10 +366,18 @@ const ChatWidget = () => {
                         </div>
                     )}
 
-                    {/* Footer: idle warning + composer, or the closed notice */}
+                    {/* Footer: idle warning + composer, or the closed/blocked notice */}
                     {view === 'chat' && (
                         <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', background: '#0b1220' }}>
-                            {idleLeft !== null && !isClosed && (
+                            {!isClosed && !blocked && convId && (
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '6px 10px 0' }}>
+                                    <button onClick={endConversation} style={{
+                                        background: 'transparent', border: 'none', color: '#94a3b8',
+                                        fontSize: '0.72rem', cursor: 'pointer', textDecoration: 'underline', padding: 0,
+                                    }}>{t('chat.end')}</button>
+                                </div>
+                            )}
+                            {idleLeft !== null && !isClosed && !blocked && (
                                 <div style={{
                                     display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px',
                                     background: 'rgba(234,179,8,0.12)', color: '#fde68a', fontSize: '0.76rem',
@@ -369,7 +390,11 @@ const ChatWidget = () => {
                                 </div>
                             )}
 
-                            {isClosed ? (
+                            {blocked ? (
+                                <div style={{ padding: 14, textAlign: 'center', color: '#fca5a5', fontSize: '0.82rem' }}>
+                                    {t('chat.blockedNotice')}
+                                </div>
+                            ) : isClosed ? (
                                 <div style={{ padding: 12, textAlign: 'center' }}>
                                     <div style={{ color: '#94a3b8', fontSize: '0.8rem', marginBottom: 8 }}>{t('chat.closedNotice')}</div>
                                     <button onClick={startNew} style={{

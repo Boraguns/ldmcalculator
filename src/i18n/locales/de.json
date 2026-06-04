@@ -673,6 +673,8 @@
     "statusOpen": "Offen",
     "statusClosed": "Geschlossen",
     "you": "Sie",
-    "empty": "Noch keine Nachrichten."
+    "empty": "Noch keine Nachrichten.",
+    "end": "Chat beenden",
+    "blockedNotice": "Dieser Chat wurde gesperrt."
   }
 }

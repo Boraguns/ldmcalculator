@@ -37,10 +37,34 @@ export async function ensureChatTables() {
             body            TEXT NOT NULL,
             created_at      TIMESTAMPTZ DEFAULT NOW()
         )`;
+    // Spam/abuse blocklist: an admin can ban an IP or an email so further
+    // messages from that source are refused.
+    await sql`
+        CREATE TABLE IF NOT EXISTS chat_blocks (
+            id          SERIAL PRIMARY KEY,
+            type        TEXT NOT NULL,                        -- ip | email
+            value       TEXT NOT NULL,
+            reason      TEXT DEFAULT '',
+            created_at  TIMESTAMPTZ DEFAULT NOW()
+        )`;
+    await sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_chat_block_uniq ON chat_blocks(type, value)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_chat_conv_visitor ON chat_conversations(visitor_key)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_chat_conv_recent  ON chat_conversations(last_message_at DESC)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_chat_msg_conv ON chat_messages(conversation_id, id)`;
     ensured = true;
+}
+
+// True if the given IP or email is on the blocklist. Empty values never match.
+export async function isBlocked(ip, email) {
+    const addr = (ip || '').trim();
+    const mail = (email || '').toLowerCase().trim();
+    if (!addr && !mail) return false;
+    const rows = await sql`
+        SELECT 1 FROM chat_blocks
+        WHERE (type = 'ip'    AND value <> '' AND value = ${addr})
+           OR (type = 'email' AND value <> '' AND value = ${mail})
+        LIMIT 1`;
+    return rows.length > 0;
 }
 
 // One short preview line for the conversation list.

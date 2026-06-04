@@ -1491,6 +1491,8 @@ const ChatManager = () => {
     const [msgs, setMsgs] = useState([]);
     const [reply, setReply] = useState('');
     const [busy, setBusy] = useState(false);
+    const [blocks, setBlocks] = useState([]);
+    const [showBlocks, setShowBlocks] = useState(false);
     const lastId = useRef(0);
     const bodyRef = useRef(null);
     const filterRef = useRef(filter);
@@ -1530,8 +1532,38 @@ const ChatManager = () => {
         } catch { /* noop */ }
     };
 
-    // List polling (refresh + filter change).
+    const loadBlocks = async () => {
+        try {
+            const r = await fetch('/api/admin/chat?blocks=1', { headers: auth() });
+            const j = await r.json();
+            setBlocks(j.blocks || []);
+        } catch { /* noop */ }
+    };
+
+    const blockConv = async (type) => {
+        const value = type === 'ip' ? conv?.ip : conv?.visitor_email;
+        if (!value) { window.alert(type === 'ip' ? 'Bu konuşmada IP bilgisi yok.' : 'Bu konuşmada e-posta yok.'); return; }
+        const label = type === 'ip' ? `IP ${value}` : `e-posta ${value}`;
+        if (!window.confirm(`${label} engellensin mi? Bu kaynaktan gelen sohbetler reddedilecek.`)) return;
+        await fetch('/api/admin/chat', {
+            method: 'POST', headers: { ...auth(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'block', type, value }),
+        });
+        if (conv) setConv({ ...conv, status: 'closed' });
+        loadBlocks(); loadList();
+    };
+
+    const unblock = async (id) => {
+        await fetch('/api/admin/chat', {
+            method: 'POST', headers: { ...auth(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'unblock', id }),
+        });
+        loadBlocks();
+    };
+
+    // List polling (refresh + filter change) + blocklist on mount.
     useEffect(() => { loadList(); }, [filter]);
+    useEffect(() => { loadBlocks(); }, []);
     useEffect(() => { const id = setInterval(loadList, 5000); return () => clearInterval(id); }, []);
 
     // Thread polling for the selected conversation.
@@ -1590,8 +1622,29 @@ const ChatManager = () => {
 
     return (
         <div>
-            <h2 style={{ color: '#f8fafc', marginTop: 0 }}>Canlı Destek</h2>
-            <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start', height: 'calc(100vh - 130px)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                <h2 style={{ color: '#f8fafc', margin: 0, flex: 1 }}>Canlı Destek</h2>
+                <button onClick={() => { setShowBlocks((s) => !s); loadBlocks(); }} style={miniBtn(showBlocks ? '#3b82f6' : '#334155')}>
+                    Engellenenler{blocks.length > 0 ? ` (${blocks.length})` : ''}
+                </button>
+            </div>
+
+            {showBlocks && (
+                <div style={{ background: 'rgba(15,23,42,0.85)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: 12, marginBottom: 10 }}>
+                    {blocks.length === 0 && <div style={{ color: '#64748b', fontSize: '0.84rem' }}>Engellenmiş IP veya e-posta yok.</div>}
+                    {blocks.map((b) => (
+                        <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                            <span style={{ fontSize: '0.66rem', fontWeight: 700, padding: '2px 7px', borderRadius: 6, background: b.type === 'ip' ? 'rgba(59,130,246,0.2)' : 'rgba(234,179,8,0.2)', color: b.type === 'ip' ? '#93c5fd' : '#fde68a' }}>
+                                {b.type === 'ip' ? 'IP' : 'E-POSTA'}
+                            </span>
+                            <span style={{ flex: 1, minWidth: 0, color: '#e2e8f0', fontSize: '0.82rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.value}</span>
+                            <button onClick={() => unblock(b.id)} style={miniBtn('#16a34a')}>Kaldır</button>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start', height: 'calc(100vh - 170px)' }}>
                 {/* Conversation list */}
                 <div style={{ flex: '0 0 320px', display: 'flex', flexDirection: 'column', height: '100%', background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, overflow: 'hidden' }}>
                     <div style={{ display: 'flex', gap: 6, padding: 10, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
@@ -1647,6 +1700,8 @@ const ChatManager = () => {
                                 {conv?.status === 'open'
                                     ? <button onClick={() => act('close')} style={miniBtn('#334155')}>Kapat</button>
                                     : <button onClick={() => act('reopen')} style={miniBtn('#16a34a')}>Yeniden Aç</button>}
+                                {conv?.ip && <button onClick={() => blockConv('ip')} style={miniBtn('#9a3412')} title={conv.ip}>IP engelle</button>}
+                                {conv?.visitor_email && <button onClick={() => blockConv('email')} style={miniBtn('#9a3412')} title={conv.visitor_email}>E-posta engelle</button>}
                                 <button onClick={() => del(sel)} style={miniBtn('#7f1d1d')}>Sil</button>
                             </div>
 

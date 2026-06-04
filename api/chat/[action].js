@@ -9,7 +9,7 @@
 // have several conversations ("sessions"); the most recent open one is active.
 import { sql, json, readJsonBody, clientIp } from '../_lib/db.js';
 import { getOrSetAnonId, hashId, requireUser } from '../_lib/userauth.js';
-import { ensureChatTables, preview, clampBody } from '../_lib/chat.js';
+import { ensureChatTables, preview, clampBody, isBlocked } from '../_lib/chat.js';
 
 // A visitor owns conversations started on their device, plus — when logged in —
 // any conversation linked to their account (so history follows them across
@@ -53,6 +53,9 @@ async function handleSend(req, res, { visitorKey, user }) {
 
     const fullName = name || (user ? [user.first_name, user.last_name].filter(Boolean).join(' ') : '');
     const mail = email || user?.email || '';
+
+    // Refuse messages from a blocked IP or email (spam/abuse control).
+    if (await isBlocked(ip, mail)) return json(res, 403, { error: 'blocked' });
 
     // Decide which conversation receives the message.
     let conv = null;

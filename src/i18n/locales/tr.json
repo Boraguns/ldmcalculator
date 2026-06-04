@@ -672,6 +672,8 @@
     "statusOpen": "Açık",
     "statusClosed": "Kapalı",
     "you": "Siz",
-    "empty": "Henüz mesaj yok."
+    "empty": "Henüz mesaj yok.",
+    "end": "Görüşmeyi sonlandır",
+    "blockedNotice": "Bu sohbet engellendi."
   }
 }

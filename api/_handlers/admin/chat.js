@@ -3,6 +3,9 @@
 //   GET    /api/admin/chat?id=<conv>&after=<id>        → thread (marks admin read)
 //   POST   /api/admin/chat { conversationId, body }    → admin reply
 //   POST   /api/admin/chat { conversationId, action }  → close | reopen | read
+//   GET    /api/admin/chat?blocks=1                    → list IP/email blocks
+//   POST   /api/admin/chat { action:'block', type, value, reason } → add block
+//   POST   /api/admin/chat { action:'unblock', id }    → remove a block
 //   DELETE /api/admin/chat?id=<conv>                   → delete conversation + logs
 import { sql, json, requireAdmin, readJsonBody } from '../../_lib/db.js';
 import { ensureChatTables, preview, clampBody } from '../../_lib/chat.js';
@@ -60,21 +63,56 @@ async function reply(req, res, conversationId, body) {
     return json(res, 200, { ok: true, message: msg[0] });
 }
 
+async function listBlocks(req, res) {
+    const rows = await sql`SELECT id, type, value, reason, created_at FROM chat_blocks ORDER BY created_at DESC LIMIT 500`;
+    return json(res, 200, { blocks: rows });
+}
+
+async function addBlock(req, res, b) {
+    const type = (b?.type || '').toString();
+    if (type !== 'ip' && type !== 'email') return json(res, 400, { error: 'bad type' });
+    const value = type === 'email'
+        ? (b?.value || '').toString().toLowerCase().trim()
+        : (b?.value || '').toString().trim();
+    if (!value) return json(res, 400, { error: 'value required' });
+    const reason = (b?.reason || '').toString().slice(0, 300);
+    await sql`
+        INSERT INTO chat_blocks (type, value, reason)
+        VALUES (${type}, ${value}, ${reason})
+        ON CONFLICT (type, value) DO UPDATE SET reason = EXCLUDED.reason`;
+    // Close any open conversations from that source so the ban takes effect now.
+    if (type === 'ip') await sql`UPDATE chat_conversations SET status = 'closed' WHERE ip = ${value}`;
+    else await sql`UPDATE chat_conversations SET status = 'closed' WHERE LOWER(visitor_email) = ${value}`;
+    return json(res, 200, { ok: true });
+}
+
+async function removeBlock(req, res, b) {
+    const id = parseInt(b?.id, 10) || 0;
+    if (id) { await sql`DELETE FROM chat_blocks WHERE id = ${id}`; return json(res, 200, { ok: true }); }
+    const type = (b?.type || '').toString();
+    const value = (b?.value || '').toString().trim();
+    if (type && value) { await sql`DELETE FROM chat_blocks WHERE type = ${type} AND value = ${value}`; return json(res, 200, { ok: true }); }
+    return json(res, 400, { error: 'id required' });
+}
+
 export default async function handler(req, res) {
     if (!requireAdmin(req)) return json(res, 401, { error: 'unauthorized' });
     try {
         await ensureChatTables();
 
         if (req.method === 'GET') {
+            if (req.query?.blocks) return listBlocks(req, res);
             const id = parseInt(req.query?.id, 10) || 0;
             return id ? thread(req, res, id) : listConversations(req, res);
         }
 
         if (req.method === 'POST') {
             const b = await readJsonBody(req);
+            const action = (b?.action || '').toString();
+            if (action === 'block') return addBlock(req, res, b);
+            if (action === 'unblock') return removeBlock(req, res, b);
             const conversationId = parseInt(b?.conversationId, 10) || 0;
             if (!conversationId) return json(res, 400, { error: 'conversationId required' });
-            const action = (b?.action || '').toString();
             if (action === 'close') {
                 await sql`UPDATE chat_conversations SET status = 'closed' WHERE id = ${conversationId}`;
                 return json(res, 200, { ok: true });

@@ -672,6 +672,8 @@
     "statusOpen": "Ouvert",
     "statusClosed": "Fermé",
     "you": "Vous",
-    "empty": "Pas encore de messages."
+    "empty": "Pas encore de messages.",
+    "end": "Terminer le chat",
+    "blockedNotice": "Ce chat a été bloqué."
   }
 }
