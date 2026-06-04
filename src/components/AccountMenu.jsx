@@ -97,12 +97,12 @@ const AccountMenu = ({ style = {}, compact = false, height }) => {
     return (
         <div
             ref={wrapRef}
-            onMouseEnter={openNow}
-            onMouseLeave={closeSoon}
             style={{ position: 'relative', ...style }}
         >
             <div
                 className="ai-btn ai-language-switcher"
+                onMouseEnter={openNow}
+                onMouseLeave={closeSoon}
                 onClick={() => (loggedIn ? setOpen(o => !o) : go('/login'))}
                 style={{
                     padding: '2px', height: `${h}px`, cursor: 'pointer',
@@ -210,11 +210,13 @@ const AccountMenu = ({ style = {}, compact = false, height }) => {
             {/* "Go premium" caption under the button for everyone who is not yet a
                 premium subscriber (logged-out + free/trial users). Links to the
                 pricing page. Absolutely positioned so it doesn't shift the header
-                row. Stays visible (and clickable) even while the dropdown is open;
-                the dropdown opens below it (see top offset above), and a high
-                z-index keeps it tappable. */}
+                row. Hovering it does NOT open the account dropdown (no hover
+                handlers here); it is purely a click target. When the dropdown is
+                open it sits beneath the menu (lower z-index), so the menu covers
+                it instead of being pushed below it. */}
             {!isPremium && (
                 <button
+                    onMouseEnter={closeSoon}
                     onClick={(e) => { e.stopPropagation(); go('/pricing'); }}
                     style={{
                         position: 'absolute',
@@ -233,7 +235,7 @@ const AccountMenu = ({ style = {}, compact = false, height }) => {
                         padding: '3px 11px',
                         borderRadius: 999,
                         boxShadow: '0 3px 9px rgba(245,158,11,0.45)',
-                        zIndex: 1001,
+                        zIndex: 1,
                     }}
                 >
                     ★ {t('nav.goPremium')}
@@ -243,12 +245,14 @@ const AccountMenu = ({ style = {}, compact = false, height }) => {
             {open && (
                 <div
                     role="menu"
+                    onMouseEnter={openNow}
+                    onMouseLeave={closeSoon}
                     style={{
                         position: 'absolute',
-                        // Non-premium users get the "Go Premium" pill below the
-                        // button, so push the dropdown down to clear it; premium
-                        // users (no pill) keep the tight 8px gap.
-                        top: !isPremium ? 'calc(100% + 38px)' : 'calc(100% + 8px)',
+                        // Open right under the button; a high z-index keeps the
+                        // menu above the "Go Premium" pill so it covers it rather
+                        // than sitting below it.
+                        top: 'calc(100% + 8px)',
                         right: 0,
                         minWidth: '190px',
                         background: '#1a1a1a',
@@ -256,7 +260,7 @@ const AccountMenu = ({ style = {}, compact = false, height }) => {
                         borderRadius: '12px',
                         boxShadow: '0 12px 30px rgba(0,0,0,0.45)',
                         padding: '6px',
-                        zIndex: 1000
+                        zIndex: 1100
                     }}
                 >
                     {loggedIn && (
