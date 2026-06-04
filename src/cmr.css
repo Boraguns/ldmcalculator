@@ -82,16 +82,16 @@
    below) so it's never pushed to the bottom. Sticky so it follows the page as
    the tall A4 sheet scrolls. */
 .cmr-guide {
-    flex: 0 0 clamp(300px, 30%, 400px);
-    width: clamp(300px, 30%, 400px);
-    max-width: 400px;
+    flex: 0 0 clamp(360px, 38%, 500px);
+    width: clamp(360px, 38%, 500px);
+    max-width: 500px;
     align-self: flex-start;
     position: sticky;
     top: 8px;
     background: #111c33;
     border: 1px solid #243352;
     border-radius: 14px;
-    padding: 20px 22px 18px;
+    padding: 16px 18px 14px;
     color: #cbd5e1;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
     box-sizing: border-box;
@@ -122,7 +122,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 .cmr-guide-toggle {
     flex: 0 0 auto;
@@ -169,51 +169,52 @@
 .cmr-guide-reopen-icon { transform: rotate(90deg); font-weight: 800; }
 .cmr-guide-title {
     margin: 0;
-    font-size: 1.05rem;
+    font-size: 1rem;
     font-weight: 700;
     color: #f1f5f9;
 }
 .cmr-guide-intro {
-    margin: 0 0 16px;
-    font-size: 0.9rem;
-    line-height: 1.55;
+    margin: 0 0 12px;
+    font-size: 0.82rem;
+    line-height: 1.45;
     color: #94a3b8;
 }
 .cmr-guide-steps {
     list-style: none;
     margin: 0;
     padding: 0;
-    /* Single readable column inside the left sidebar. */
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
+    /* Two compact columns inside the widened sidebar so all steps fit on
+       screen without the panel running off the bottom of the viewport. */
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 14px;
 }
 .cmr-guide-steps li {
     display: flex;
-    gap: 10px;
+    gap: 8px;
     align-items: flex-start;
 }
 .cmr-guide-num {
     flex: 0 0 auto;
-    min-width: 38px;
+    min-width: 30px;
     text-align: center;
     background: #1d4ed8;
     color: #fff;
-    font-size: 0.72rem;
+    font-size: 0.66rem;
     font-weight: 700;
-    padding: 3px 6px;
-    border-radius: 8px;
+    padding: 2px 5px;
+    border-radius: 7px;
     margin-top: 1px;
 }
-.cmr-guide-text { display: flex; flex-direction: column; gap: 3px; }
-.cmr-guide-text strong { color: #e2e8f0; font-size: 0.92rem; }
-.cmr-guide-text span { color: #94a3b8; font-size: 0.85rem; line-height: 1.5; }
+.cmr-guide-text { display: flex; flex-direction: column; gap: 2px; }
+.cmr-guide-text strong { color: #e2e8f0; font-size: 0.82rem; }
+.cmr-guide-text span { color: #94a3b8; font-size: 0.76rem; line-height: 1.4; }
 .cmr-guide-tip {
-    margin: 16px 0 0;
-    padding-top: 12px;
+    margin: 12px 0 0;
+    padding-top: 10px;
     border-top: 1px solid #243352;
-    font-size: 0.85rem;
-    line-height: 1.5;
+    font-size: 0.78rem;
+    line-height: 1.45;
     color: #7dd3fc;
 }
 
