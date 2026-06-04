@@ -369,7 +369,7 @@ const Home = () => {
                     zIndex: 100,
                     width: '100%',
                     backgroundColor: '#f0f0f0',
-                    backgroundImage: 'url(/map-bg.jpg)',
+                    backgroundImage: 'url(/wide-bg.jpg)',
                     backgroundRepeat: 'no-repeat',
                     backgroundPosition: 'right bottom',
                     backgroundSize: 'contain',
