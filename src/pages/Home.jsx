@@ -368,7 +368,11 @@ const Home = () => {
                     position: 'relative',
                     zIndex: 100,
                     width: '100%',
-                    background: 'linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%)',
+                    backgroundColor: '#f0f0f0',
+                    backgroundImage: 'url(/map-bg.jpg)',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right bottom',
+                    backgroundSize: 'contain',
                     borderTop: '1px solid #e2e8f0',
                     padding: isDesktop ? '64px 32px 72px' : '44px 18px 56px',
                 }}
