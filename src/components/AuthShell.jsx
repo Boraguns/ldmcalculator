@@ -2,7 +2,7 @@
 import { Link } from 'react-router-dom';
 import { useT, LanguageSwitcher } from '../i18n/LanguageContext';
 
-export default function AuthShell({ title, subtitle, children, footer, wide = false }) {
+export default function AuthShell({ title, subtitle, children, footer, wide = false, bgImage = false }) {
     const { t } = useT();
     return (
         <div style={{
@@ -10,7 +10,15 @@ export default function AuthShell({ title, subtitle, children, footer, wide = fa
             // overflow:hidden for the calculator, so the auth pages must scroll
             // internally instead of relying on the body scrollbar.
             height: '100vh', width: '100%', overflowY: 'auto', WebkitOverflowScrolling: 'touch',
+            // When bgImage is on (login / register), layer the map image bottom-right
+            // over the dark gradient — same treatment as the home SEO section.
             background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
+            ...(bgImage ? {
+                backgroundImage: 'url(/map-bg.jpg), linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
+                backgroundRepeat: 'no-repeat, no-repeat',
+                backgroundPosition: 'right bottom, center',
+                backgroundSize: 'contain, cover',
+            } : {}),
             color: '#e2e8f0', display: 'flex', flexDirection: 'column', alignItems: 'center',
             // Top pad clears the fixed language switcher so it never overlaps the logo.
             padding: 'calc(env(safe-area-inset-top, 0px) + 72px) 20px calc(env(safe-area-inset-bottom, 0px) + 40px)',

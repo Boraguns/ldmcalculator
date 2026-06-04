@@ -78,6 +78,7 @@ export default function Register() {
             title={t('auth.registerTitle')}
             subtitle={t('auth.registerSubtitle')}
             wide={type === 'corporate'}
+            bgImage
             footer={<>{t('auth.haveAccount')} <Link to="/login" style={{ color: '#60a5fa' }}>{t('auth.loginLink')}</Link></>}
         >
             <form onSubmit={submit}>

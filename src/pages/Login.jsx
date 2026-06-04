@@ -31,6 +31,7 @@ export default function Login() {
         <AuthShell
             title={t('auth.loginTitle')}
             subtitle={t('auth.loginSubtitle')}
+            bgImage
             footer={<>{t('auth.noAccount')} <Link to="/register" style={{ color: '#60a5fa' }}>{t('auth.registerLink')}</Link></>}
         >
             <form onSubmit={submit}>
