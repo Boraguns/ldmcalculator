@@ -660,6 +660,18 @@
     "close": "Close",
     "name": "Name",
     "email": "Email",
-    "optional": "optional"
+    "optional": "optional",
+    "history": "Past chats",
+    "newChat": "New chat",
+    "back": "Back",
+    "closedNotice": "This conversation has been closed.",
+    "startNew": "Start a new chat",
+    "idleWarning": "No activity for a while — this chat will close in {sec}s.",
+    "stayOpen": "Keep chatting",
+    "noHistory": "You have no previous chats yet.",
+    "statusOpen": "Open",
+    "statusClosed": "Closed",
+    "you": "You",
+    "empty": "No messages yet."
   }
 }

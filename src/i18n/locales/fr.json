@@ -660,6 +660,18 @@
     "close": "Fermer",
     "name": "Nom",
     "email": "E-mail",
-    "optional": "facultatif"
+    "optional": "facultatif",
+    "history": "Anciens chats",
+    "newChat": "Nouveau chat",
+    "back": "Retour",
+    "closedNotice": "Cette conversation a été fermée.",
+    "startNew": "Démarrer un nouveau chat",
+    "idleWarning": "Aucune activité — ce chat se fermera dans {sec}s.",
+    "stayOpen": "Continuer le chat",
+    "noHistory": "Vous n'avez pas encore de chats.",
+    "statusOpen": "Ouvert",
+    "statusClosed": "Fermé",
+    "you": "Vous",
+    "empty": "Pas encore de messages."
   }
 }

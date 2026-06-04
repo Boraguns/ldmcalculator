@@ -661,6 +661,18 @@
     "close": "Schließen",
     "name": "Name",
     "email": "E-Mail",
-    "optional": "optional"
+    "optional": "optional",
+    "history": "Frühere Chats",
+    "newChat": "Neuer Chat",
+    "back": "Zurück",
+    "closedNotice": "Diese Unterhaltung wurde geschlossen.",
+    "startNew": "Neuen Chat starten",
+    "idleWarning": "Längere Zeit keine Aktivität — der Chat schließt in {sec}s.",
+    "stayOpen": "Weiter chatten",
+    "noHistory": "Sie haben noch keine früheren Chats.",
+    "statusOpen": "Offen",
+    "statusClosed": "Geschlossen",
+    "you": "Sie",
+    "empty": "Noch keine Nachrichten."
   }
 }

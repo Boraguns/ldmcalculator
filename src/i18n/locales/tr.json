@@ -660,6 +660,18 @@
     "close": "Kapat",
     "name": "Ad",
     "email": "E-posta",
-    "optional": "isteğe bağlı"
+    "optional": "isteğe bağlı",
+    "history": "Geçmiş görüşmeler",
+    "newChat": "Yeni görüşme",
+    "back": "Geri",
+    "closedNotice": "Bu görüşme kapatıldı.",
+    "startNew": "Yeni görüşme başlat",
+    "idleWarning": "Bir süredir yanıt yok — görüşme {sec} sn içinde kapanacak.",
+    "stayOpen": "Görüşmeye devam et",
+    "noHistory": "Henüz görüşmeniz yok.",
+    "statusOpen": "Açık",
+    "statusClosed": "Kapalı",
+    "you": "Siz",
+    "empty": "Henüz mesaj yok."
   }
 }

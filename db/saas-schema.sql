@@ -183,9 +183,10 @@ CREATE TABLE IF NOT EXISTS reference_companies (
 CREATE INDEX IF NOT EXISTS idx_reference_companies_sort ON reference_companies(sort_order, id);
 
 -- --- Live chat (visitor ⇄ admin support) -----------------------------------
--- A simple polling-based live chat. Each visitor (anonymous device or logged-in
--- user) gets one conversation; messages stream both ways. The admin panel polls
--- the same tables. visitor_key is a hashed anon-device id (see _lib/userauth).
+-- A simple polling-based live chat. A visitor (anonymous device or logged-in
+-- user) may keep several conversations ("sessions"); an idle one auto-closes and
+-- a fresh one can be started. Messages stream both ways and the admin panel
+-- polls the same tables. visitor_key is a hashed anon-device id (see userauth).
 CREATE TABLE IF NOT EXISTS chat_conversations (
     id             SERIAL PRIMARY KEY,
     visitor_key    TEXT NOT NULL,                         -- hashed anon device id
@@ -193,6 +194,7 @@ CREATE TABLE IF NOT EXISTS chat_conversations (
     visitor_name   TEXT DEFAULT '',
     visitor_email  TEXT DEFAULT '',
     status         TEXT DEFAULT 'open',                   -- open | closed
+    lang           TEXT DEFAULT '',                       -- visitor UI language (en|tr|de|ru|fr|ar)
     admin_unread   INTEGER DEFAULT 0,                     -- visitor msgs admin hasn't read
     visitor_unread INTEGER DEFAULT 0,                     -- admin msgs visitor hasn't read
     last_message   TEXT DEFAULT '',                       -- preview of the latest message

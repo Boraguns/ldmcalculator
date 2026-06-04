@@ -1479,6 +1479,9 @@ const UsersManager = () => {
 const fmtDateTime = (iso) => { try { return new Date(iso).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }); } catch { return ''; } };
 const fmtTime = (iso) => { try { return new Date(iso).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }); } catch { return ''; } };
 
+// Conversation language → flag for the chat tab (mirrors SUPPORTED_LANGS).
+const LANG_FLAGS = { en: '🇬🇧', tr: '🇹🇷', de: '🇩🇪', ru: '🇷🇺', fr: '🇫🇷', ar: '🇸🇦' };
+
 const ChatManager = () => {
     const [convs, setConvs] = useState([]);
     const [filter, setFilter] = useState('all');   // all | open | closed
@@ -1582,6 +1585,7 @@ const ChatManager = () => {
 
     const FILTERS = [['all', 'Tümü'], ['open', 'Açık'], ['closed', 'Kapalı']];
     const visitorLabel = (c) => c.visitor_name?.trim() || c.visitor_email?.trim() || (c.user_id ? `Üye #${c.user_id}` : `Ziyaretçi #${c.id}`);
+    const langFlag = (code) => LANG_FLAGS[(code || '').toLowerCase()] || '';
 
     return (
         <div>
@@ -1606,6 +1610,7 @@ const ChatManager = () => {
                                 borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '10px 12px', fontFamily: 'inherit',
                             }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                    {langFlag(c.lang) && <span title={c.lang} style={{ fontSize: '0.95rem', lineHeight: 1 }}>{langFlag(c.lang)}</span>}
                                     <span style={{ flex: 1, minWidth: 0, color: '#e2e8f0', fontWeight: 600, fontSize: '0.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{visitorLabel(c)}</span>
                                     {c.status === 'closed' && <span style={{ color: '#64748b', fontSize: '0.66rem', border: '1px solid #334155', borderRadius: 6, padding: '0 5px' }}>kapalı</span>}
                                     {c.admin_unread > 0 && <span style={{ background: '#ef4444', color: '#fff', borderRadius: 999, fontSize: '0.66rem', fontWeight: 800, minWidth: 18, height: 18, lineHeight: '18px', textAlign: 'center', padding: '0 5px' }}>{c.admin_unread}</span>}
@@ -1628,7 +1633,10 @@ const ChatManager = () => {
                             {/* Thread header + visitor meta */}
                             <div style={{ padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                                 <div style={{ flex: 1, minWidth: 0 }}>
-                                    <div style={{ color: '#f1f5f9', fontWeight: 700 }}>{conv ? visitorLabel(conv) : '…'}</div>
+                                    <div style={{ color: '#f1f5f9', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                        {conv && langFlag(conv.lang) && <span title={conv.lang} style={{ fontSize: '1.05rem', lineHeight: 1 }}>{langFlag(conv.lang)}</span>}
+                                        {conv ? visitorLabel(conv) : '…'}
+                                    </div>
                                     {conv && (
                                         <div style={{ color: '#64748b', fontSize: '0.72rem' }}>
                                             {conv.visitor_email ? conv.visitor_email + ' • ' : ''}{conv.user_id ? 'Üye #' + conv.user_id + ' • ' : ''}IP: {conv.ip || '—'} • {fmtDateTime(conv.created_at)}

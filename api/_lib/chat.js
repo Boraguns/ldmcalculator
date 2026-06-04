@@ -17,6 +17,7 @@ export async function ensureChatTables() {
             visitor_name    TEXT DEFAULT '',
             visitor_email   TEXT DEFAULT '',
             status          TEXT DEFAULT 'open',
+            lang            TEXT DEFAULT '',
             admin_unread    INTEGER DEFAULT 0,
             visitor_unread  INTEGER DEFAULT 0,
             last_message    TEXT DEFAULT '',
@@ -26,6 +27,8 @@ export async function ensureChatTables() {
             user_agent      TEXT DEFAULT '',
             created_at      TIMESTAMPTZ DEFAULT NOW()
         )`;
+    // Self-migration for tables provisioned before the multi-session work.
+    await sql`ALTER TABLE chat_conversations ADD COLUMN IF NOT EXISTS lang TEXT DEFAULT ''`;
     await sql`
         CREATE TABLE IF NOT EXISTS chat_messages (
             id              SERIAL PRIMARY KEY,
