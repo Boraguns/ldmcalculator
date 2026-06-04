@@ -210,8 +210,10 @@ const AccountMenu = ({ style = {}, compact = false, height }) => {
             {/* "Go premium" caption under the button for everyone who is not yet a
                 premium subscriber (logged-out + free/trial users). Links to the
                 pricing page. Absolutely positioned so it doesn't shift the header
-                row; hidden while the dropdown is open. */}
-            {!isPremium && !open && (
+                row. Stays visible (and clickable) even while the dropdown is open;
+                the dropdown opens below it (see top offset above), and a high
+                z-index keeps it tappable. */}
+            {!isPremium && (
                 <button
                     onClick={(e) => { e.stopPropagation(); go('/pricing'); }}
                     style={{
@@ -231,7 +233,7 @@ const AccountMenu = ({ style = {}, compact = false, height }) => {
                         padding: '3px 11px',
                         borderRadius: 999,
                         boxShadow: '0 3px 9px rgba(245,158,11,0.45)',
-                        zIndex: 1,
+                        zIndex: 1001,
                     }}
                 >
                     ★ {t('nav.goPremium')}
@@ -243,7 +245,10 @@ const AccountMenu = ({ style = {}, compact = false, height }) => {
                     role="menu"
                     style={{
                         position: 'absolute',
-                        top: 'calc(100% + 8px)',
+                        // Non-premium users get the "Go Premium" pill below the
+                        // button, so push the dropdown down to clear it; premium
+                        // users (no pill) keep the tight 8px gap.
+                        top: !isPremium ? 'calc(100% + 38px)' : 'calc(100% + 8px)',
                         right: 0,
                         minWidth: '190px',
                         background: '#1a1a1a',
