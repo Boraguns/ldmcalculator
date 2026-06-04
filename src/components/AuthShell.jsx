@@ -18,8 +18,8 @@ export default function AuthShell({ title, subtitle, children, footer, wide = fa
                 backgroundColor: '#f0f0f0',
                 backgroundImage: 'url(/wide-bg.jpg)',
                 backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'right bottom',
-                backgroundSize: 'contain',
+                backgroundPosition: 'center bottom',
+                backgroundSize: 'cover',
             } : {}),
             color: '#e2e8f0', display: 'flex', flexDirection: 'column', alignItems: 'center',
             // Top pad clears the fixed language switcher so it never overlaps the logo.

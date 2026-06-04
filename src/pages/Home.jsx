@@ -371,8 +371,8 @@ const Home = () => {
                     backgroundColor: '#f0f0f0',
                     backgroundImage: 'url(/wide-bg.jpg)',
                     backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'right bottom',
-                    backgroundSize: 'contain',
+                    backgroundPosition: 'center bottom',
+                    backgroundSize: 'cover',
                     borderTop: '1px solid #e2e8f0',
                     padding: isDesktop ? '64px 32px 72px' : '44px 18px 56px',
                 }}
