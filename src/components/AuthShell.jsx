@@ -16,7 +16,7 @@ export default function AuthShell({ title, subtitle, children, footer, wide = fa
             background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
             ...(bgImage ? {
                 backgroundColor: '#f0f0f0',
-                backgroundImage: 'url(/map-bg.jpg)',
+                backgroundImage: 'url(/wide-bg.jpg)',
                 backgroundRepeat: 'no-repeat',
                 backgroundPosition: 'right bottom',
                 backgroundSize: 'contain',
