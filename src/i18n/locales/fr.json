@@ -674,6 +674,9 @@
     "you": "Vous",
     "empty": "Pas encore de messages.",
     "end": "Terminer le chat",
-    "blockedNotice": "Ce chat a été bloqué."
+    "blockedNotice": "Ce chat a été bloqué.",
+    "required": "obligatoire",
+    "leadRequired": "Veuillez saisir votre nom et votre e-mail pour commencer.",
+    "invalidEmail": "Veuillez saisir une adresse e-mail valide."
   }
 }

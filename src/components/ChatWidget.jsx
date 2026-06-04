@@ -41,6 +41,7 @@ const ChatWidget = () => {
     const [sending, setSending] = useState(false);
     const [idleLeft, setIdleLeft] = useState(null);  // seconds left before auto-close, or null
     const [blocked, setBlocked] = useState(false);   // admin blocked this IP/email
+    const [leadErr, setLeadErr] = useState('');      // name/email validation message
 
     const lastId = useRef(0);
     const timer = useRef(null);
@@ -173,6 +174,7 @@ const ChatWidget = () => {
         setMessages([]);
         setIdleLeft(null);
         setBlocked(false);
+        setLeadErr('');
         viewRef.current = 'chat';
         setView('chat');
     };
@@ -196,6 +198,12 @@ const ChatWidget = () => {
     const send = async () => {
         const body = input.trim();
         if (!body || sending) return;
+        // Name + email are mandatory for anonymous visitors before the first message.
+        if (showLead) {
+            if (!name.trim() || !email.trim()) { setLeadErr(t('chat.leadRequired')); return; }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) { setLeadErr(t('chat.invalidEmail')); return; }
+        }
+        setLeadErr('');
         setSending(true);
         lastActivity.current = Date.now();
         setIdleLeft(null);
@@ -405,10 +413,15 @@ const ChatWidget = () => {
                             ) : (
                                 <div style={{ padding: 10 }}>
                                     {showLead && (
-                                        <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
-                                            <input value={name} onChange={(e) => setName(e.target.value)} placeholder={`${t('chat.name')} (${t('chat.optional')})`} style={inS} />
-                                            <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder={`${t('chat.email')} (${t('chat.optional')})`} style={inS} />
-                                        </div>
+                                        <>
+                                            <div style={{ display: 'flex', gap: 6, marginBottom: leadErr ? 6 : 8 }}>
+                                                <input value={name} onChange={(e) => { setName(e.target.value); if (leadErr) setLeadErr(''); }} placeholder={`${t('chat.name')} *`} style={inS} />
+                                                <input value={email} onChange={(e) => { setEmail(e.target.value); if (leadErr) setLeadErr(''); }} type="email" placeholder={`${t('chat.email')} *`} style={inS} />
+                                            </div>
+                                            {leadErr && (
+                                                <div style={{ color: '#fca5a5', fontSize: '0.74rem', marginBottom: 8 }}>{leadErr}</div>
+                                            )}
+                                        </>
                                     )}
                                     <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
                                         <textarea

@@ -675,6 +675,9 @@
     "you": "Sie",
     "empty": "Noch keine Nachrichten.",
     "end": "Chat beenden",
-    "blockedNotice": "Dieser Chat wurde gesperrt."
+    "blockedNotice": "Dieser Chat wurde gesperrt.",
+    "required": "erforderlich",
+    "leadRequired": "Bitte geben Sie Ihren Namen und Ihre E-Mail-Adresse ein.",
+    "invalidEmail": "Bitte geben Sie eine gültige E-Mail-Adresse ein."
   }
 }

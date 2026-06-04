@@ -674,6 +674,9 @@
     "you": "Siz",
     "empty": "Henüz mesaj yok.",
     "end": "Görüşmeyi sonlandır",
-    "blockedNotice": "Bu sohbet engellendi."
+    "blockedNotice": "Bu sohbet engellendi.",
+    "required": "zorunlu",
+    "leadRequired": "Başlamak için lütfen adınızı ve e-postanızı girin.",
+    "invalidEmail": "Lütfen geçerli bir e-posta adresi girin."
   }
 }
