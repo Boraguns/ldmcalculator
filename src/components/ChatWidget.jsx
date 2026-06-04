@@ -139,8 +139,10 @@ const ChatWidget = () => {
                     }}>
                         <span style={{
                             width: 34, height: 34, borderRadius: '50%', background: 'rgba(255,255,255,0.18)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem',
-                        }}>💬</span>
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+                        }}>
+                            <img src="/chat.png" alt="" aria-hidden="true" style={{ width: 24, height: 24, objectFit: 'contain', display: 'block' }} />
+                        </span>
                         <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{t('chat.title')}</div>
                             <div style={{ fontSize: '0.72rem', opacity: 0.85 }}>{t('chat.subtitle')}</div>
