@@ -10,14 +10,16 @@ export default function AuthShell({ title, subtitle, children, footer, wide = fa
             // overflow:hidden for the calculator, so the auth pages must scroll
             // internally instead of relying on the body scrollbar.
             height: '100vh', width: '100%', overflowY: 'auto', WebkitOverflowScrolling: 'touch',
-            // When bgImage is on (login / register), layer the map image bottom-right
-            // over the dark gradient — same treatment as the home SEO section.
+            // When bgImage is on (login / register) use the light theme: a #f0f0f0
+            // backdrop with the map image bottom-right — same as the home SEO section.
+            // Otherwise keep the dark gradient (reset / verify / accept-invite).
             background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
             ...(bgImage ? {
-                backgroundImage: 'url(/map-bg.jpg), linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
-                backgroundRepeat: 'no-repeat, no-repeat',
-                backgroundPosition: 'right bottom, center',
-                backgroundSize: 'contain, cover',
+                backgroundColor: '#f0f0f0',
+                backgroundImage: 'url(/map-bg.jpg)',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'right bottom',
+                backgroundSize: 'contain',
             } : {}),
             color: '#e2e8f0', display: 'flex', flexDirection: 'column', alignItems: 'center',
             // Top pad clears the fixed language switcher so it never overlaps the logo.
@@ -27,7 +29,8 @@ export default function AuthShell({ title, subtitle, children, footer, wide = fa
                 <LanguageSwitcher height={40} compact />
             </div>
             <Link to="/" style={{ marginBottom: 24, maxWidth: '70%' }}>
-                <img src="/src/ldm-calculator-beyaz-logo.png" alt="LDM" style={{ width: 190, maxWidth: '100%', height: 'auto' }} />
+                {/* Light backdrop → original colour logo; dark backdrop → white logo. */}
+                <img src={bgImage ? '/src/ldm-calculator-logo.png' : '/src/ldm-calculator-beyaz-logo.png'} alt="LDM" style={{ width: 190, maxWidth: '100%', height: 'auto' }} />
             </Link>
             <div style={{
                 width: '100%', maxWidth: wide ? 640 : 420,
@@ -38,8 +41,8 @@ export default function AuthShell({ title, subtitle, children, footer, wide = fa
                 {subtitle && <p style={{ color: '#94a3b8', textAlign: 'center', margin: '0 0 22px', fontSize: '0.92rem' }}>{subtitle}</p>}
                 {children}
             </div>
-            {footer && <div style={{ marginTop: 18, color: '#94a3b8', fontSize: '0.9rem' }}>{footer}</div>}
-            <Link to="/" style={{ marginTop: 18, color: '#64748b', textDecoration: 'none', fontSize: '0.85rem' }}>
+            {footer && <div style={{ marginTop: 18, color: bgImage ? '#475569' : '#94a3b8', fontSize: '0.9rem' }}>{footer}</div>}
+            <Link to="/" style={{ marginTop: 18, color: bgImage ? '#475569' : '#64748b', textDecoration: 'none', fontSize: '0.85rem' }}>
                 ← {t('viewer.backHome')}
             </Link>
         </div>
