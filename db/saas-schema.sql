@@ -181,3 +181,35 @@ CREATE TABLE IF NOT EXISTS reference_companies (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_reference_companies_sort ON reference_companies(sort_order, id);
+
+-- --- Live chat (visitor ⇄ admin support) -----------------------------------
+-- A simple polling-based live chat. Each visitor (anonymous device or logged-in
+-- user) gets one conversation; messages stream both ways. The admin panel polls
+-- the same tables. visitor_key is a hashed anon-device id (see _lib/userauth).
+CREATE TABLE IF NOT EXISTS chat_conversations (
+    id             SERIAL PRIMARY KEY,
+    visitor_key    TEXT NOT NULL,                         -- hashed anon device id
+    user_id        INTEGER,                               -- set when logged in
+    visitor_name   TEXT DEFAULT '',
+    visitor_email  TEXT DEFAULT '',
+    status         TEXT DEFAULT 'open',                   -- open | closed
+    admin_unread   INTEGER DEFAULT 0,                     -- visitor msgs admin hasn't read
+    visitor_unread INTEGER DEFAULT 0,                     -- admin msgs visitor hasn't read
+    last_message   TEXT DEFAULT '',                       -- preview of the latest message
+    last_sender    TEXT DEFAULT '',                       -- visitor | admin
+    last_message_at TIMESTAMPTZ DEFAULT NOW(),
+    ip             TEXT DEFAULT '',
+    user_agent     TEXT DEFAULT '',
+    created_at     TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_chat_conv_visitor ON chat_conversations(visitor_key);
+CREATE INDEX IF NOT EXISTS idx_chat_conv_recent  ON chat_conversations(last_message_at DESC);
+
+CREATE TABLE IF NOT EXISTS chat_messages (
+    id              SERIAL PRIMARY KEY,
+    conversation_id INTEGER NOT NULL REFERENCES chat_conversations(id) ON DELETE CASCADE,
+    sender          TEXT NOT NULL,                        -- visitor | admin
+    body            TEXT NOT NULL,
+    created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_chat_msg_conv ON chat_messages(conversation_id, id);

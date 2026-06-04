@@ -649,5 +649,17 @@
       "show": "Kılavuzu göster",
       "hide": "Kılavuzu gizle"
     }
+  },
+  "chat": {
+    "title": "Canlı destek",
+    "subtitle": "Genellikle birkaç dakikada yanıtlıyoruz",
+    "greeting": "Merhaba! 👋 Size nasıl yardımcı olabiliriz?",
+    "placeholder": "Mesajınızı yazın…",
+    "send": "Gönder",
+    "open": "Canlı sohbeti aç",
+    "close": "Kapat",
+    "name": "Ad",
+    "email": "E-posta",
+    "optional": "isteğe bağlı"
   }
 }

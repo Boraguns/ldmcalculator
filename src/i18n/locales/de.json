@@ -650,5 +650,17 @@
       "show": "Anleitung anzeigen",
       "hide": "Anleitung ausblenden"
     }
+  },
+  "chat": {
+    "title": "Live-Support",
+    "subtitle": "Wir antworten meist in wenigen Minuten",
+    "greeting": "Hallo! 👋 Wie können wir helfen?",
+    "placeholder": "Nachricht eingeben…",
+    "send": "Senden",
+    "open": "Live-Chat öffnen",
+    "close": "Schließen",
+    "name": "Name",
+    "email": "E-Mail",
+    "optional": "optional"
   }
 }

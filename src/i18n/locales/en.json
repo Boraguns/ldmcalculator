@@ -649,5 +649,17 @@
       "show": "Show guide",
       "hide": "Hide guide"
     }
+  },
+  "chat": {
+    "title": "Live support",
+    "subtitle": "We typically reply in a few minutes",
+    "greeting": "Hi! 👋 How can we help you today?",
+    "placeholder": "Type your message…",
+    "send": "Send",
+    "open": "Open live chat",
+    "close": "Close",
+    "name": "Name",
+    "email": "Email",
+    "optional": "optional"
   }
 }

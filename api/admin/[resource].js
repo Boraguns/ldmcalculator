@@ -7,6 +7,7 @@ import references from '../_handlers/admin/references.js';
 import documents from '../_handlers/admin/documents.js';
 import login from '../_handlers/admin/login.js';
 import messages from '../_handlers/admin/messages.js';
+import chat from '../_handlers/admin/chat.js';
 import productNames from '../_handlers/admin/product-names.js';
 import siteAssets from '../_handlers/admin/site-assets.js';
 import translations from '../_handlers/admin/translations.js';
@@ -24,6 +25,7 @@ const HANDLERS = {
     'documents': documents,
     'login': login,
     'messages': messages,
+    'chat': chat,
     'product-names': productNames,
     'site-assets': siteAssets,
     'translations': translations,

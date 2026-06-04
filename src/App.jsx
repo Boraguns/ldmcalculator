@@ -30,6 +30,7 @@ import AcceptInvite from './pages/AcceptInvite';
 import Kvkk from './pages/legal/Kvkk';
 import ExplicitConsent from './pages/legal/ExplicitConsent';
 import RefundPolicy from './pages/legal/RefundPolicy';
+import ChatWidget from './components/ChatWidget';
 
 const MODE_META = {
     truck: {
@@ -681,6 +682,8 @@ function App() {
                     <Route path="/legal/refund-policy" element={<RefundPolicy />} />
                     <Route path="/admin" element={<Admin />} />
                 </Routes>
+                {/* Floating live-chat — renders on every page except /admin */}
+                <ChatWidget />
             </UsageProvider>
         </Router>
     );

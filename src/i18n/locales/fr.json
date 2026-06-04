@@ -649,5 +649,17 @@
       "show": "Afficher le guide",
       "hide": "Masquer le guide"
     }
+  },
+  "chat": {
+    "title": "Support en direct",
+    "subtitle": "Nous répondons en quelques minutes",
+    "greeting": "Bonjour ! 👋 Comment pouvons-nous vous aider ?",
+    "placeholder": "Saisissez votre message…",
+    "send": "Envoyer",
+    "open": "Ouvrir le chat",
+    "close": "Fermer",
+    "name": "Nom",
+    "email": "E-mail",
+    "optional": "facultatif"
   }
 }

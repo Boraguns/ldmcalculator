@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { PROMO_FREE } from '../utils/promo';
 // Bundled JSON dictionaries — used as the "default" column in the site
 // content editor so admins can see what they're overriding.
@@ -1475,9 +1475,216 @@ const UsersManager = () => {
     );
 };
 
+// ---- Live chat (visitor ⇄ admin) -----------------------------------------
+const fmtDateTime = (iso) => { try { return new Date(iso).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }); } catch { return ''; } };
+const fmtTime = (iso) => { try { return new Date(iso).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }); } catch { return ''; } };
+
+const ChatManager = () => {
+    const [convs, setConvs] = useState([]);
+    const [filter, setFilter] = useState('all');   // all | open | closed
+    const [sel, setSel] = useState(null);          // selected conversation id
+    const [conv, setConv] = useState(null);        // selected conversation meta
+    const [msgs, setMsgs] = useState([]);
+    const [reply, setReply] = useState('');
+    const [busy, setBusy] = useState(false);
+    const lastId = useRef(0);
+    const bodyRef = useRef(null);
+    const filterRef = useRef(filter);
+    filterRef.current = filter;
+    const selRef = useRef(sel);
+    selRef.current = sel;
+
+    const loadList = async () => {
+        try {
+            const r = await fetch(`/api/admin/chat?status=${filterRef.current}`, { headers: auth() });
+            const j = await r.json();
+            setConvs(j.items || []);
+        } catch { /* noop */ }
+    };
+
+    const mergeMsgs = (incoming) => {
+        if (!incoming?.length) return;
+        setMsgs((prev) => {
+            const seen = new Set(prev.map((m) => m.id));
+            const fresh = incoming.filter((m) => !seen.has(m.id));
+            if (!fresh.length) return prev;
+            const next = [...prev, ...fresh];
+            lastId.current = next.reduce((a, m) => Math.max(a, m.id), lastId.current);
+            return next;
+        });
+    };
+
+    const openConv = async (id) => {
+        setSel(id); lastId.current = 0; setMsgs([]); setConv(null);
+        try {
+            const r = await fetch(`/api/admin/chat?id=${id}&after=0`, { headers: auth() });
+            const j = await r.json();
+            setConv(j.conversation || null);
+            setMsgs(j.messages || []);
+            lastId.current = (j.messages || []).reduce((a, m) => Math.max(a, m.id), 0);
+            loadList();
+        } catch { /* noop */ }
+    };
+
+    // List polling (refresh + filter change).
+    useEffect(() => { loadList(); }, [filter]);
+    useEffect(() => { const id = setInterval(loadList, 5000); return () => clearInterval(id); }, []);
+
+    // Thread polling for the selected conversation.
+    useEffect(() => {
+        if (!sel) return;
+        const tick = async () => {
+            try {
+                const r = await fetch(`/api/admin/chat?id=${selRef.current}&after=${lastId.current}`, { headers: auth() });
+                const j = await r.json();
+                mergeMsgs(j.messages);
+                if (j.conversation) setConv(j.conversation);
+            } catch { /* noop */ }
+        };
+        const t = setInterval(tick, 3000);
+        return () => clearInterval(t);
+    }, [sel]);
+
+    useEffect(() => { if (bodyRef.current) bodyRef.current.scrollTop = bodyRef.current.scrollHeight; }, [msgs]);
+
+    const sendReply = async () => {
+        const body = reply.trim();
+        if (!body || !sel || busy) return;
+        setBusy(true);
+        try {
+            const r = await fetch('/api/admin/chat', {
+                method: 'POST', headers: { ...auth(), 'Content-Type': 'application/json' },
+                body: JSON.stringify({ conversationId: sel, body }),
+            });
+            const j = await r.json();
+            if (j.message) mergeMsgs([j.message]);
+            setReply('');
+            loadList();
+        } finally { setBusy(false); }
+    };
+
+    const act = async (action) => {
+        if (!sel) return;
+        await fetch('/api/admin/chat', {
+            method: 'POST', headers: { ...auth(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ conversationId: sel, action }),
+        });
+        if (conv) setConv({ ...conv, status: action === 'close' ? 'closed' : 'open' });
+        loadList();
+    };
+
+    const del = async (id) => {
+        if (!window.confirm('Bu konuşmayı ve tüm mesajlarını kalıcı olarak silmek istediğinize emin misiniz?')) return;
+        await fetch(`/api/admin/chat?id=${id}`, { method: 'DELETE', headers: auth() });
+        if (sel === id) { setSel(null); setConv(null); setMsgs([]); }
+        loadList();
+    };
+
+    const FILTERS = [['all', 'Tümü'], ['open', 'Açık'], ['closed', 'Kapalı']];
+    const visitorLabel = (c) => c.visitor_name?.trim() || c.visitor_email?.trim() || (c.user_id ? `Üye #${c.user_id}` : `Ziyaretçi #${c.id}`);
+
+    return (
+        <div>
+            <h2 style={{ color: '#f8fafc', marginTop: 0 }}>Canlı Destek</h2>
+            <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start', height: 'calc(100vh - 130px)' }}>
+                {/* Conversation list */}
+                <div style={{ flex: '0 0 320px', display: 'flex', flexDirection: 'column', height: '100%', background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', gap: 6, padding: 10, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                        {FILTERS.map(([k, l]) => (
+                            <button key={k} onClick={() => setFilter(k)} style={{
+                                flex: 1, border: 'none', borderRadius: 8, padding: '6px 0', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, fontFamily: 'inherit',
+                                background: filter === k ? '#3b82f6' : '#1e293b', color: filter === k ? '#fff' : '#94a3b8',
+                            }}>{l}</button>
+                        ))}
+                    </div>
+                    <div style={{ flex: 1, overflowY: 'auto' }}>
+                        {convs.length === 0 && <div style={{ padding: 16, color: '#64748b', fontSize: '0.85rem' }}>Henüz konuşma yok.</div>}
+                        {convs.map((c) => (
+                            <button key={c.id} onClick={() => openConv(c.id)} style={{
+                                display: 'block', width: '100%', textAlign: 'left', border: 'none', cursor: 'pointer',
+                                background: sel === c.id ? 'rgba(59,130,246,0.18)' : 'transparent',
+                                borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '10px 12px', fontFamily: 'inherit',
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                    <span style={{ flex: 1, minWidth: 0, color: '#e2e8f0', fontWeight: 600, fontSize: '0.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{visitorLabel(c)}</span>
+                                    {c.status === 'closed' && <span style={{ color: '#64748b', fontSize: '0.66rem', border: '1px solid #334155', borderRadius: 6, padding: '0 5px' }}>kapalı</span>}
+                                    {c.admin_unread > 0 && <span style={{ background: '#ef4444', color: '#fff', borderRadius: 999, fontSize: '0.66rem', fontWeight: 800, minWidth: 18, height: 18, lineHeight: '18px', textAlign: 'center', padding: '0 5px' }}>{c.admin_unread}</span>}
+                                </div>
+                                <div style={{ color: '#94a3b8', fontSize: '0.76rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2 }}>
+                                    {c.last_sender === 'admin' ? '↩ ' : ''}{c.last_message || '—'}
+                                </div>
+                                <div style={{ color: '#475569', fontSize: '0.68rem', marginTop: 2 }}>{fmtDateTime(c.last_message_at)}</div>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Thread */}
+                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', height: '100%', background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, overflow: 'hidden' }}>
+                    {!sel ? (
+                        <div style={{ margin: 'auto', color: '#64748b', fontSize: '0.9rem' }}>Soldan bir konuşma seçin.</div>
+                    ) : (
+                        <>
+                            {/* Thread header + visitor meta */}
+                            <div style={{ padding: '10px 14px', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ color: '#f1f5f9', fontWeight: 700 }}>{conv ? visitorLabel(conv) : '…'}</div>
+                                    {conv && (
+                                        <div style={{ color: '#64748b', fontSize: '0.72rem' }}>
+                                            {conv.visitor_email ? conv.visitor_email + ' • ' : ''}{conv.user_id ? 'Üye #' + conv.user_id + ' • ' : ''}IP: {conv.ip || '—'} • {fmtDateTime(conv.created_at)}
+                                        </div>
+                                    )}
+                                </div>
+                                {conv?.status === 'open'
+                                    ? <button onClick={() => act('close')} style={miniBtn('#334155')}>Kapat</button>
+                                    : <button onClick={() => act('reopen')} style={miniBtn('#16a34a')}>Yeniden Aç</button>}
+                                <button onClick={() => del(sel)} style={miniBtn('#7f1d1d')}>Sil</button>
+                            </div>
+
+                            {/* Messages */}
+                            <div ref={bodyRef} style={{ flex: 1, overflowY: 'auto', padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                {msgs.map((m) => (
+                                    <div key={m.id} style={{
+                                        alignSelf: m.sender === 'admin' ? 'flex-end' : 'flex-start', maxWidth: '75%',
+                                        background: m.sender === 'admin' ? '#2563eb' : '#1e293b',
+                                        color: m.sender === 'admin' ? '#fff' : '#e2e8f0',
+                                        padding: '8px 11px',
+                                        borderRadius: m.sender === 'admin' ? '12px 12px 4px 12px' : '12px 12px 12px 4px',
+                                        fontSize: '0.86rem', lineHeight: 1.45, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                                    }}>
+                                        {m.body}
+                                        <div style={{ fontSize: '0.62rem', opacity: 0.6, marginTop: 3, textAlign: 'right' }}>{fmtTime(m.created_at)}</div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Reply box */}
+                            <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', padding: 10, display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+                                <textarea
+                                    value={reply}
+                                    onChange={(e) => setReply(e.target.value)}
+                                    onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendReply(); } }}
+                                    placeholder="Yanıtınızı yazın…  (Enter ile gönder)"
+                                    rows={2}
+                                    style={{ ...inputS, flex: 1, resize: 'none', maxHeight: 120 }}
+                                />
+                                <button onClick={sendReply} disabled={busy || !reply.trim()} className="ai-btn ai-btn-primary" style={{ height: 42, flexShrink: 0 }}>
+                                    <div className="ai-btn-inner" style={{ background: '#3b82f6', color: '#fff', padding: '0 16px' }}>{busy ? '…' : 'Gönder'}</div>
+                                </button>
+                            </div>
+                        </>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+const miniBtn = (bg) => ({ border: 'none', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600, fontFamily: 'inherit', background: bg, color: '#fff' });
+
 const Admin = () => {
     const [user, setUser] = useState(null);
     const [tab, setTab] = useState('flags');
+    const [chatUnread, setChatUnread] = useState(0);
 
     // Global CSS pins body to overflow:hidden / height:100vh for the 3D viewer
     // pages. The admin dashboard is content-heavy and needs native scrolling,
@@ -1507,6 +1714,24 @@ const Admin = () => {
         }
     }, []);
 
+    // Poll the unread-chat count so the sidebar badge stays live regardless of
+    // which tab is open.
+    useEffect(() => {
+        if (!user) return;
+        let stop = false;
+        const tick = async () => {
+            try {
+                const r = await fetch('/api/admin/chat?status=open', { headers: auth() });
+                if (!r.ok) return;
+                const j = await r.json();
+                if (!stop) setChatUnread(j.unread || 0);
+            } catch { /* noop */ }
+        };
+        tick();
+        const id = setInterval(tick, 12000);
+        return () => { stop = true; clearInterval(id); };
+    }, [user]);
+
     if (!user) return <div style={{ minHeight: '100vh', background: '#0b1220' }}><Login onAuthed={setUser} /></div>;
 
     // Grouped, vertical navigation. Keys match the tab conditionals below.
@@ -1529,6 +1754,7 @@ const Admin = () => {
             ['documents', 'Belge Logları'],
         ] },
         { group: 'Mesajlar', items: [
+            ['chat',      'Canlı Destek'],
             ['contact',   'İletişim'],
             ['advertise', 'Reklam'],
             ['screenshot','Ekran Görüntüleri'],
@@ -1563,8 +1789,14 @@ const Admin = () => {
                                             background: tab === k ? '#3b82f6' : 'transparent',
                                             color: tab === k ? '#fff' : '#cbd5e1',
                                             transition: 'background .12s',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6,
                                         }}
-                                    >{l}</button>
+                                    >
+                                        <span>{l}</span>
+                                        {k === 'chat' && chatUnread > 0 && (
+                                            <span style={{ background: '#ef4444', color: '#fff', borderRadius: 999, fontSize: '0.66rem', fontWeight: 800, minWidth: 18, height: 18, lineHeight: '18px', textAlign: 'center', padding: '0 5px' }}>{chatUnread}</span>
+                                        )}
+                                    </button>
                                 ))}
                             </div>
                         </div>
@@ -1600,6 +1832,7 @@ const Admin = () => {
                 {tab === 'pricing' && <PricingManager />}
                 {tab === 'subs'    && <SubscriptionsManager />}
                 {tab === 'users'   && <UsersManager />}
+                {tab === 'chat'    && <ChatManager />}
                 {tab === 'contact' && <MessageList type="contact" columns={{
                     title: r => `${r.name} <${r.email}>${r.subject ? ' — ' + r.subject : ''}`,
                     body: r => r.message
