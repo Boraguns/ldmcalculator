@@ -47,15 +47,23 @@ const Home = () => {
     // page is content-heavy (hero + SEO + footer) and needs to scroll natively.
     useEffect(() => {
         const prevOverflow = document.body.style.overflow;
+        const prevOverflowX = document.body.style.overflowX;
         const prevHeight = document.body.style.height;
         const prevHtmlOverflow = document.documentElement.style.overflow;
+        const prevHtmlOverflowX = document.documentElement.style.overflowX;
+        // Vertical scroll only — never horizontal (100vw + scrollbar would
+        // otherwise let the page drift sideways).
         document.body.style.overflow = 'auto';
+        document.body.style.overflowX = 'hidden';
         document.body.style.height = 'auto';
         document.documentElement.style.overflow = 'auto';
+        document.documentElement.style.overflowX = 'hidden';
         return () => {
             document.body.style.overflow = prevOverflow;
+            document.body.style.overflowX = prevOverflowX;
             document.body.style.height = prevHeight;
             document.documentElement.style.overflow = prevHtmlOverflow;
+            document.documentElement.style.overflowX = prevHtmlOverflowX;
         };
     }, []);
 

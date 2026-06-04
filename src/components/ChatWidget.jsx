@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { api } from '../utils/api';
+import { linkify } from '../utils/linkify';
 import { useT } from '../i18n/LanguageContext';
 import { useAuth } from '../auth/AuthContext';
 
@@ -345,7 +346,7 @@ const ChatWidget = () => {
                                     borderRadius: m.sender === 'visitor' ? '12px 12px 4px 12px' : '12px 12px 12px 4px',
                                     fontSize: '0.85rem', lineHeight: 1.45, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
                                 }}>
-                                    {m.body}
+                                    {linkify(m.body, { color: m.sender === 'visitor' ? '#dbeafe' : '#93c5fd', textDecoration: 'underline' })}
                                     <div style={{ fontSize: '0.62rem', opacity: 0.6, marginTop: 3, textAlign: 'right' }}>{fmtTime(m.created_at)}</div>
                                 </div>
                             ))}

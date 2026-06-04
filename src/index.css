@@ -58,7 +58,10 @@ body {
     color: var(--text-primary);
     overflow: hidden;
     height: 100vh;
-    width: 100vw;
+    /* 100% (not 100vw) so the vertical scrollbar width never pushes content
+       sideways and creates a phantom horizontal scroll. */
+    width: 100%;
+    max-width: 100%;
     margin: 0;
     padding: 0;
 }

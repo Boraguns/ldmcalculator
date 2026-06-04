@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { PROMO_FREE } from '../utils/promo';
+import { linkify } from '../utils/linkify';
 // Bundled JSON dictionaries — used as the "default" column in the site
 // content editor so admins can see what they're overriding.
 import enDict from '../i18n/locales/en.json';
@@ -1660,7 +1661,7 @@ const ChatManager = () => {
                                         borderRadius: m.sender === 'admin' ? '12px 12px 4px 12px' : '12px 12px 12px 4px',
                                         fontSize: '0.86rem', lineHeight: 1.45, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
                                     }}>
-                                        {m.body}
+                                        {linkify(m.body, { color: m.sender === 'admin' ? '#dbeafe' : '#93c5fd', textDecoration: 'underline' })}
                                         <div style={{ fontSize: '0.62rem', opacity: 0.6, marginTop: 3, textAlign: 'right' }}>{fmtTime(m.created_at)}</div>
                                     </div>
                                 ))}
