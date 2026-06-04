@@ -411,7 +411,8 @@
   "nav": {
     "signIn": "تسجيل الدخول",
     "signUp": "إنشاء حساب",
-    "myAccount": "حسابي"
+    "myAccount": "حسابي",
+    "goPremium": "اشترك في Premium"
   },
   "cmr": {
     "guide": {

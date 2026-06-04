@@ -1,14 +1,19 @@
 // Free-tier usage metering. A "service" is one stacking run OR one tool
-// document. Limits are a LIFETIME trial allowance (not a daily reset), shared
-// across both kinds, forming a sign-up → subscribe funnel:
-//   • anonymous visitor      → 2 total  (tracked by IP + signed cookie + fingerprint) → register
-//   • free registered user   → 2 total  (tracked by user_id)                          → subscribe
+// document. Limits are a DAILY allowance that resets every day at 00:00 Turkey
+// time (Europe/Istanbul), shared across both kinds, forming a sign-up →
+// subscribe funnel:
+//   • anonymous visitor      → 2 / day  (tracked by IP + signed cookie + fingerprint) → register
+//   • free registered user   → 2 / day  (tracked by user_id)                          → subscribe
 //   • active paid subscriber → unlimited
 import { sql } from './db.js';
 import { getOrSetAnonId, hashId, clientIp } from './userauth.js';
 
 export const ANON_LIMIT = 2;
 export const FREE_LIMIT = 2;
+
+// Only count events from "today" in Turkey local time, so the allowance resets
+// at Istanbul midnight regardless of the database server's timezone.
+const TODAY_TR = sql`(created_at AT TIME ZONE 'Europe/Istanbul')::date = (NOW() AT TIME ZONE 'Europe/Istanbul')::date`;
 
 // True if the user (or their company) has a usable, non-expired subscription.
 export async function hasActiveSubscription(user) {
@@ -22,12 +27,13 @@ export async function hasActiveSubscription(user) {
     return !!rows[0];
 }
 
-// Lifetime trial counts (no day filter) — the allowance is consumed once, never
-// resets, so an exhausted visitor is pushed to register / subscribe.
+// Daily counts (today in Turkey time) — the allowance refills every midnight, so
+// an exhausted visitor is pushed to register / subscribe until the next day.
 async function anonCount({ ip, cookieId, fp }) {
     const rows = await sql`
         SELECT COUNT(*)::int AS n FROM usage_events
         WHERE user_id IS NULL
+          AND ${TODAY_TR}
           AND ( (ip <> '' AND ip = ${ip})
              OR (cookie_id <> '' AND cookie_id = ${cookieId})
              OR (fingerprint <> '' AND fingerprint = ${fp}) )`;
@@ -37,7 +43,8 @@ async function anonCount({ ip, cookieId, fp }) {
 async function userCount(userId) {
     const rows = await sql`
         SELECT COUNT(*)::int AS n FROM usage_events
-        WHERE user_id = ${userId}`;
+        WHERE user_id = ${userId}
+          AND ${TODAY_TR}`;
     return rows[0]?.n || 0;
 }
 

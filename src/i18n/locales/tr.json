@@ -419,7 +419,8 @@
   "nav": {
     "signIn": "Giriş Yap",
     "signUp": "Kayıt Ol",
-    "myAccount": "Hesabım"
+    "myAccount": "Hesabım",
+    "goPremium": "Premium Ol"
   },
   "cmr": {
     "guide": {

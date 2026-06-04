@@ -419,7 +419,8 @@
   "nav": {
     "signIn": "Se connecter",
     "signUp": "S'inscrire",
-    "myAccount": "Mon compte"
+    "myAccount": "Mon compte",
+    "goPremium": "Passer Premium"
   },
   "cmr": {
     "guide": {

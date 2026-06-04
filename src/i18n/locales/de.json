@@ -420,7 +420,8 @@
   "nav": {
     "signIn": "Anmelden",
     "signUp": "Registrieren",
-    "myAccount": "Mein Konto"
+    "myAccount": "Mein Konto",
+    "goPremium": "Premium holen"
   },
   "cmr": {
     "guide": {

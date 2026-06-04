@@ -207,6 +207,35 @@ const AccountMenu = ({ style = {}, compact = false, height }) => {
                 </span>
             )}
 
+            {/* "Go premium" caption under the button for everyone who is not yet a
+                premium subscriber (logged-out + free/trial users). Links to the
+                pricing page. Absolutely positioned so it doesn't shift the header
+                row; hidden while the dropdown is open. */}
+            {!isPremium && !open && (
+                <button
+                    onClick={(e) => { e.stopPropagation(); go('/pricing'); }}
+                    style={{
+                        position: 'absolute',
+                        top: 'calc(100% + 5px)',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#fbbf24',
+                        fontFamily: 'inherit',
+                        fontSize: compact ? '0.68rem' : '0.72rem',
+                        fontWeight: 700,
+                        letterSpacing: '.2px',
+                        whiteSpace: 'nowrap',
+                        cursor: 'pointer',
+                        padding: 0,
+                        zIndex: 1,
+                    }}
+                >
+                    ★ {t('nav.goPremium')}
+                </button>
+            )}
+
             {open && (
                 <div
                     role="menu"

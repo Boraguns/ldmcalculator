@@ -419,7 +419,8 @@
   "nav": {
     "signIn": "Войти",
     "signUp": "Регистрация",
-    "myAccount": "Мой аккаунт"
+    "myAccount": "Мой аккаунт",
+    "goPremium": "Перейти на Premium"
   },
   "cmr": {
     "guide": {
