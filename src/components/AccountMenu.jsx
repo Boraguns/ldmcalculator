@@ -216,19 +216,21 @@ const AccountMenu = ({ style = {}, compact = false, height }) => {
                     onClick={(e) => { e.stopPropagation(); go('/pricing'); }}
                     style={{
                         position: 'absolute',
-                        top: 'calc(100% + 5px)',
+                        top: 'calc(100% + 6px)',
                         left: '50%',
                         transform: 'translateX(-50%)',
-                        background: 'transparent',
+                        background: 'linear-gradient(135deg,#fbbf24,#f59e0b)',
                         border: 'none',
-                        color: '#fbbf24',
+                        color: '#1f1300',
                         fontFamily: 'inherit',
-                        fontSize: compact ? '0.68rem' : '0.72rem',
-                        fontWeight: 700,
+                        fontSize: compact ? '0.66rem' : '0.7rem',
+                        fontWeight: 800,
                         letterSpacing: '.2px',
                         whiteSpace: 'nowrap',
                         cursor: 'pointer',
-                        padding: 0,
+                        padding: '3px 11px',
+                        borderRadius: 999,
+                        boxShadow: '0 3px 9px rgba(245,158,11,0.45)',
                         zIndex: 1,
                     }}
                 >

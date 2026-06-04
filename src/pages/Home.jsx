@@ -353,55 +353,69 @@ const Home = () => {
             </div>
             </div>
 
-            {/* SEO + Usage info section */}
+            {/* SEO + Usage info section — light, logistics-themed band */}
             <section
                 aria-label={t('home.seo.heading')}
                 style={{
                     position: 'relative',
                     zIndex: 100,
                     width: '100%',
-                    maxWidth: '1200px',
-                    margin: '0 auto',
-                    padding: isDesktop ? '60px 32px 80px' : '40px 20px 80px',
-                    color: '#e2e8f0'
+                    background: 'linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%)',
+                    borderTop: '1px solid #e2e8f0',
+                    padding: isDesktop ? '64px 32px 72px' : '44px 18px 56px',
                 }}
             >
-                <article style={{
-                    background: 'rgba(15, 23, 42, 0.78)',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    borderRadius: '16px',
-                    padding: isDesktop ? '40px 44px' : '24px 20px',
-                    backdropFilter: 'blur(6px)',
-                    lineHeight: 1.65,
-                    fontSize: '0.98rem'
-                }}>
-                    <h2 style={{ color: '#f8fafc', fontSize: isDesktop ? '1.8rem' : '1.35rem', marginTop: 0 }}>
-                        {t('home.seo.heading')}
-                    </h2>
-                    <p style={{ color: '#cbd5e1' }}>{t('home.seo.intro')}</p>
+                <article style={{ maxWidth: 1060, margin: '0 auto', color: '#334155', lineHeight: 1.7, fontSize: '1rem' }}>
+                    <div style={{ textAlign: 'center', marginBottom: isDesktop ? 44 : 32 }}>
+                        <span style={{
+                            display: 'inline-block', fontSize: '0.72rem', fontWeight: 800,
+                            letterSpacing: '.09em', textTransform: 'uppercase', color: '#2563eb',
+                            background: '#e0ecff', padding: '5px 14px', borderRadius: 999, marginBottom: 16,
+                        }}>
+                            {t('home.seo.eyebrow')}
+                        </span>
+                        <h2 style={{ color: '#0f172a', fontSize: isDesktop ? '1.9rem' : '1.4rem', margin: '0 0 12px', fontWeight: 800, lineHeight: 1.25 }}>
+                            {t('home.seo.heading')}
+                        </h2>
+                        <p style={{ color: '#475569', maxWidth: 720, margin: '0 auto', fontSize: '1.02rem' }}>{t('home.seo.intro')}</p>
+                    </div>
 
-                    <h3 style={{ color: '#f8fafc', marginTop: 32, fontSize: '1.2rem' }}>{t('home.seo.howTitle')}</h3>
-                    <ol style={{ color: '#cbd5e1', paddingLeft: 22 }}>
-                        <li>{t('home.seo.how1')}</li>
-                        <li>{t('home.seo.how2')}</li>
-                        <li>{t('home.seo.how3')}</li>
-                    </ol>
+                    {/* How / Why as two clean cards */}
+                    <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? '1fr 1fr' : '1fr', gap: 18, marginBottom: isDesktop ? 52 : 38 }}>
+                        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: '22px 24px', boxShadow: '0 1px 3px rgba(15,23,42,0.05)' }}>
+                            <h3 style={{ color: '#0f172a', margin: '0 0 14px', fontSize: '1.12rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <span aria-hidden="true" style={{ width: 30, height: 30, flexShrink: 0, borderRadius: 8, background: '#e0ecff', color: '#2563eb', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.95rem' }}>📦</span>
+                                {t('home.seo.howTitle')}
+                            </h3>
+                            <ol style={{ color: '#475569', paddingLeft: 20, margin: 0 }}>
+                                <li style={{ marginBottom: 7 }}>{t('home.seo.how1')}</li>
+                                <li style={{ marginBottom: 7 }}>{t('home.seo.how2')}</li>
+                                <li>{t('home.seo.how3')}</li>
+                            </ol>
+                        </div>
+                        <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: 14, padding: '22px 24px', boxShadow: '0 1px 3px rgba(15,23,42,0.05)' }}>
+                            <h3 style={{ color: '#0f172a', margin: '0 0 14px', fontSize: '1.12rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <span aria-hidden="true" style={{ width: 30, height: 30, flexShrink: 0, borderRadius: 8, background: '#e0ecff', color: '#2563eb', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.95rem' }}>🚚</span>
+                                {t('home.seo.whyTitle')}
+                            </h3>
+                            <p style={{ color: '#475569', margin: 0 }}>{t('home.seo.whyBody')}</p>
+                        </div>
+                    </div>
 
-                    <h3 style={{ color: '#f8fafc', marginTop: 32, fontSize: '1.2rem' }}>{t('home.seo.whyTitle')}</h3>
-                    <p style={{ color: '#cbd5e1' }}>{t('home.seo.whyBody')}</p>
-
-                    <h3 style={{ color: '#f8fafc', marginTop: 32, fontSize: '1.2rem' }}>{t('home.seo.faqTitle')}</h3>
-                    <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                    {/* FAQ */}
+                    <h3 style={{ color: '#0f172a', fontSize: isDesktop ? '1.5rem' : '1.25rem', textAlign: 'center', margin: '0 0 22px', fontWeight: 800 }}>{t('home.seo.faqTitle')}</h3>
+                    <ul style={{ listStyle: 'none', padding: 0, margin: '0 auto', maxWidth: 820 }}>
                         {faqItems.map((item, i) => (
-                            <li key={i} style={{ marginBottom: 10 }}>
+                            <li key={i} style={{ marginBottom: 12 }}>
                                 <details style={{
-                                    background: 'rgba(255,255,255,0.04)',
-                                    border: '1px solid rgba(255,255,255,0.08)',
-                                    borderRadius: 10,
-                                    padding: '12px 16px'
+                                    background: '#fff',
+                                    border: '1px solid #e2e8f0',
+                                    borderRadius: 12,
+                                    padding: '14px 18px',
+                                    boxShadow: '0 1px 3px rgba(15,23,42,0.05)',
                                 }}>
-                                    <summary style={{ cursor: 'pointer', color: '#f1f5f9', fontWeight: 600 }}>{item.q}</summary>
-                                    <p style={{ marginTop: 10, color: '#cbd5e1', marginBottom: 0 }}>{item.a}</p>
+                                    <summary style={{ cursor: 'pointer', color: '#0f172a', fontWeight: 600 }}>{item.q}</summary>
+                                    <p style={{ marginTop: 10, color: '#475569', marginBottom: 0 }}>{item.a}</p>
                                 </details>
                             </li>
                         ))}
