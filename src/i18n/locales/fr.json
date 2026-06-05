@@ -372,7 +372,7 @@
     "subscription": "Abonnement",
     "renews": "Renouvellement",
     "seatUsage": "{used} sièges sur {total} utilisés",
-    "willCancel": "Votre abonnement sera annulé en fin de période.",
+    "willCancel": "Votre abonnement prendra fin à la fin de la période.",
     "cancel": "Annuler l'abonnement",
     "cancelConfirm": "Voulez-vous vraiment annuler votre abonnement ?",
     "noSubscription": "Vous n'avez pas d'abonnement actif.",

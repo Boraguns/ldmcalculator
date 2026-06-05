@@ -372,7 +372,7 @@
     "subscription": "Abonelik",
     "renews": "Yenilenme",
     "seatUsage": "{total} koltuktan {used} tanesi kullanılıyor",
-    "willCancel": "Aboneliğiniz dönem sonunda iptal edilecek.",
+    "willCancel": "Aboneliğiniz dönem sonunda bitecek.",
     "cancel": "Aboneliği iptal et",
     "cancelConfirm": "Aboneliğinizi iptal etmek istediğinize emin misiniz?",
     "noSubscription": "Aktif aboneliğiniz yok.",

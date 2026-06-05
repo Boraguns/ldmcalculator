@@ -373,7 +373,7 @@
     "subscription": "Abonnement",
     "renews": "Verlängerung",
     "seatUsage": "{used} von {total} Plätzen belegt",
-    "willCancel": "Ihr Abonnement wird zum Periodenende gekündigt.",
+    "willCancel": "Ihr Abonnement endet zum Periodenende.",
     "cancel": "Abonnement kündigen",
     "cancelConfirm": "Möchten Sie Ihr Abonnement wirklich kündigen?",
     "noSubscription": "Sie haben kein aktives Abonnement.",

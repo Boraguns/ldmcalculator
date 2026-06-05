@@ -26,9 +26,10 @@ const CmrDocument = () => {
         canonical: 'https://ldmcalculator.com/tools/cmr'
     });
 
+    // Only the "NO" prefix is pre-filled; the user types the document number
+    // and the place/country themselves (no auto "İstanbul / Türkiye").
     const [f, setF] = useState({
-        no: 'NO 02030',
-        place3: 'İSTANBUL / TÜRKİYE'
+        no: 'NO '
     });
     const set = (k) => (e) => setF(prev => ({ ...prev, [k]: e.target.value }));
     const val = (k) => f[k] ?? '';
@@ -91,7 +92,7 @@ const CmrDocument = () => {
     // Reset asks for confirmation first so a full form isn't wiped by accident.
     const handleReset = () => {
         if (window.confirm(t('tools.resetConfirm'))) {
-            setF({ no: 'NO 02030', place3: 'İSTANBUL / TÜRKİYE' });
+            setF({ no: 'NO ' });
         }
     };
 
