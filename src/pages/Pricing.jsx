@@ -54,13 +54,13 @@ export default function Pricing() {
         return (
             <div style={{ marginBottom: compact ? 8 : 10 }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: compact ? '1.25rem' : '1.6rem', fontWeight: 700, color: PROMO ? '#6ee7b7' : '#fff' }}>
+                    <span style={{ fontSize: compact ? '1.25rem' : '1.6rem', fontWeight: 700, color: PROMO ? '#059669' : '#0f172a' }}>
                         {PROMO ? fmt(0) : fmt(original)}
                     </span>
                     {PROMO && original > 0 && (
                         <span style={{ fontSize: compact ? '0.85rem' : '1rem', color: '#94a3b8', textDecoration: 'line-through' }}>{fmt(original)}</span>
                     )}
-                    <span style={{ fontSize: compact ? '0.72rem' : '0.82rem', color: '#94a3b8', fontWeight: 400 }}>/ {t(`pricing.${period}`)}</span>
+                    <span style={{ fontSize: compact ? '0.72rem' : '0.82rem', color: '#64748b', fontWeight: 400 }}>/ {t(`pricing.${period}`)}</span>
                 </div>
                 {PROMO && (
                     <span style={{ display: 'inline-block', marginTop: 4, fontSize: compact ? '0.66rem' : '0.7rem', fontWeight: 800,
@@ -92,9 +92,10 @@ export default function Pricing() {
 
     const card = (children, highlight, pad = '16px 16px', key) => (
         <div key={key} style={{
-            background: highlight ? 'rgba(59,130,246,0.12)' : 'rgba(15,23,42,0.6)',
-            border: `1px solid ${highlight ? 'rgba(59,130,246,0.5)' : 'rgba(255,255,255,0.08)'}`,
+            background: highlight ? 'rgba(59,130,246,0.10)' : 'rgba(255,255,255,0.9)',
+            border: `1px solid ${highlight ? 'rgba(59,130,246,0.45)' : '#e7ded0'}`,
             borderRadius: 12, padding: pad, display: 'flex', flexDirection: 'column',
+            boxShadow: '0 6px 18px rgba(120,100,60,0.10)',
         }}>{children}</div>
     );
 
@@ -107,11 +108,11 @@ export default function Pricing() {
     );
 
     const Toggle = ({ options, value, onChange }) => (
-        <div style={{ display: 'inline-flex', border: '1px solid #334155', borderRadius: 9, overflow: 'hidden' }}>
+        <div style={{ display: 'inline-flex', border: '1px solid #d8cfbd', borderRadius: 9, overflow: 'hidden', background: 'rgba(255,255,255,0.7)' }}>
             {options.map((o) => (
                 <button key={o.id} onClick={() => onChange(o.id)} style={{
                     padding: '7px 14px', border: 'none', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600,
-                    background: value === o.id ? '#3b82f6' : 'transparent', color: value === o.id ? '#fff' : '#94a3b8',
+                    background: value === o.id ? '#3b82f6' : 'transparent', color: value === o.id ? '#fff' : '#64748b',
                 }}>{o.label}</button>
             ))}
         </div>
@@ -122,8 +123,8 @@ export default function Pricing() {
     const topBtn = {
         display: 'inline-flex', alignItems: 'center', gap: 6,
         padding: '0 16px', height: 42, borderRadius: 10,
-        background: 'rgba(255,255,255,0.06)', color: '#e2e8f0',
-        border: '1px solid rgba(255,255,255,0.16)', cursor: 'pointer',
+        background: 'rgba(255,255,255,0.85)', color: '#1e293b',
+        border: '1px solid #d8cfbd', cursor: 'pointer',
         fontSize: '0.9rem', fontWeight: 600, whiteSpace: 'nowrap',
         fontFamily: 'inherit',
     };
@@ -131,8 +132,13 @@ export default function Pricing() {
     return (
         <div style={{
             minHeight: '100vh',
-            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
-            color: '#e2e8f0',
+            backgroundColor: '#f0f0f0',
+            backgroundImage: 'url(/wide-bg.jpg)',
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'center bottom',
+            backgroundSize: 'cover',
+            backgroundAttachment: 'fixed',
+            color: '#1e293b',
             display: 'flex', flexDirection: 'column',
             padding: 'calc(env(safe-area-inset-top, 0px) + 16px) 20px 24px',
         }}>
@@ -161,8 +167,8 @@ export default function Pricing() {
 
             <div style={{ width: '100%', maxWidth: 1240, margin: '0 auto', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 14 }}>
                 <div>
-                    <h1 style={{ color: '#f8fafc', fontSize: '1.7rem', margin: '0 0 2px' }}>{t('pricing.title')}</h1>
-                    <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.9rem' }}>{t('pricing.subtitle')}</p>
+                    <h1 style={{ color: '#0f172a', fontSize: '1.7rem', margin: '0 0 2px' }}>{t('pricing.title')}</h1>
+                    <p style={{ color: '#64748b', margin: 0, fontSize: '0.9rem' }}>{t('pricing.subtitle')}</p>
                 </div>
 
                 {PROMO && (
@@ -174,8 +180,8 @@ export default function Pricing() {
                     }}>
                         <span style={{ fontSize: '1.4rem', lineHeight: 1 }}>🎉</span>
                         <div>
-                            <div style={{ color: '#6ee7b7', fontWeight: 800, fontSize: '1rem' }}>{t('pricing.promoTitle')}</div>
-                            <div style={{ color: '#cbd5e1', fontSize: '0.85rem' }}>{t('pricing.promoDesc')}</div>
+                            <div style={{ color: '#059669', fontWeight: 800, fontSize: '1rem' }}>{t('pricing.promoTitle')}</div>
+                            <div style={{ color: '#475569', fontSize: '0.85rem' }}>{t('pricing.promoDesc')}</div>
                         </div>
                     </div>
                 )}
@@ -188,15 +194,15 @@ export default function Pricing() {
                     <Toggle value={currency} onChange={setCurrency} options={[
                         { id: 'TRY', label: '₺ TRY' }, { id: 'USD', label: '$ USD' }, { id: 'EUR', label: '€ EUR' },
                     ]} />
-                    {period === 'yearly' && <span style={{ color: '#6ee7b7', fontSize: '0.85rem' }}>{t('pricing.yearlySave')}</span>}
+                    {period === 'yearly' && <span style={{ color: '#059669', fontSize: '0.85rem' }}>{t('pricing.yearlySave')}</span>}
                 </div>
 
-                {err && <p style={{ color: '#fca5a5', margin: 0 }}>{err}</p>}
+                {err && <p style={{ color: '#b91c1c', margin: 0 }}>{err}</p>}
                 {msg && (
                     <p style={{
                         margin: 0, padding: '10px 14px', borderRadius: 9,
                         background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.4)',
-                        color: '#6ee7b7', fontSize: '0.9rem',
+                        color: '#059669', fontSize: '0.9rem',
                     }}>{msg}</p>
                 )}
 
@@ -204,15 +210,15 @@ export default function Pricing() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14 }}>
                     {card(
                         <>
-                            <h3 style={{ color: '#f8fafc', margin: '0 0 4px' }}>{t('pricing.free')}</h3>
-                            <p style={{ color: '#94a3b8', fontSize: '0.82rem', margin: '0 0 8px' }}>{t('pricing.freeDesc')}</p>
-                            <div style={{ fontSize: '1.6rem', fontWeight: 700, color: '#fff' }}>{fmt(0)}</div>
+                            <h3 style={{ color: '#0f172a', margin: '0 0 4px' }}>{t('pricing.free')}</h3>
+                            <p style={{ color: '#64748b', fontSize: '0.82rem', margin: '0 0 8px' }}>{t('pricing.freeDesc')}</p>
+                            <div style={{ fontSize: '1.6rem', fontWeight: 700, color: '#0f172a' }}>{fmt(0)}</div>
                         </>
                     )}
                     {card(
                         <>
-                            <h3 style={{ color: '#f8fafc', margin: '0 0 4px' }}>{t('pricing.individual')}</h3>
-                            <p style={{ color: '#94a3b8', fontSize: '0.82rem', margin: '0 0 8px' }}>{t('pricing.individualDesc')}</p>
+                            <h3 style={{ color: '#0f172a', margin: '0 0 4px' }}>{t('pricing.individual')}</h3>
+                            <p style={{ color: '#64748b', fontSize: '0.82rem', margin: '0 0 8px' }}>{t('pricing.individualDesc')}</p>
                             <PriceTag amount={priceFor[`individual|x|${period}`] || 0} />
                             <Btn plan="individual" tier={null} label={PROMO ? t('pricing.startFree') : t('pricing.subscribe')} />
                         </>,
@@ -223,14 +229,14 @@ export default function Pricing() {
                 {/* Corporate */}
                 <div>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, flexWrap: 'wrap', marginBottom: 8 }}>
-                        <h2 style={{ color: '#f8fafc', fontSize: '1.15rem', margin: 0 }}>{t('pricing.corporate')}</h2>
-                        <span style={{ color: '#94a3b8', fontSize: '0.85rem' }}>{t('pricing.corporateDesc')}</span>
+                        <h2 style={{ color: '#0f172a', fontSize: '1.15rem', margin: 0 }}>{t('pricing.corporate')}</h2>
+                        <span style={{ color: '#64748b', fontSize: '0.85rem' }}>{t('pricing.corporateDesc')}</span>
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 12 }}>
                         {CORP_TIERS.map((tier) => (
                             card(
                                 <>
-                                    <h3 style={{ color: '#f8fafc', margin: '0 0 2px', fontSize: '1rem' }}>{tier} {t('pricing.seats')}</h3>
+                                    <h3 style={{ color: '#0f172a', margin: '0 0 2px', fontSize: '1rem' }}>{tier} {t('pricing.seats')}</h3>
                                     <PriceTag amount={priceFor[`corporate|${tier}|${period}`] || 0} compact />
                                     <Btn plan="corporate" tier={tier} label={t('pricing.choose')} compact />
                                 </>,

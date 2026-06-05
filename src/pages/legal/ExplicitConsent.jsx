@@ -11,7 +11,7 @@ export default function ExplicitConsent() {
     });
     return (
         <StaticPage title="Açık Rıza Metni">
-            <p style={{ color: '#fbbf24', fontSize: '0.85rem' }}>
+            <p style={{ color: '#b45309', fontSize: '0.85rem' }}>
                 ⚠ Bu metin bir taslaktır ve yürürlüğe almadan önce hukuk danışmanı tarafından
                 gözden geçirilmelidir. / Template — review by a lawyer before use.
             </p>
@@ -29,12 +29,12 @@ export default function ExplicitConsent() {
             </ul>
 
             <p><strong>açık rızamı veriyorum.</strong> Verdiğim açık rızayı dilediğim zaman
-            <a href="mailto:kvkk@ldmcalculator.com" style={{ color: '#60a5fa' }}> kvkk@ldmcalculator.com</a>
+            <a href="mailto:kvkk@ldmcalculator.com" style={{ color: '#2563eb' }}> kvkk@ldmcalculator.com</a>
             adresine başvurarak geri alabileceğimi biliyorum.</p>
 
-            <hr style={{ borderColor: '#1f2937', margin: '26px 0' }} />
+            <hr style={{ borderColor: '#e7ded0', margin: '26px 0' }} />
 
-            <h3 style={{ color: '#f8fafc', fontSize: '1.1rem' }}>English summary</h3>
+            <h3 style={{ color: '#0f172a', fontSize: '1.1rem' }}>English summary</h3>
             <p>I have read and understood the KVKK information notice and give my explicit consent to
             the processing of my identity, contact and (where applicable) corporate data for membership
             and service delivery, the sharing of necessary data with the payment provider (PayTR) for

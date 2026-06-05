@@ -9,10 +9,10 @@ export default function RefundPolicy() {
         description: 'Abonelik iade, iptal ve cayma hakkı politikası.',
         canonical: 'https://ldmcalculator.com/legal/refund-policy',
     });
-    const h = { color: '#f8fafc', fontSize: '1.1rem', marginTop: 22 };
+    const h = { color: '#0f172a', fontSize: '1.1rem', marginTop: 22 };
     return (
         <StaticPage title="İade ve İptal Politikası">
-            <p style={{ color: '#fbbf24', fontSize: '0.85rem' }}>
+            <p style={{ color: '#b45309', fontSize: '0.85rem' }}>
                 ⚠ Bu metin bir taslaktır ve yürürlüğe almadan önce hukuk danışmanı tarafından
                 gözden geçirilmelidir. / Template — review by a lawyer before use.
             </p>
@@ -40,7 +40,7 @@ export default function RefundPolicy() {
 
             <h3 style={h}>5. İletişim</h3>
             <p>İptal ve iade talepleriniz için:
-            <a href="mailto:destek@ldmcalculator.com" style={{ color: '#60a5fa' }}> destek@ldmcalculator.com</a></p>
+            <a href="mailto:destek@ldmcalculator.com" style={{ color: '#2563eb' }}> destek@ldmcalculator.com</a></p>
 
             <hr style={{ borderColor: '#1f2937', margin: '26px 0' }} />
 

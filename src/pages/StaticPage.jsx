@@ -10,8 +10,15 @@ const StaticPage = ({ title, children }) => {
         <div style={{
             minHeight: '100vh',
             width: '100%',
-            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
-            color: '#e2e8f0',
+            // Light theme with the wide map photo anchored to the bottom centre,
+            // mirroring the profile / pricing pages.
+            backgroundColor: '#f0f0f0',
+            backgroundImage: 'url(/wide-bg.jpg)',
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'center bottom',
+            backgroundSize: 'cover',
+            backgroundAttachment: 'fixed',
+            color: '#1e293b',
             paddingTop: 'calc(env(safe-area-inset-top, 0px) + 28px)',
             paddingBottom: '60px'
         }}>
@@ -20,16 +27,17 @@ const StaticPage = ({ title, children }) => {
                 <LanguageSwitcher height={40} compact />
             </div>
             <div style={{ maxWidth: 880, margin: '0 auto', padding: '0 24px' }}>
-                <Link to="/" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: '0.9rem' }}>
+                <Link to="/" style={{ color: '#475569', textDecoration: 'none', fontSize: '0.9rem' }}>
                     ← {t('viewer.backHome')}
                 </Link>
-                <h1 style={{ color: '#f8fafc', fontSize: '2rem', marginTop: 16, marginBottom: 18 }}>{title}</h1>
+                <h1 style={{ color: '#0f172a', fontSize: '2rem', marginTop: 16, marginBottom: 18 }}>{title}</h1>
                 <article style={{
-                    background: 'rgba(15,23,42,0.6)',
-                    border: '1px solid rgba(255,255,255,0.08)',
+                    background: 'rgba(255,255,255,0.9)',
+                    border: '1px solid #e7ded0',
                     borderRadius: 14,
                     padding: '24px 28px',
-                    lineHeight: 1.65
+                    lineHeight: 1.65,
+                    boxShadow: '0 6px 18px rgba(120,100,60,0.10)'
                 }}>
                     {children}
                 </article>

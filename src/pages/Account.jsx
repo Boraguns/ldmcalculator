@@ -50,7 +50,7 @@ export default function Account() {
     if (loading || !user) return null;
 
     return (
-        <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#faf6ec,#f3ecdc 60%,#efe6d2)', color: '#1e293b' }}>
+        <div style={{ minHeight: '100vh', backgroundColor: '#f0f0f0', backgroundImage: 'url(/wide-bg.jpg)', backgroundRepeat: 'no-repeat', backgroundPosition: 'center bottom', backgroundSize: 'cover', backgroundAttachment: 'fixed', color: '#1e293b' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 24px', borderBottom: '1px solid #e7ded0' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                     <Link to="/"><img src="/src/ldm-calculator-logo.png" alt="LDM" style={{ width: 150 }} /></Link>

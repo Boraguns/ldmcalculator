@@ -10,10 +10,10 @@ export default function Kvkk() {
         description: 'KVKK kapsamında kişisel verilerin işlenmesine ilişkin aydınlatma metni.',
         canonical: 'https://ldmcalculator.com/legal/kvkk',
     });
-    const h = { color: '#f8fafc', fontSize: '1.1rem', marginTop: 22 };
+    const h = { color: '#0f172a', fontSize: '1.1rem', marginTop: 22 };
     return (
         <StaticPage title="KVKK Aydınlatma Metni">
-            <p style={{ color: '#fbbf24', fontSize: '0.85rem' }}>
+            <p style={{ color: '#b45309', fontSize: '0.85rem' }}>
                 ⚠ Bu metin bir taslaktır ve yürürlüğe almadan önce hukuk danışmanı tarafından
                 gözden geçirilmelidir. / This is a template and must be reviewed by a lawyer.
             </p>
@@ -49,7 +49,7 @@ export default function Kvkk() {
             <h3 style={h}>6. Haklarınız (KVKK m.11)</h3>
             <p>Kişisel verilerinizin işlenip işlenmediğini öğrenme, düzeltme, silme, işlemeye itiraz
             etme ve zararın giderilmesini talep etme haklarına sahipsiniz. Taleplerinizi
-            <a href="mailto:kvkk@ldmcalculator.com" style={{ color: '#60a5fa' }}> kvkk@ldmcalculator.com</a> adresine iletebilirsiniz.</p>
+            <a href="mailto:kvkk@ldmcalculator.com" style={{ color: '#2563eb' }}> kvkk@ldmcalculator.com</a> adresine iletebilirsiniz.</p>
 
             <hr style={{ borderColor: '#1f2937', margin: '26px 0' }} />
 

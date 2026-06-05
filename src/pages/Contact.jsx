@@ -5,9 +5,9 @@ import usePageMeta from '../hooks/usePageMeta';
 
 const inputStyle = {
     width: '100%',
-    background: '#0f172a',
-    border: '1px solid rgba(255,255,255,0.12)',
-    color: '#f1f5f9',
+    background: '#fbf8f1',
+    border: '1px solid #d8cfbd',
+    color: '#1e293b',
     borderRadius: 8,
     padding: '10px 12px',
     fontSize: '0.95rem',
@@ -45,9 +45,9 @@ const Contact = () => {
 
     return (
         <StaticPage title={t('contact.title')}>
-            <p style={{ color: '#94a3b8', marginTop: 0 }}>{t('contact.intro')}</p>
+            <p style={{ color: '#475569', marginTop: 0 }}>{t('contact.intro')}</p>
             <p style={{ marginBottom: 20 }}>
-                <a href="mailto:info@ldmcalculator.com" style={{ color: '#60a5fa' }}>info@ldmcalculator.com</a>
+                <a href="mailto:info@ldmcalculator.com" style={{ color: '#2563eb' }}>info@ldmcalculator.com</a>
             </p>
             <form onSubmit={submit} style={{ display: 'grid', gap: 12 }}>
                 <input style={inputStyle} placeholder={t('contact.name')} value={form.name} onChange={set('name')} required />

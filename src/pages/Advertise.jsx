@@ -5,9 +5,9 @@ import usePageMeta from '../hooks/usePageMeta';
 
 const inputStyle = {
     width: '100%',
-    background: '#0f172a',
-    border: '1px solid rgba(255,255,255,0.12)',
-    color: '#f1f5f9',
+    background: '#fbf8f1',
+    border: '1px solid #d8cfbd',
+    color: '#1e293b',
     borderRadius: 8,
     padding: '10px 12px',
     fontSize: '0.95rem',
@@ -42,7 +42,7 @@ const Advertise = () => {
 
     return (
         <StaticPage title={t('advertise.title')}>
-            <p style={{ color: '#94a3b8', marginTop: 0 }}>{t('advertise.intro')}</p>
+            <p style={{ color: '#475569', marginTop: 0 }}>{t('advertise.intro')}</p>
             <form onSubmit={submit} style={{ display: 'grid', gap: 12 }}>
                 <input style={inputStyle} placeholder={t('advertise.company')} value={form.company_name} onChange={set('company_name')} required />
                 <input style={inputStyle} placeholder={t('advertise.contact')} value={form.contact_name} onChange={set('contact_name')} required />
