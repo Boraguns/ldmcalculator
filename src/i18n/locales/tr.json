@@ -135,7 +135,8 @@
     "totalWeightKg": "Toplam ağırlık (kg)",
     "important": "ÖNEMLİ",
     "excelWarning": "Yalnızca yukarıdaki şablonu kullanın.",
-    "excelConfirm": "Dosyanızı yukarıdaki şablondan mı hazırladınız? Yalnızca şablona dayalı dosyalar çalışır."
+    "excelConfirm": "Dosyanızı yukarıdaki şablondan mı hazırladınız? Yalnızca şablona dayalı dosyalar çalışır.",
+    "excelDrop": "Dosyayı buraya sürükleyin veya seçmek için tıklayın"
   },
   "step3": {
     "title": "Sonuç Raporu",

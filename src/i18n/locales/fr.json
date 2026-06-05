@@ -135,7 +135,8 @@
     "totalWeightKg": "Poids total (kg)",
     "important": "IMPORTANT",
     "excelWarning": "Utilisez uniquement le modèle ci-dessus.",
-    "excelConfirm": "Avez-vous préparé votre fichier à partir du modèle ci-dessus ? Seuls les fichiers basés sur le modèle fonctionnent."
+    "excelConfirm": "Avez-vous préparé votre fichier à partir du modèle ci-dessus ? Seuls les fichiers basés sur le modèle fonctionnent.",
+    "excelDrop": "Glissez votre fichier ici ou cliquez pour le sélectionner"
   },
   "step3": {
     "title": "Rapport de résultat",

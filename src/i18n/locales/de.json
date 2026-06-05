@@ -136,7 +136,8 @@
     "totalWeightKg": "Gesamtgewicht (kg)",
     "important": "WICHTIG",
     "excelWarning": "Nur die obige Vorlage verwenden.",
-    "excelConfirm": "Haben Sie Ihre Datei mit der obigen Vorlage erstellt? Nur auf der Vorlage basierende Dateien funktionieren."
+    "excelConfirm": "Haben Sie Ihre Datei mit der obigen Vorlage erstellt? Nur auf der Vorlage basierende Dateien funktionieren.",
+    "excelDrop": "Datei hierher ziehen oder zum Auswählen klicken"
   },
   "step3": {
     "title": "Ergebnisbericht",

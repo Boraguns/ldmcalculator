@@ -22,6 +22,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
     const [customDimensions, setCustomDimensions] = useState({ length: 1360, width: 245, height: 275 });
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [excelModal, setExcelModal] = useState(false);
+    const [excelDragOver, setExcelDragOver] = useState(false);
     const productListRef = useRef(null);
     const navigate = useNavigate();
 
@@ -124,10 +125,9 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
         }
     };
 
-    const handleExcelFile = async (e) => {
-        const file = e.target.files && e.target.files[0];
-        // Reset the input so the same file can be re-selected later.
-        e.target.value = '';
+    // Shared parser used by both the hidden file input and the modal's
+    // drag-and-drop / click upload zone. Closes the modal on success.
+    const processProductsFile = async (file) => {
         if (!file) return;
         try {
             const imported = await parseProductsFile(file);
@@ -142,9 +142,17 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
             setProducts(imported.slice(0, 20));
             if (imported.length > 20) alert(t('wizard.maxProducts'));
             alert(t('wizard.excelLoaded', { count: Math.min(imported.length, 20) }));
+            setExcelModal(false);
         } catch (err) {
             alert(t('wizard.excelError'));
         }
+    };
+
+    const handleExcelFile = async (e) => {
+        const file = e.target.files && e.target.files[0];
+        // Reset the input so the same file can be re-selected later.
+        e.target.value = '';
+        await processProductsFile(file);
     };
 
     const updateProduct = (id, field, value) => {
@@ -692,32 +700,48 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                         >
                             ⬇️ {t('wizard.excelTemplate')}
                         </button>
-                        <div style={{ display: 'flex', gap: '8px', marginTop: '2px' }}>
-                            <button
-                                type="button"
-                                onClick={() => setExcelModal(false)}
-                                style={{
-                                    flex: 1, padding: '9px 10px', cursor: 'pointer',
-                                    background: 'rgba(255,255,255,0.05)', color: '#cbd5e1',
-                                    border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px',
-                                    fontSize: '0.8rem', fontWeight: 600,
-                                }}
-                            >
-                                {t('viewer.cancel')}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => { setExcelModal(false); excelInputRef.current && excelInputRef.current.click(); }}
-                                style={{
-                                    flex: 1.4, padding: '9px 10px', cursor: 'pointer',
-                                    background: 'rgba(16,185,129,0.22)', color: '#d1fae5',
-                                    border: '1px solid rgba(16,185,129,0.55)', borderRadius: '8px',
-                                    fontSize: '0.8rem', fontWeight: 700,
-                                }}
-                            >
-                                📤 {t('wizard.continue')}
-                            </button>
+                        {/* Upload zone directly under the (blinking) template
+                            button: drag-and-drop OR click to pick a file. The file
+                            loads in place — no extra "continue" step. */}
+                        <div
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => excelInputRef.current && excelInputRef.current.click()}
+                            onDragOver={(e) => { e.preventDefault(); setExcelDragOver(true); }}
+                            onDragLeave={(e) => { e.preventDefault(); setExcelDragOver(false); }}
+                            onDrop={(e) => {
+                                e.preventDefault();
+                                setExcelDragOver(false);
+                                const file = e.dataTransfer.files && e.dataTransfer.files[0];
+                                processProductsFile(file);
+                            }}
+                            style={{
+                                cursor: 'pointer', padding: '22px 14px', textAlign: 'center',
+                                borderRadius: '12px',
+                                border: `2px dashed ${excelDragOver ? '#34d399' : 'rgba(16,185,129,0.55)'}`,
+                                background: excelDragOver ? 'rgba(16,185,129,0.18)' : 'rgba(16,185,129,0.08)',
+                                color: '#d1fae5', transition: 'all 0.15s ease',
+                                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
+                            }}
+                        >
+                            <span style={{ fontSize: '1.6rem', lineHeight: 1 }}>📤</span>
+                            <span style={{ fontSize: '0.82rem', fontWeight: 700 }}>{t('wizard.excelUpload')}</span>
+                            <span style={{ fontSize: '0.72rem', color: '#9ca3af', lineHeight: 1.4 }}>
+                                {t('wizard.excelDrop')}
+                            </span>
                         </div>
+                        <button
+                            type="button"
+                            onClick={() => setExcelModal(false)}
+                            style={{
+                                padding: '8px 10px', cursor: 'pointer', width: '100%',
+                                background: 'transparent', color: '#94a3b8',
+                                border: 'none', borderRadius: '8px',
+                                fontSize: '0.78rem', fontWeight: 600,
+                            }}
+                        >
+                            {t('viewer.cancel')}
+                        </button>
                     </div>
                 </div>
             )}
