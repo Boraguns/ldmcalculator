@@ -149,7 +149,7 @@ body {
     perspective: 1200px;
     /* Adjusted perspective */
     overflow: hidden;
-    background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+    background: radial-gradient(circle at center, #f5efe3 0%, #e9e1d0 100%);
 }
 
 #productLegend {
@@ -533,7 +533,7 @@ select option:hover {
     /* Cream theme (matches the rest of the site). The dark .ai-btn / .ai-input
        components and the Excel modal stay dark — they read fine on cream. */
     background-color: #f0f0f0;
-    background-image: url(/wide-bg.jpg);
+    background-image: url(/truck-bg.jpg);
     background-repeat: no-repeat;
     background-position: center bottom;
     background-size: cover;

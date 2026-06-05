@@ -1443,9 +1443,9 @@ const ModelViewer = ({
                 <directionalLight position={[-15, 10, -5]} intensity={0.65} />
                 <pointLight position={[0, 8, 0]} intensity={0.5} />
 
-                {/* Mood Atmosphere */}
-                <color attach="background" args={['#0b1220']} />
-                <fog attach="fog" args={['#0b1220', 8, 80]} />
+                {/* Mood Atmosphere — cream scene to match the rest of the site */}
+                <color attach="background" args={['#efe9db']} />
+                <fog attach="fog" args={['#efe9db', 8, 80]} />
 
                 <Suspense fallback={<Loader />}>
                     <WarehouseEnvironment
