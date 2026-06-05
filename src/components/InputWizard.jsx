@@ -21,6 +21,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
     const [resultData, setResultData] = useState(null);
     const [customDimensions, setCustomDimensions] = useState({ length: 1360, width: 245, height: 275 });
     const [drawerOpen, setDrawerOpen] = useState(false);
+    const [excelModal, setExcelModal] = useState(false);
     const productListRef = useRef(null);
     const navigate = useNavigate();
 
@@ -585,6 +586,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                     <button
                         type="button"
+                        className={excelModal ? 'tpl-blink' : ''}
                         onClick={handleDownloadTemplate}
                         style={{
                             flex: '1 1 140px', padding: '8px 10px', cursor: 'pointer',
@@ -597,7 +599,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                     </button>
                     <button
                         type="button"
-                        onClick={() => { if (window.confirm(t('wizard.excelConfirm'))) excelInputRef.current && excelInputRef.current.click(); }}
+                        onClick={() => setExcelModal(true)}
                         style={{
                             flex: '1 1 140px', padding: '8px 10px', cursor: 'pointer',
                             background: 'rgba(16,185,129,0.18)', color: '#d1fae5',
@@ -644,6 +646,81 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                     <div className="ai-btn-inner">{t('wizard.calc')}</div>
                 </button>
             </div>
+
+            {/* Custom mini-modal that replaces window.confirm before Excel upload.
+                While open it also blinks the template button (.tpl-blink) so the
+                user notices they must download/use the template first. */}
+            {excelModal && (
+                <div
+                    onClick={() => setExcelModal(false)}
+                    style={{
+                        position: 'fixed', inset: 0, zIndex: 9999,
+                        background: 'rgba(2,6,23,0.62)', backdropFilter: 'blur(2px)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px',
+                    }}
+                >
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                            width: '100%', maxWidth: '360px',
+                            background: 'linear-gradient(160deg, #0f172a 0%, #1e293b 100%)',
+                            border: '1px solid rgba(245,158,11,0.45)', borderRadius: '14px',
+                            padding: '18px', boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+                            display: 'flex', flexDirection: 'column', gap: '12px',
+                        }}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{
+                                fontSize: '0.66rem', fontWeight: 800, letterSpacing: '0.04em',
+                                color: '#0f172a', background: '#f59e0b', borderRadius: '6px',
+                                padding: '3px 8px', lineHeight: 1.5,
+                            }}>⚠ {t('wizard.important')}</span>
+                        </div>
+                        <div style={{ fontSize: '0.84rem', color: '#e2e8f0', lineHeight: 1.5 }}>
+                            {t('wizard.excelConfirm')}
+                        </div>
+                        <button
+                            type="button"
+                            className="tpl-blink"
+                            onClick={handleDownloadTemplate}
+                            style={{
+                                padding: '9px 10px', cursor: 'pointer', width: '100%',
+                                background: 'rgba(255,255,255,0.06)', color: '#e2e8f0',
+                                border: '1px solid rgba(255,255,255,0.16)', borderRadius: '8px',
+                                fontSize: '0.8rem', fontWeight: 600,
+                            }}
+                        >
+                            ⬇️ {t('wizard.excelTemplate')}
+                        </button>
+                        <div style={{ display: 'flex', gap: '8px', marginTop: '2px' }}>
+                            <button
+                                type="button"
+                                onClick={() => setExcelModal(false)}
+                                style={{
+                                    flex: 1, padding: '9px 10px', cursor: 'pointer',
+                                    background: 'rgba(255,255,255,0.05)', color: '#cbd5e1',
+                                    border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px',
+                                    fontSize: '0.8rem', fontWeight: 600,
+                                }}
+                            >
+                                {t('viewer.cancel')}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => { setExcelModal(false); excelInputRef.current && excelInputRef.current.click(); }}
+                                style={{
+                                    flex: 1.4, padding: '9px 10px', cursor: 'pointer',
+                                    background: 'rgba(16,185,129,0.22)', color: '#d1fae5',
+                                    border: '1px solid rgba(16,185,129,0.55)', borderRadius: '8px',
+                                    fontSize: '0.8rem', fontWeight: 700,
+                                }}
+                            >
+                                📤 {t('wizard.continue')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 // bir comment
