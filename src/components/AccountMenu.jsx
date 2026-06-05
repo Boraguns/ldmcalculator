@@ -14,7 +14,7 @@ import { useUsage } from '../usage/UsageContext';
  *
  * Opens on hover (desktop) and click/tap (touch), closing on outside click.
  */
-const AccountMenu = ({ style = {}, compact = false, height }) => {
+const AccountMenu = ({ style = {}, compact = false, height, flyout = false }) => {
     const { t } = useT();
     const navigate = useNavigate();
     const { user, loading, logout } = useAuth();
@@ -249,11 +249,16 @@ const AccountMenu = ({ style = {}, compact = false, height }) => {
                     onMouseLeave={closeSoon}
                     style={{
                         position: 'absolute',
-                        // Open right under the button; a high z-index keeps the
-                        // menu above the "Go Premium" pill so it covers it rather
-                        // than sitting below it.
-                        top: 'calc(100% + 8px)',
-                        right: 0,
+                        // Default: open right under the button. A high z-index
+                        // keeps the menu above the "Go Premium" pill so it covers
+                        // it rather than sitting below it.
+                        // Flyout: open sideways (to the right of the button) so it
+                        // doesn't drop down over the page content — used on the
+                        // truck/wizard page where a downward menu would cover the
+                        // step loader + "Select dorse type" heading.
+                        ...(flyout
+                            ? { top: 0, left: 'calc(100% + 6px)', right: 'auto' }
+                            : { top: 'calc(100% + 8px)', right: 0 }),
                         minWidth: '190px',
                         background: '#1a1a1a',
                         border: '1px solid rgba(255,255,255,0.12)',

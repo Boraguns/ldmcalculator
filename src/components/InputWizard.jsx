@@ -1033,7 +1033,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
             {/* Language switcher — desktop: top-right next to back button.
                 Mobile: floating flag-only circle on left middle of viewport. */}
             <div className="lang-switcher-desktop" style={{ position: 'absolute', top: 20, right: 240, zIndex: 100, display: 'flex', gap: 10, alignItems: 'center' }}>
-                <AccountMenu height={40} compact />
+                <AccountMenu height={40} compact flyout />
                 <LanguageSwitcher height={40} compact />
             </div>
             <div className="lang-switcher-mobile" style={{ position: 'fixed', left: 12, top: '50%', transform: 'translateY(-50%)', zIndex: 250 }}>
