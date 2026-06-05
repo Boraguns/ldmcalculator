@@ -522,10 +522,11 @@ select option:hover {
     justify-content: center;
     padding: var(--spacing-md);
     /* Reserve room for the absolutely-positioned header row (back / account /
-       language buttons sit at top:20px, 40px tall). Without this the centered
-       wizard content — and especially the StepLoader bar — rides up under the
-       buttons on the taller steps. */
-    padding-top: 80px;
+       language buttons sit at top:20px, 40px tall) plus the "Go Premium" pill
+       that hangs under the account button. Without this the centered wizard
+       content — and especially the StepLoader bar — rides up under the buttons
+       on short laptop screens. */
+    padding-top: 96px;
     overflow: hidden;
     max-height: 100vh;
     position: relative;

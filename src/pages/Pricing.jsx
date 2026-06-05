@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../utils/api';
 import { useAuth } from '../auth/AuthContext';
 import { useT, LanguageSwitcher } from '../i18n/LanguageContext';
@@ -117,25 +117,51 @@ export default function Pricing() {
         </div>
     );
 
+    // Bigger, button-shaped nav controls for the top bar (replaces the old
+    // tiny text "back home" link).
+    const topBtn = {
+        display: 'inline-flex', alignItems: 'center', gap: 6,
+        padding: '0 16px', height: 42, borderRadius: 10,
+        background: 'rgba(255,255,255,0.06)', color: '#e2e8f0',
+        border: '1px solid rgba(255,255,255,0.16)', cursor: 'pointer',
+        fontSize: '0.9rem', fontWeight: 600, whiteSpace: 'nowrap',
+        fontFamily: 'inherit',
+    };
+
     return (
         <div style={{
             minHeight: '100vh',
             background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
             color: '#e2e8f0',
             display: 'flex', flexDirection: 'column',
-            padding: 'calc(env(safe-area-inset-top, 0px) + 20px) 24px 24px',
+            padding: 'calc(env(safe-area-inset-top, 0px) + 16px) 20px 24px',
         }}>
-            <div style={{ position: 'fixed', top: 18, right: 18, zIndex: 200, display: 'flex', gap: 10, alignItems: 'center' }}>
-                <AccountMenu height={40} compact />
-                <LanguageSwitcher height={40} compact />
+            {/* Top bar — profile / home buttons on the left, account & language
+                on the right. Kept in normal document flow (not position:fixed) so
+                the controls never overlap the page content on short laptop or
+                small screens. */}
+            <div style={{
+                width: '100%', maxWidth: 1240, margin: '0 auto 10px',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                gap: 12, flexWrap: 'wrap',
+            }}>
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                    <button type="button" onClick={() => navigate('/account')} style={topBtn}>
+                        ← {t('nav.myAccount')}
+                    </button>
+                    <button type="button" onClick={() => navigate('/')} style={topBtn}>
+                        ← {t('viewer.backHome')}
+                    </button>
+                </div>
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                    <AccountMenu height={40} compact />
+                    <LanguageSwitcher height={40} compact />
+                </div>
             </div>
 
             <div style={{ width: '100%', maxWidth: 1240, margin: '0 auto', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 14 }}>
                 <div>
-                    <Link to="/" style={{ color: '#94a3b8', textDecoration: 'none', fontSize: '0.9rem' }}>
-                        ← {t('viewer.backHome')}
-                    </Link>
-                    <h1 style={{ color: '#f8fafc', fontSize: '1.7rem', margin: '10px 0 2px' }}>{t('pricing.title')}</h1>
+                    <h1 style={{ color: '#f8fafc', fontSize: '1.7rem', margin: '0 0 2px' }}>{t('pricing.title')}</h1>
                     <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.9rem' }}>{t('pricing.subtitle')}</p>
                 </div>
 
