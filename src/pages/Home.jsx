@@ -440,7 +440,7 @@ const Home = () => {
                 position: 'relative',
                 zIndex: 100,
                 width: '100%',
-                background: 'rgba(15, 23, 42, 0.92)',
+                background: '#2b2b2b',
                 borderTop: '1px solid rgba(255,255,255,0.08)',
                 padding: isDesktop ? '40px 32px 24px' : '28px 18px 16px',
                 color: '#cbd5e1',
