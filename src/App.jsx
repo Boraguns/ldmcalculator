@@ -270,7 +270,7 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
             const ctx = tempCanvas.getContext('2d');
 
             // Fill background
-            ctx.fillStyle = '#efe9db';
+            ctx.fillStyle = '#e7e7e7';
             ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
 
             // Draw the 3D scene
@@ -420,7 +420,7 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
     const colors = ['#3b82f6', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
 
     return (
-        <div className="container" style={{ height: '100vh', width: '100vw', background: '#efe9db', display: 'flex', overflow: 'hidden' }}>
+        <div className="container" style={{ height: '100vh', width: '100vw', background: '#e7e7e7', display: 'flex', overflow: 'hidden' }}>
             {/* LEFT: VISUAL SECTION */}
             <div className={`${mode}-section`} style={{
                 flex: 2,

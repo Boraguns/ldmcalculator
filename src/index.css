@@ -149,7 +149,7 @@ body {
     perspective: 1200px;
     /* Adjusted perspective */
     overflow: hidden;
-    background: radial-gradient(circle at center, #f5efe3 0%, #e9e1d0 100%);
+    background: #e7e7e7;
 }
 
 #productLegend {
@@ -533,24 +533,32 @@ select option:hover {
     /* Cream theme (matches the rest of the site). The dark .ai-btn / .ai-input
        components and the Excel modal stay dark — they read fine on cream. */
     background-color: #f0f0f0;
-    background-image: url(/truck-bg.jpg);
+    background-image: url(/truck-bg.jpg?v=2);
     background-repeat: no-repeat;
     background-position: center bottom;
     background-size: cover;
-    color: #1e293b;
+    color: #000000;
     /* Flip the text-color variables locally so all the class-based wizard text
        (.step-description, .option-specs, .summary-*, .report-*, .checkbox-label)
-       turns dark for contrast on the cream backdrop. */
-    --text-primary: #0f172a;
-    --text-secondary: #334155;
-    --text-muted: #64748b;
+       turns black for contrast on the light backdrop. */
+    --text-primary: #000000;
+    --text-secondary: #000000;
+    --text-muted: #1f2937;
 }
 
 /* The input labels sit on the cream backdrop (the inputs themselves stay dark),
    so darken them here only — the global .ai-input-label is still light for the
    dark screenshot modal that reuses the same component. */
 .wizard-section .ai-input-label {
-    color: #475569;
+    color: #1f2937;
+}
+
+/* Step headings use a gradient text-fill by default; force solid black on the
+   light truck page so they read clearly. */
+.wizard-section .step-title {
+    background: none;
+    -webkit-text-fill-color: #000000;
+    color: #000000;
 }
 
 .wizard-container {

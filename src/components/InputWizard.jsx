@@ -296,7 +296,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
 
             {truckType === 'custom' && (
                 <div style={{ marginTop: '20px', padding: '20px', background: 'rgba(255,255,255,0.7)', borderRadius: '12px', border: '1px solid #e7ded0' }}>
-                    <h3 style={{ color: '#0f172a', fontSize: '1.1rem', marginBottom: '15px' }}>{t('wizard.customDimsTitle')}</h3>
+                    <h3 style={{ color: '#000000', fontSize: '1.1rem', marginBottom: '15px' }}>{t('wizard.customDimsTitle')}</h3>
                     <div className="product-inputs" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px' }}>
                         <div className="ai-input-group">
                             <span className="ai-input-label">{t('wizard.lengthCm')}</span>
@@ -356,7 +356,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
             {isPlane && (
                 <div style={{ marginBottom: '20px', padding: '10px', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '10px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
                     <div style={{ fontSize: '0.85rem', color: '#2563eb', fontWeight: '600' }}>{t('wizard.uldSelected')}: {TRUCK_SPECS[truckType]?.label}</div>
-                    <div style={{ fontSize: '0.75rem', color: '#475569' }}>{t('wizard.uldDims')}: {TRUCK_SPECS[truckType]?.dims}</div>
+                    <div style={{ fontSize: '0.75rem', color: '#000000' }}>{t('wizard.uldDims')}: {TRUCK_SPECS[truckType]?.dims}</div>
                 </div>
             )}
 
@@ -381,7 +381,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                         />
                         <div className="checkmark"></div>
                     </div>
-                    <span className="checkbox-label" style={{ fontSize: '0.9rem', color: '#334155', fontWeight: '500' }}>
+                    <span className="checkbox-label" style={{ fontSize: '0.9rem', color: '#000000', fontWeight: '500' }}>
                         {t('wizard.allSameSize')}
                     </span>
                 </label>
@@ -427,7 +427,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                                                 background: 'transparent',
                                                 border: 'none',
                                                 outline: 'none',
-                                                color: '#0f172a',
+                                                color: '#000000',
                                                 fontWeight: 'bold',
                                                 fontSize: '0.9rem',
                                                 width: `${Math.max((product.name?.length || 0) + 1, 14)}ch`,
@@ -445,7 +445,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                                                 />
                                                 <div className="checkmark" style={{ height: '1.1em', width: '1.1em' }}></div>
                                             </div>
-                                            <span style={{ color: '#475569' }}>{t('wizard.rotate')}</span>
+                                            <span style={{ color: '#000000' }}>{t('wizard.rotate')}</span>
                                         </label>
                                     </div>
                                     {/* Color picker — overrides the auto-assigned palette color in the 3D scene. */}
@@ -457,7 +457,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                                             gap: '6px',
                                             cursor: 'pointer',
                                             fontSize: '0.8rem',
-                                            color: '#475569'
+                                            color: '#000000'
                                         }}
                                         title={t('wizard.colorTitle')}
                                     >
@@ -487,7 +487,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                                             />
                                             <div className="checkmark" style={{ height: '1.1em', width: '1.1em' }}></div>
                                         </div>
-                                        <span style={{ color: product.stackable === false ? '#b45309' : '#475569', fontWeight: product.stackable === false ? 600 : 400 }}>
+                                        <span style={{ color: product.stackable === false ? '#b45309' : '#000000', fontWeight: product.stackable === false ? 600 : 400 }}>
                                             {product.stackable === false ? t('wizard.unstackable') : t('wizard.stackable')}
                                         </span>
                                     </label>
@@ -562,7 +562,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                             {/* Per-product "use total weight" toggle. When checked the
                                 weight input above accepts kg-total instead of kg-per-unit;
                                 the algorithm derives unit weight = total / quantity. */}
-                            <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginTop: '8px', fontSize: '0.8rem', color: '#475569' }}>
+                            <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginTop: '8px', fontSize: '0.8rem', color: '#000000' }}>
                                 <input
                                     type="checkbox"
                                     checked={!!product.useTotalWeight}
@@ -598,7 +598,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                         onClick={handleDownloadTemplate}
                         style={{
                             flex: '1 1 140px', padding: '8px 10px', cursor: 'pointer',
-                            background: '#fbf8f1', color: '#1e293b',
+                            background: '#fbf8f1', color: '#000000',
                             border: '1px solid #d8cfbd', borderRadius: '8px',
                             fontSize: '0.8rem', fontWeight: 600
                         }}
@@ -779,7 +779,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                     {/* TRUCK LENGTH USAGE VISUALIZATION */}
                     {!isPlane && !isShip && resultData && (
                         <div style={{ marginBottom: '15px', background: 'rgba(255,255,255,0.7)', border: '1px solid #e7ded0', padding: '12px', borderRadius: '10px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.9rem', color: '#334155' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.9rem', color: '#000000' }}>
                                 <span>{truckType === 'custom' ? t('step3.customDorse') : t('step3.dorseUsage')}</span>
                                 <span>{((resultData.placedItems.reduce((max, i) => Math.max(max, i.position.x + i.dimensions.length), 0) / (truckType === 'custom' ? parseFloat(customDimensions.length) : 1360)) * 100).toFixed(1)}% {t('step3.full')}</span>
                             </div>
@@ -798,7 +798,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                                         </div>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px', fontSize: '0.8rem', fontWeight: '500' }}>
                                             <span style={{ color: '#059669' }}>{t('step3.usedM', { m: usedMeters })}</span>
-                                            <span style={{ color: '#475569' }}>{t('step3.emptyM', { m: emptyMeters })}</span>
+                                            <span style={{ color: '#000000' }}>{t('step3.emptyM', { m: emptyMeters })}</span>
                                         </div>
                                     </>
                                 );
@@ -852,10 +852,10 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                             border: `1px solid ${resultData.balance.warning ? 'rgba(239, 68, 68, 0.4)' : 'rgba(16, 185, 129, 0.3)'}`
                         }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#1e293b' }}>
+                                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#000000' }}>
                                     {resultData.balance.warning ? '⚠️ ' : '✓ '}{t('step3.axleBalance') || 'Aks Yük Dengesi'}
                                 </span>
-                                <span style={{ fontSize: '0.75rem', color: '#475569' }}>
+                                <span style={{ fontSize: '0.75rem', color: '#000000' }}>
                                     {t('step3.front') || 'Ön'}: {resultData.balance.frontPct.toFixed(0)}% / {t('step3.rear') || 'Arka'}: {resultData.balance.rearPct.toFixed(0)}%
                                 </span>
                             </div>
@@ -937,7 +937,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                     )}
 
                     <div className="detailed-report" style={{ marginTop: '1.2rem' }}>
-                        <h3 className="report-title" style={{ marginBottom: '0.8rem', fontSize: '1rem', color: '#475569' }}>{t('step3.byProduct')}</h3>
+                        <h3 className="report-title" style={{ marginBottom: '0.8rem', fontSize: '1rem', color: '#000000' }}>{t('step3.byProduct')}</h3>
                         <div className="report-grid" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             {Object.entries(resultData.itemBreakdown).map(([id, data]) => {
                                 const original = products.find(p => p.id == id) || {};
@@ -959,7 +959,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                                                         {t('step3.notFit', { n: data.unplaced })}
                                                     </div>
                                                 ) : (
-                                                    <div className="report-remaining" style={{ color: data.remainingCapacity > 0 ? '#3b82f6' : '#64748b', fontSize: '0.75rem', fontWeight: '500' }}>
+                                                    <div className="report-remaining" style={{ color: data.remainingCapacity > 0 ? '#3b82f6' : '#1f2937', fontSize: '0.75rem', fontWeight: '500' }}>
                                                         {t('step3.spaceLeft', { n: data.remainingCapacity })}
                                                     </div>
                                                 )}
@@ -979,13 +979,13 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                                                 💡 {t('step3.rotateHint', { n: data.rotationHint })}
                                             </div>
                                         )}
-                                        <div className="report-dims" style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '8px', borderBottom: '1px solid #ece4d4', paddingBottom: '4px' }}>
+                                        <div className="report-dims" style={{ fontSize: '0.75rem', color: '#1f2937', marginBottom: '8px', borderBottom: '1px solid #ece4d4', paddingBottom: '4px' }}>
                                             {original.length}x{original.width}x{original.height} cm
                                         </div>
-                                        <div className="report-stats" style={{ display: 'flex', gap: '12px', fontSize: '0.9rem', color: '#334155' }}>
-                                            <div><span style={{ color: '#64748b' }}>{t('step3.row')}:</span> {data.rows}</div>
-                                            <div><span style={{ color: '#64748b' }}>{t('step3.col')}:</span> {data.columns}</div>
-                                            <div><span style={{ color: '#64748b' }}>{t('step3.layer')}:</span> {data.layers}</div>
+                                        <div className="report-stats" style={{ display: 'flex', gap: '12px', fontSize: '0.9rem', color: '#000000' }}>
+                                            <div><span style={{ color: '#1f2937' }}>{t('step3.row')}:</span> {data.rows}</div>
+                                            <div><span style={{ color: '#1f2937' }}>{t('step3.col')}:</span> {data.columns}</div>
+                                            <div><span style={{ color: '#1f2937' }}>{t('step3.layer')}:</span> {data.layers}</div>
                                         </div>
                                     </div>
                                 );
