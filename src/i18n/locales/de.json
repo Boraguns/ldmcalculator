@@ -133,7 +133,9 @@
     "stackable": "Stapelbar",
     "unstackable": "Nicht stapelbar",
     "useTotalWeight": "Gesamtgewicht für dieses Produkt verwenden",
-    "totalWeightKg": "Gesamtgewicht (kg)"
+    "totalWeightKg": "Gesamtgewicht (kg)",
+    "important": "WICHTIG",
+    "excelWarning": "Sie müssen die obige Vorlage ausfüllen und hochladen. Ihre eigene Excel-Datei funktioniert nicht direkt."
   },
   "step3": {
     "title": "Ergebnisbericht",

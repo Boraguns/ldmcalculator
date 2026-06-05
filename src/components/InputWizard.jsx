@@ -582,6 +582,21 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                 <div style={{ fontSize: '0.78rem', color: '#34d399', fontWeight: 600 }}>
                     {t('wizard.excelTitle')}
                 </div>
+                {/* Important: people must use the provided template, not their own file. */}
+                <div style={{
+                    display: 'flex', alignItems: 'flex-start', gap: '8px',
+                    padding: '8px 10px', borderRadius: '8px',
+                    background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.45)',
+                }}>
+                    <span style={{
+                        flexShrink: 0, fontSize: '0.62rem', fontWeight: 800, letterSpacing: '0.04em',
+                        color: '#0f172a', background: '#f59e0b', borderRadius: '6px',
+                        padding: '2px 7px', lineHeight: 1.5,
+                    }}>⚠ {t('wizard.important')}</span>
+                    <span style={{ fontSize: '0.74rem', color: '#fcd34d', lineHeight: 1.45 }}>
+                        {t('wizard.excelWarning')}
+                    </span>
+                </div>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                     <button
                         type="button"

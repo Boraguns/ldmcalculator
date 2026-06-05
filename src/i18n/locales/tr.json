@@ -132,7 +132,9 @@
     "stackable": "İstiflenebilir",
     "unstackable": "İstiflenemez",
     "useTotalWeight": "Bu ürün için toplam ağırlık gir",
-    "totalWeightKg": "Toplam ağırlık (kg)"
+    "totalWeightKg": "Toplam ağırlık (kg)",
+    "important": "ÖNEMLİ",
+    "excelWarning": "Yukarıdaki şablonu doldurup yüklemelisiniz. Kendi Excel dosyanız doğrudan çalışmayacaktır."
   },
   "step3": {
     "title": "Sonuç Raporu",

@@ -132,7 +132,9 @@
     "stackable": "Empilable",
     "unstackable": "Non empilable",
     "useTotalWeight": "Utiliser le poids total pour ce produit",
-    "totalWeightKg": "Poids total (kg)"
+    "totalWeightKg": "Poids total (kg)",
+    "important": "IMPORTANT",
+    "excelWarning": "Vous devez remplir et téléverser le modèle ci-dessus. Votre propre fichier Excel ne fonctionnera pas directement."
   },
   "step3": {
     "title": "Rapport de résultat",

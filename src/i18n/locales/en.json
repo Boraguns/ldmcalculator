@@ -132,7 +132,9 @@
     "stackable": "Stackable",
     "unstackable": "Unstackable",
     "useTotalWeight": "Use total weight for this product",
-    "totalWeightKg": "Total weight (kg)"
+    "totalWeightKg": "Total weight (kg)",
+    "important": "IMPORTANT",
+    "excelWarning": "You must fill in and upload the template above. Your own Excel file will not work directly."
   },
   "step3": {
     "title": "Result Report",
