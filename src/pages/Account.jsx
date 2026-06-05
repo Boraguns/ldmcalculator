@@ -123,7 +123,6 @@ function VerifyNotice() {
 
 function Overview({ user, subscription }) {
     const { t } = useT();
-    const navigate = useNavigate();
     const [seats, setSeats] = useState(null);
     const [busy, setBusy] = useState(false);
     useEffect(() => {
@@ -154,7 +153,12 @@ function Overview({ user, subscription }) {
                         <p style={{ margin: '6px 0', color: '#64748b' }}>{PROMO_FREE ? <FreePrice amount={subscription.amount} currency={subscription.currency} /> : money(subscription.amount, subscription.currency)} · {t('account.renews')}: {fmtDate(subscription.current_period_end)}</p>
                         {seats && <p style={{ margin: '6px 0', color: '#64748b' }}>{t('account.seatUsage', { used: seats.used, total: seats.total })}</p>}
                         {subscription.cancel_at_period_end
-                            ? <p style={{ color: '#b45309' }}>{t('account.willCancel')}</p>
+                            ? <>
+                                <p style={{ color: '#b45309' }}>{t('account.willCancel')}</p>
+                                {/* Subscription is set to end — let the user re-subscribe
+                                    straight away without leaving the account page. */}
+                                <QuickSubscribe user={user} currency={subscription.currency} />
+                              </>
                             : <button onClick={cancel} disabled={busy} style={{ marginTop: 8, background: 'transparent', border: '1px solid #7f1d1d', color: '#b91c1c', borderRadius: 8, padding: '8px 14px', cursor: 'pointer' }}>{t('account.cancel')}</button>}
                     </>
                 ) : pending ? (
@@ -172,11 +176,107 @@ function Overview({ user, subscription }) {
                 ) : (
                     <>
                         <p style={{ color: '#64748b' }}>{t('account.noSubscription')}</p>
-                        <button onClick={() => navigate('/pricing')} style={{ background: '#3b82f6', border: 'none', color: '#fff', borderRadius: 8, padding: '10px 16px', cursor: 'pointer', fontWeight: 600 }}>{t('account.choosePlan')}</button>
+                        {/* No active subscription (never had one or it expired) — show
+                            inline plan cards so the user can subscribe in one step. */}
+                        <QuickSubscribe user={user} currency={subscription?.currency} />
                     </>
                 )}
             </Card>
         </>
+    );
+}
+
+// Inline plan picker shown inside the subscription card when the user has no
+// active plan (expired / never subscribed) or has scheduled a cancellation, so
+// they can re-subscribe in one step without going to the full pricing page.
+function QuickSubscribe({ user, currency: initialCur }) {
+    const { t } = useT();
+    const navigate = useNavigate();
+    const isCorpAdmin = user?.accountType === 'corporate_admin';
+    const [currency, setCurrency] = useState(initialCur || 'TRY');
+    const [period, setPeriod] = useState('monthly');
+    const [rows, setRows] = useState([]);
+    const [busy, setBusy] = useState('');
+    const [err, setErr] = useState('');
+    const [msg, setMsg] = useState('');
+
+    useEffect(() => {
+        let cancelled = false;
+        api(`/api/billing/plans?currency=${currency}`, { auth: false })
+            .then((j) => { if (!cancelled) setRows(j.plans || []); })
+            .catch(() => { if (!cancelled) setRows([]); });
+        return () => { cancelled = true; };
+    }, [currency]);
+
+    const indAmount = (() => {
+        const r = rows.find((x) => x.plan === 'individual' && x.period === period);
+        return r ? Number(r.amount) : 0;
+    })();
+
+    const subscribe = async (plan, tier) => {
+        setErr(''); setMsg(''); setBusy(`${plan}|${tier}`);
+        try {
+            const j = await api('/api/billing/checkout', { method: 'POST', body: { plan, period, tier, currency } });
+            if (j.pending) { setMsg(t('pricing.requestReceived')); return; }
+            if (j.iframeUrl) { window.location.href = j.iframeUrl; }
+        } catch (e) {
+            setErr(t(`auth.err.${e.message}`) || t('auth.err.generic'));
+        } finally { setBusy(''); }
+    };
+
+    const PROMO = PROMO_FREE;
+    const seg = (active) => ({
+        padding: '6px 12px', border: 'none', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600,
+        background: active ? '#3b82f6' : 'transparent', color: active ? '#fff' : '#64748b',
+    });
+
+    return (
+        <div style={{ marginTop: 14, borderTop: '1px solid #ece4d4', paddingTop: 14 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
+                <h4 style={{ margin: 0, color: '#0f172a' }}>{t('account.quickSubscribe')}</h4>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <div style={{ display: 'inline-flex', border: '1px solid #d8cfbd', borderRadius: 8, overflow: 'hidden', background: '#fbf8f1' }}>
+                        <button onClick={() => setPeriod('monthly')} style={seg(period === 'monthly')}>{t('pricing.monthly')}</button>
+                        <button onClick={() => setPeriod('yearly')} style={seg(period === 'yearly')}>{t('pricing.yearly')}</button>
+                    </div>
+                    <div style={{ display: 'inline-flex', border: '1px solid #d8cfbd', borderRadius: 8, overflow: 'hidden', background: '#fbf8f1' }}>
+                        {['TRY', 'USD', 'EUR'].map((c) => (
+                            <button key={c} onClick={() => setCurrency(c)} style={seg(currency === c)}>{CUR[c]}</button>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {isCorpAdmin ? (
+                <button onClick={() => navigate('/pricing')} style={{ background: '#3b82f6', border: 'none', color: '#fff', borderRadius: 8, padding: '10px 16px', cursor: 'pointer', fontWeight: 600 }}>{t('account.choosePlan')}</button>
+            ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 12 }}>
+                    <div style={{ background: '#fbf8f1', border: '1px solid #e7ded0', borderRadius: 12, padding: '14px 16px', display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>{t('pricing.individual')}</div>
+                        <div style={{ color: '#64748b', fontSize: '0.8rem', marginBottom: 8 }}>{t('pricing.individualDesc')}</div>
+                        <div style={{ marginBottom: 12 }}>
+                            {PROMO
+                                ? <FreePrice amount={indAmount} currency={currency} />
+                                : <span style={{ fontWeight: 700, fontSize: '1.3rem', color: '#0f172a' }}>{money(indAmount, currency)}</span>}
+                            <span style={{ color: '#64748b', fontSize: '0.78rem' }}> / {t(`pricing.${period}`)}</span>
+                        </div>
+                        <button onClick={() => subscribe('individual', null)} disabled={busy === 'individual|null'}
+                            style={{ width: '100%', marginTop: 'auto', background: '#3b82f6', border: 'none', color: '#fff', borderRadius: 8, padding: '9px 12px', cursor: 'pointer', fontWeight: 600 }}>
+                            {busy === 'individual|null' ? '…' : (PROMO ? t('pricing.startFree') : t('pricing.subscribe'))}
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            <div style={{ marginTop: 10 }}>
+                <button onClick={() => navigate('/pricing')} style={{ background: 'transparent', border: 'none', color: '#2563eb', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', padding: 0 }}>
+                    {t('account.viewAllPlans')} →
+                </button>
+            </div>
+
+            {err && <p style={{ color: '#b91c1c', margin: '10px 0 0' }}>{err}</p>}
+            {msg && <p style={{ color: '#059669', margin: '10px 0 0' }}>{msg}</p>}
+        </div>
     );
 }
 

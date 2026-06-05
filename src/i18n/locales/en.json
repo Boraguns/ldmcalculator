@@ -413,7 +413,9 @@
     "subPending": "Your subscription request is awaiting approval. You'll get access as soon as it's confirmed.",
     "method": "Method",
     "method_manual": "Bank transfer (IBAN/EFT)",
-    "method_card": "Credit card"
+    "method_card": "Credit card",
+    "quickSubscribe": "Quick subscribe",
+    "viewAllPlans": "View all plans"
   },
   "invite": {
     "title": "Join your team",

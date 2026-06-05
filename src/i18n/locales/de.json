@@ -414,7 +414,9 @@
     "subPending": "Ihre Abo-Anfrage wartet auf Freigabe. Sobald sie bestätigt ist, erhalten Sie Zugriff.",
     "method": "Methode",
     "method_manual": "Banküberweisung (IBAN/EFT)",
-    "method_card": "Kreditkarte"
+    "method_card": "Kreditkarte",
+    "quickSubscribe": "Schnell abonnieren",
+    "viewAllPlans": "Alle Pläne ansehen"
   },
   "invite": {
     "title": "Team beitreten",

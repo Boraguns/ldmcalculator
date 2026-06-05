@@ -405,7 +405,9 @@
     "subPending": "طلب اشتراكك في انتظار الموافقة. ستحصل على حق الوصول فور تأكيده.",
     "method": "الطريقة",
     "method_manual": "تحويل بنكي (IBAN/EFT)",
-    "method_card": "بطاقة ائتمان"
+    "method_card": "بطاقة ائتمان",
+    "quickSubscribe": "اشترك بسرعة",
+    "viewAllPlans": "عرض كل الباقات"
   },
   "invite": {
     "title": "انضم إلى فريقك",

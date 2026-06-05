@@ -413,7 +413,9 @@
     "subPending": "Abonelik talebiniz onay bekliyor. Onaylandığı anda erişiminiz açılacaktır.",
     "method": "Yöntem",
     "method_manual": "Havale/EFT (IBAN)",
-    "method_card": "Kredi kartı"
+    "method_card": "Kredi kartı",
+    "quickSubscribe": "Hızlı abone ol",
+    "viewAllPlans": "Tüm planları gör"
   },
   "invite": {
     "title": "Ekibinize katılın",
