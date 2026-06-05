@@ -530,6 +530,27 @@ select option:hover {
     overflow: hidden;
     max-height: 100vh;
     position: relative;
+    /* Cream theme (matches the rest of the site). The dark .ai-btn / .ai-input
+       components and the Excel modal stay dark — they read fine on cream. */
+    background-color: #f0f0f0;
+    background-image: url(/wide-bg.jpg);
+    background-repeat: no-repeat;
+    background-position: center bottom;
+    background-size: cover;
+    color: #1e293b;
+    /* Flip the text-color variables locally so all the class-based wizard text
+       (.step-description, .option-specs, .summary-*, .report-*, .checkbox-label)
+       turns dark for contrast on the cream backdrop. */
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
+    --text-muted: #64748b;
+}
+
+/* The input labels sit on the cream backdrop (the inputs themselves stay dark),
+   so darken them here only — the global .ai-input-label is still light for the
+   dark screenshot modal that reuses the same component. */
+.wizard-section .ai-input-label {
+    color: #475569;
 }
 
 .wizard-container {
@@ -1070,9 +1091,9 @@ select option:hover {
         max-height: 92vh !important;
         max-height: 92dvh !important;
         min-height: 56px !important;
-        background: #0f172a;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.5);
+        background: #f5efe3;
+        border-top: 1px solid #e7ded0;
+        box-shadow: 0 -8px 30px rgba(120, 100, 60, 0.28);
         border-radius: 18px 18px 0 0;
         padding: 0 !important;
         transform: translateY(calc(100% - 56px));
@@ -1103,8 +1124,8 @@ select option:hover {
         padding: 0 18px;
         background: transparent;
         border: none;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        color: #f1f5f9;
+        border-bottom: 1px solid #e7ded0;
+        color: #1e293b;
         font-family: inherit;
         cursor: pointer;
         position: relative;
@@ -1224,32 +1245,31 @@ select option:hover {
 }
 
 .summary-card {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: #ffffff;
+    border: 1px solid #e7ded0;
     border-radius: 12px;
     padding: 1.25rem;
     display: flex;
     align-items: center;
     gap: 1.25rem;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 6px 18px rgba(120, 100, 60, 0.10);
 }
 
 .summary-card:hover {
     transform: translateY(-5px);
-    background: rgba(255, 255, 255, 0.08);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 10px 30px rgba(120, 100, 60, 0.18);
 }
 
 .summary-card.highlight {
-    border-color: var(--primary);
-    background: rgba(59, 130, 246, 0.1);
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.45);
+    background: rgba(59, 130, 246, 0.08);
+    box-shadow: 0 6px 18px rgba(59, 130, 246, 0.12);
 }
 
 .summary-card-icon {
     font-size: 2.2rem;
-    background: rgba(255, 255, 255, 0.05);
+    background: #fbf8f1;
     width: 60px;
     height: 60px;
     display: flex;
@@ -1293,24 +1313,20 @@ select option:hover {
 /* Detailed Report Grid */
 .detailed-report {
     margin-top: 2rem;
-    background: rgba(15, 23, 42, 0.3);
+    background: rgba(255, 255, 255, 0.6);
     border-radius: 20px;
     padding: 1.5rem;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid #e7ded0;
 }
 
 .report-title {
     font-size: 1.25rem;
     font-weight: 800;
     margin-bottom: 1.5rem;
-    color: var(--text-primary);
+    color: #0f172a;
     display: flex;
     align-items: center;
     gap: 10px;
-    background: linear-gradient(135deg, #fff 0%, #aaa 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
 }
 
 .report-grid {
@@ -1320,16 +1336,16 @@ select option:hover {
 }
 
 .report-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: #ffffff;
+    border: 1px solid #e7ded0;
     border-radius: 16px;
     padding: 1.25rem;
     transition: all 0.3s ease;
 }
 
 .report-card:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.1);
+    border-color: #d8cfbd;
+    box-shadow: 0 6px 18px rgba(120, 100, 60, 0.10);
 }
 
 .report-card-header {
@@ -1338,7 +1354,7 @@ select option:hover {
     align-items: center;
     margin-bottom: 1rem;
     padding-bottom: 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid #ece4d4;
 }
 
 .report-id {
