@@ -13,7 +13,14 @@
 .cmr-page {
     min-height: 100vh;
     width: 100%;
-    background: #0f172a;
+    /* Light backdrop shared with the login/register pages: #f0f0f0 plus the
+       wide map image. Fixed so it stays put behind the tall A4 sheet. */
+    background-color: #f0f0f0;
+    background-image: url(/wide-bg.jpg);
+    background-repeat: no-repeat;
+    background-position: center bottom;
+    background-size: cover;
+    background-attachment: fixed;
     padding: 24px 12px 60px;
     display: flex;
     flex-direction: column;
@@ -88,12 +95,13 @@
     align-self: flex-start;
     position: sticky;
     top: 8px;
-    background: #111c33;
-    border: 1px solid #243352;
+    /* Light card to match the #f0f0f0 page (was a dark navy panel). */
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid #d8dee9;
     border-radius: 14px;
     padding: 16px 18px 14px;
-    color: #cbd5e1;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    color: #334155;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
     box-sizing: border-box;
     /* Cap to the viewport and scroll internally so a tall guide is never
        clipped on short screens (sticky would otherwise pin the top and hide
@@ -128,10 +136,10 @@
     flex: 0 0 auto;
     width: 26px;
     height: 26px;
-    border: 1px solid #243352;
+    border: 1px solid #cbd5e1;
     border-radius: 8px;
-    background: #1e293b;
-    color: #cbd5e1;
+    background: #f1f5f9;
+    color: #334155;
     font-size: 16px;
     line-height: 1;
     cursor: pointer;
@@ -140,7 +148,7 @@
     justify-content: center;
     transition: background .15s;
 }
-.cmr-guide-toggle:hover { background: #334155; }
+.cmr-guide-toggle:hover { background: #e2e8f0; }
 
 /* Reopen pill, centred under the toolbar while the guide is hidden */
 .cmr-guide-reopen {
@@ -171,13 +179,13 @@
     margin: 0;
     font-size: 1rem;
     font-weight: 700;
-    color: #f1f5f9;
+    color: #0f172a;
 }
 .cmr-guide-intro {
     margin: 0 0 12px;
     font-size: 0.82rem;
     line-height: 1.45;
-    color: #94a3b8;
+    color: #64748b;
 }
 .cmr-guide-steps {
     list-style: none;
@@ -207,15 +215,15 @@
     margin-top: 1px;
 }
 .cmr-guide-text { display: flex; flex-direction: column; gap: 2px; }
-.cmr-guide-text strong { color: #e2e8f0; font-size: 0.82rem; }
-.cmr-guide-text span { color: #94a3b8; font-size: 0.76rem; line-height: 1.4; }
+.cmr-guide-text strong { color: #1e293b; font-size: 0.82rem; }
+.cmr-guide-text span { color: #64748b; font-size: 0.76rem; line-height: 1.4; }
 .cmr-guide-tip {
     margin: 12px 0 0;
     padding-top: 10px;
-    border-top: 1px solid #243352;
+    border-top: 1px solid #d8dee9;
     font-size: 0.78rem;
     line-height: 1.45;
-    color: #7dd3fc;
+    color: #0369a1;
 }
 
 /* ---------- Zoom stage (bounded viewport that scrolls in both axes) ---------- */

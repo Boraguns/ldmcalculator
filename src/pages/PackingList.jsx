@@ -296,12 +296,12 @@ const PackingList = () => {
             <div className="cmr-toolbar">
                 <div className="cmr-tb-left">
                     <img
-                        src="/src/ldm-calculator-beyaz-logo.png"
+                        src="/src/ldm-calculator-logo.png"
                         alt="LDM"
                         onClick={() => navigate('/')}
                         style={{ width: 150, cursor: 'pointer' }}
                     />
-                    <strong style={{ color: '#e2e8f0' }}>{t('tools.packingList')}</strong>
+                    <strong style={{ color: '#1e293b' }}>{t('tools.packingList')}</strong>
                 </div>
                 <div className="cmr-tb-actions">
                     <button className="ai-btn" onClick={() => navigate('/')} style={{ height: 42 }}>
