@@ -135,7 +135,8 @@
     "useTotalWeight": "Gesamtgewicht für dieses Produkt verwenden",
     "totalWeightKg": "Gesamtgewicht (kg)",
     "important": "WICHTIG",
-    "excelWarning": "Sie müssen die obige Vorlage ausfüllen und hochladen. Ihre eigene Excel-Datei funktioniert nicht direkt."
+    "excelWarning": "Nur die obige Vorlage verwenden.",
+    "excelConfirm": "Haben Sie Ihre Datei mit der obigen Vorlage erstellt? Nur auf der Vorlage basierende Dateien funktionieren."
   },
   "step3": {
     "title": "Ergebnisbericht",

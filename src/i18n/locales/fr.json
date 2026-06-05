@@ -134,7 +134,8 @@
     "useTotalWeight": "Utiliser le poids total pour ce produit",
     "totalWeightKg": "Poids total (kg)",
     "important": "IMPORTANT",
-    "excelWarning": "Vous devez remplir et téléverser le modèle ci-dessus. Votre propre fichier Excel ne fonctionnera pas directement."
+    "excelWarning": "Utilisez uniquement le modèle ci-dessus.",
+    "excelConfirm": "Avez-vous préparé votre fichier à partir du modèle ci-dessus ? Seuls les fichiers basés sur le modèle fonctionnent."
   },
   "step3": {
     "title": "Rapport de résultat",

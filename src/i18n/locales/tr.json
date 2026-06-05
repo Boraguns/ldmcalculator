@@ -134,7 +134,8 @@
     "useTotalWeight": "Bu ürün için toplam ağırlık gir",
     "totalWeightKg": "Toplam ağırlık (kg)",
     "important": "ÖNEMLİ",
-    "excelWarning": "Yukarıdaki şablonu doldurup yüklemelisiniz. Kendi Excel dosyanız doğrudan çalışmayacaktır."
+    "excelWarning": "Yalnızca yukarıdaki şablonu kullanın.",
+    "excelConfirm": "Dosyanızı yukarıdaki şablondan mı hazırladınız? Yalnızca şablona dayalı dosyalar çalışır."
   },
   "step3": {
     "title": "Sonuç Raporu",

@@ -582,21 +582,6 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                 <div style={{ fontSize: '0.78rem', color: '#34d399', fontWeight: 600 }}>
                     {t('wizard.excelTitle')}
                 </div>
-                {/* Important: people must use the provided template, not their own file. */}
-                <div style={{
-                    display: 'flex', alignItems: 'flex-start', gap: '8px',
-                    padding: '8px 10px', borderRadius: '8px',
-                    background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.45)',
-                }}>
-                    <span style={{
-                        flexShrink: 0, fontSize: '0.62rem', fontWeight: 800, letterSpacing: '0.04em',
-                        color: '#0f172a', background: '#f59e0b', borderRadius: '6px',
-                        padding: '2px 7px', lineHeight: 1.5,
-                    }}>⚠ {t('wizard.important')}</span>
-                    <span style={{ fontSize: '0.74rem', color: '#fcd34d', lineHeight: 1.45 }}>
-                        {t('wizard.excelWarning')}
-                    </span>
-                </div>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                     <button
                         type="button"
@@ -612,7 +597,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                     </button>
                     <button
                         type="button"
-                        onClick={() => excelInputRef.current && excelInputRef.current.click()}
+                        onClick={() => { if (window.confirm(t('wizard.excelConfirm'))) excelInputRef.current && excelInputRef.current.click(); }}
                         style={{
                             flex: '1 1 140px', padding: '8px 10px', cursor: 'pointer',
                             background: 'rgba(16,185,129,0.18)', color: '#d1fae5',
@@ -629,6 +614,25 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                         onChange={handleExcelFile}
                         style={{ display: 'none' }}
                     />
+                </div>
+                {/* Important: people must use the provided template, not their own file.
+                    Placed below the buttons so "the template above" is accurate. */}
+                <div style={{
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    padding: '7px 10px', borderRadius: '8px', minWidth: 0,
+                    background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.45)',
+                }}>
+                    <span style={{
+                        flexShrink: 0, fontSize: '0.62rem', fontWeight: 800, letterSpacing: '0.04em',
+                        color: '#0f172a', background: '#f59e0b', borderRadius: '6px',
+                        padding: '2px 7px', lineHeight: 1.5,
+                    }}>⚠ {t('wizard.important')}</span>
+                    <span style={{
+                        fontSize: '0.72rem', color: '#fcd34d', lineHeight: 1.4,
+                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                    }}>
+                        {t('wizard.excelWarning')}
+                    </span>
                 </div>
             </div>
 

@@ -134,7 +134,8 @@
     "useTotalWeight": "Use total weight for this product",
     "totalWeightKg": "Total weight (kg)",
     "important": "IMPORTANT",
-    "excelWarning": "You must fill in and upload the template above. Your own Excel file will not work directly."
+    "excelWarning": "Use only the template above.",
+    "excelConfirm": "Did you prepare your file from the template above? Only files based on the template will work."
   },
   "step3": {
     "title": "Result Report",
