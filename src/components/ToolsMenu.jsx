@@ -91,8 +91,13 @@ const ToolsMenu = ({ style = {}, compact = false, height }) => {
                     style={{
                         position: 'absolute',
                         top: `calc(100% + 8px)`,
-                        right: 0,
+                        // This is the left-most header button, so anchoring the
+                        // dropdown to the right edge makes it grow leftward and
+                        // overflow off-screen on mobile. Open it down-right
+                        // (left:0) on compact/mobile; keep right-aligned on desktop.
+                        ...(compact ? { left: 0, right: 'auto' } : { right: 0 }),
                         minWidth: '210px',
+                        maxWidth: 'calc(100vw - 32px)',
                         background: '#1a1a1a',
                         border: '1px solid rgba(255,255,255,0.12)',
                         borderRadius: '12px',
