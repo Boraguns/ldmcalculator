@@ -122,7 +122,7 @@
     "editRecalc": "Edit and Recalculate",
     "resetAll": "Start Over",
     "invalid": "Please enter valid product information.",
-    "maxProducts": "You can add at most 20 different products!",
+    "maxProducts": "You can add at most 100 different products!",
     "notFitErr": "Items did not fit, or an error occurred.",
     "errorOccurred": "An error occurred",
     "drawerAria": "Open/close step panel",
@@ -174,7 +174,9 @@
     "addStanga": "Add Štanga (Load Bar)",
     "stangaModeActive": "Click cargo to add/remove",
     "addSpanzet": "Add Spanzet (Strap)",
-    "spanzetModeActive": "Click cargo to add/remove"
+    "spanzetModeActive": "Click cargo to add/remove",
+    "frontZone": "Front zone (first 4 m)",
+    "frontZoneWarn": "Front-zone load limit (4.5 t) exceeded — shift the load rearward or reduce it if possible."
   },
   "viewer": {
     "iso": "Isometric",

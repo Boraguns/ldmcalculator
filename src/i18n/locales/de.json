@@ -123,7 +123,7 @@
     "editRecalc": "Bearbeiten und neu berechnen",
     "resetAll": "Von vorne",
     "invalid": "Bitte gültige Produktdaten eingeben.",
-    "maxProducts": "Sie können maximal 20 verschiedene Produkte hinzufügen!",
+    "maxProducts": "Sie können maximal 100 verschiedene Produkte hinzufügen!",
     "notFitErr": "Artikel passten nicht oder es ist ein Fehler aufgetreten.",
     "errorOccurred": "Ein Fehler ist aufgetreten",
     "drawerAria": "Schritt-Panel öffnen/schließen",
@@ -175,7 +175,9 @@
     "addStanga": "Ladebalken hinzufügen",
     "stangaModeActive": "Klick auf Ladung",
     "addSpanzet": "Zurrgurt hinzufügen",
-    "spanzetModeActive": "Klick auf Ladung"
+    "spanzetModeActive": "Klick auf Ladung",
+    "frontZone": "Vorderzone (erste 4 m)",
+    "frontZoneWarn": "Lastgrenze der Vorderzone (4,5 t) überschritten — Last nach hinten verlagern oder reduzieren."
   },
   "viewer": {
     "iso": "Isometrisch",

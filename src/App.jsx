@@ -146,6 +146,25 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
                 warning: cogPct > 58
             };
         }
+
+        // Front-axle zone load: absolute kg resting on the first `frontZoneCm`
+        // of the deck (NOT a ratio). Only present for trucks (actualTruck holds
+        // the zone config). Each placedItem is one physical unit, so we sum the
+        // per-unit weight directly — no quantity multiplier.
+        if (actualTruck.frontZoneCm > 0 && totalDistW > 0) {
+            const zone = actualTruck.frontZoneCm;
+            const limit = actualTruck.frontZoneMaxKg || 0;
+            let frontZoneKg = 0;
+            result.placedItems.forEach(it => {
+                const cx = (it.position?.x || 0) + (it.dimensions?.length || 0) / 2;
+                if (cx < zone) frontZoneKg += (it.weight || 0);
+            });
+            result.balance = result.balance || {};
+            result.balance.frontZoneCm = zone;
+            result.balance.frontZoneKg = frontZoneKg;
+            result.balance.frontZoneLimit = limit;
+            result.balance.frontZoneOver = limit > 0 && frontZoneKg > limit + 1;
+        }
         return result;
     };
 
@@ -185,6 +204,14 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
                 const uldBase = 318;
                 actualTruck.length = Math.ceil(maxProdLen / uldBase) * uldBase;
             }
+        }
+
+        // Front-axle protection for semi-trailers: keep the first 4 m of the
+        // deck under 4.5 t. The packer budgets weight in this zone and pushes
+        // over-budget stacks behind it. Trucks (incl. custom dorse) only.
+        if (mode === 'truck') {
+            actualTruck.frontZoneCm = 400;
+            actualTruck.frontZoneMaxKg = 4500;
         }
 
         setSpecs(actualTruck);

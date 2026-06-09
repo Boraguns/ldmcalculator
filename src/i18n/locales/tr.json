@@ -122,7 +122,7 @@
     "editRecalc": "Düzenle ve Yeniden Hesapla",
     "resetAll": "Sıfırdan Hesapla",
     "invalid": "Lütfen geçerli ürün bilgileri girin.",
-    "maxProducts": "En fazla 20 farklı ürün ekleyebilirsiniz!",
+    "maxProducts": "En fazla 100 farklı ürün ekleyebilirsiniz!",
     "notFitErr": "Ürünler sığmadı veya bir hata oluştu.",
     "errorOccurred": "Hata oluştu",
     "drawerAria": "Adım panelini aç/kapat",
@@ -174,7 +174,9 @@
     "addStanga": "Ştanga Ekle",
     "stangaModeActive": "Eklemek için yüke tıkla",
     "addSpanzet": "Spanzet Ekle",
-    "spanzetModeActive": "Eklemek için yüke tıkla"
+    "spanzetModeActive": "Eklemek için yüke tıkla",
+    "frontZone": "Ön bölge (ilk 4 m)",
+    "frontZoneWarn": "Ön bölge yük sınırı (4.5 t) aşıldı — yükü mümkünse arkaya kaydırın veya azaltın."
   },
   "viewer": {
     "iso": "İzometrik",

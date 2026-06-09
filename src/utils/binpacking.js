@@ -13,6 +13,17 @@ export class BinPacking3D {
             maxWeight: containerDims.maxWeight || 22000 // kg
         };
 
+        // Front-axle protection (semi-trailer only): the first `frontZoneCm` of
+        // the deck must not carry more than `frontZoneMaxKg`. While packing we
+        // budget weight in this zone and push over-budget stacks behind it, so
+        // the load stays solid but the front (kingpin / drive axles) is not
+        // overloaded. Disabled (no effect) when frontZoneCm is 0 / unset.
+        this.frontZoneCm = containerDims.frontZoneCm || 0;
+        this.frontZoneMaxKg = (containerDims.frontZoneMaxKg && containerDims.frontZoneMaxKg > 0)
+            ? containerDims.frontZoneMaxKg
+            : Infinity;
+        this.frontZoneWeight = 0;
+
         // Items to pack (boxes/pallets)
         this.items = items.map((item) => ({
             id: item.id,
@@ -179,32 +190,53 @@ export class BinPacking3D {
 
             // Check if this TOWER fits anywhere
             // We pass a dummy item with infinite maxStack because we are handling the height manually here
-            const position = this.findBestPosition(stackDims, { ...item, maxStack: 99999 });
+            let position = this.findBestPosition(stackDims, { ...item, maxStack: 99999 });
 
-            if (position) {
-                // Found a spot! 
-                // Now place individual items in the stack at this position
-                for (let i = 0; i < stackSize; i++) {
-                    this.placedItems.push({
-                        ...item,
-                        isTemp, // Mark as temporary for capacity testing
-                        // Unique ID for each placed instance could be useful, but keeping ref is fine
-                        // Override properties for the placed instance
-                        position: {
-                            x: position.x,
-                            y: position.y,
-                            z: position.z + (i * orientation.height) // Stack up
-                        },
-                        dimensions: {
-                            length: orientation.length,
-                            width: orientation.width,
-                            height: orientation.height
-                        },
-                        rotation: orientation.rotation
-                    });
+            if (!position) continue;
+
+            // Front-axle protection: if this stack's centre lands in the front
+            // zone and would push the front-zone weight past its limit, try to
+            // re-place it behind the zone (the rest of the deck stays packed
+            // solid). If nothing fits behind, fall back to the original spot —
+            // placing beats dropping, and the result then flags a front-zone
+            // overload so the user knows to shed/redistribute weight.
+            const stackWeight = (item.weight || 0) * stackSize;
+            if (this.frontZoneCm > 0 && Number.isFinite(this.frontZoneMaxKg)) {
+                const cx = position.x + stackDims.length / 2;
+                if (cx < this.frontZoneCm && this.frontZoneWeight + stackWeight > this.frontZoneMaxKg) {
+                    const alt = this.findBestPosition(stackDims, { ...item, maxStack: 99999 }, this.frontZoneCm);
+                    if (alt) position = alt;
                 }
-                return true;
             }
+
+            // Found a spot!
+            // Now place individual items in the stack at this position
+            for (let i = 0; i < stackSize; i++) {
+                this.placedItems.push({
+                    ...item,
+                    isTemp, // Mark as temporary for capacity testing
+                    // Unique ID for each placed instance could be useful, but keeping ref is fine
+                    // Override properties for the placed instance
+                    position: {
+                        x: position.x,
+                        y: position.y,
+                        z: position.z + (i * orientation.height) // Stack up
+                    },
+                    dimensions: {
+                        length: orientation.length,
+                        width: orientation.width,
+                        height: orientation.height
+                    },
+                    rotation: orientation.rotation
+                });
+            }
+
+            // Track committed front-zone weight (ignore temporary trial fills).
+            if (this.frontZoneCm > 0 && !isTemp) {
+                const cx = position.x + stackDims.length / 2;
+                if (cx < this.frontZoneCm) this.frontZoneWeight += stackWeight;
+            }
+            return true;
         }
         return false;
     }
@@ -226,12 +258,17 @@ export class BinPacking3D {
         return orientations;
     }
 
-    findBestPosition(itemDims, item) {
+    findBestPosition(itemDims, item, minX = 0) {
         // OPTIMIZATION: Coordinate Point Search (Corner Point Heuristic)
         // Instead of checking every 1cm grid point (which causes millions of checks -> freezing),
         // we only check coordinates defined by the corners of already placed items.
+        //
+        // `minX` (optional): forbid any placement whose left edge is before this
+        // X. Used by the front-axle protection to push an over-budget stack
+        // behind the front zone.
 
         const xPoints = new Set([0]);
+        if (minX > 0) xPoints.add(minX);
         const yPoints = new Set([0]);
         const zPoints = new Set([0]);
 
@@ -253,6 +290,7 @@ export class BinPacking3D {
         for (let z of sortedZ) {
             if (z > effMaxZ) break;
             for (let x of sortedX) {
+                if (x < minX) continue; // front-zone exclusion (axle protection)
                 if (x > effMaxX) break;
                 for (let y of sortedY) {
                     if (y > effMaxY) break;

@@ -21,13 +21,15 @@ const COLUMNS = [
     { field: 'height',        aliases: ['height', 'yukseklik', 'hohe', 'vysota', 'hauteur', 'altrtfa', 'irtifa'] },
     { field: 'weight',        aliases: ['weight', 'agirlik', 'gewicht', 'ves', 'poids', 'alvzn', 'kg'] },
     { field: 'quantity',      aliases: ['quantity', 'qty', 'adet', 'menge', 'kolichestvo', 'quantite', 'alkmy', 'count'] },
-    { field: 'maxStack',      aliases: ['maxstack', 'maxistif', 'maksistif', 'istif', 'stapel', 'stack', 'shtabel', 'empilage'] },
+    // NOTE: "Max Stack" is intentionally NOT a template column. It is computed
+    // automatically on import from the box height vs the container height, so
+    // the user never has to fill it in.
     { field: 'allowRotation', aliases: ['allowrotation', 'rotation', 'dondurulebilir', 'dondur', 'rotierbar', 'povorot', 'aldwran', 'rotate'] },
     { field: 'stackable',     aliases: ['stackable', 'istiflenebilir', 'stapelbar', 'shtabeliruemyy', 'empilable', 'kabllltkds', 'canstack'] },
     { field: 'color',         aliases: ['color', 'colour', 'renk', 'farbe', 'cvet', 'couleur', 'allwn'] },
 ];
 
-const NUMERIC = new Set(['length', 'width', 'height', 'weight', 'quantity', 'maxStack']);
+const NUMERIC = new Set(['length', 'width', 'height', 'weight', 'quantity']);
 const BOOLEAN = new Set(['allowRotation', 'stackable']);
 
 // --- Localised header labels (for the downloaded template) ------------------
@@ -177,8 +179,8 @@ export const downloadProductTemplate = async (lang = 'en') => {
     // Example rows use friendly colour NAMES so the user copies the pattern
     // (instead of guessing hex). Colour is optional — leaving it blank lets the
     // app auto-assign one.
-    const example = ['Box A', 120, 80, 100, 25, 10, 3, 'N', 'Y', names[1]]; // Blue
-    const example2 = ['Box B', 60, 40, 40, 8, 24, 5, 'Y', 'Y', names[0]];   // Red
+    const example = ['Box A', 120, 80, 100, 25, 10, 'N', 'Y', names[1]]; // Blue
+    const example2 = ['Box B', 60, 40, 40, 8, 24, 'Y', 'Y', names[0]];   // Red
 
     const ws = XLSX.utils.aoa_to_sheet([header, example, example2]);
     ws['!cols'] = COLUMNS.map((c) => ({ wch: c.field === 'name' ? 18 : 14 }));

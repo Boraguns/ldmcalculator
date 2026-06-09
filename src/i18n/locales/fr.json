@@ -122,7 +122,7 @@
     "editRecalc": "Modifier et recalculer",
     "resetAll": "Recommencer",
     "invalid": "Veuillez saisir des données produit valides.",
-    "maxProducts": "Vous pouvez ajouter au maximum 20 produits différents !",
+    "maxProducts": "Vous pouvez ajouter au maximum 100 produits différents !",
     "notFitErr": "Les articles ne rentrent pas ou une erreur est survenue.",
     "errorOccurred": "Une erreur est survenue",
     "drawerAria": "Ouvrir/fermer le panneau",
@@ -174,7 +174,9 @@
     "addStanga": "Ajouter une barre",
     "stangaModeActive": "Cliquer sur la charge",
     "addSpanzet": "Ajouter une sangle",
-    "spanzetModeActive": "Cliquer sur la charge"
+    "spanzetModeActive": "Cliquer sur la charge",
+    "frontZone": "Zone avant (4 premiers m)",
+    "frontZoneWarn": "Limite de charge de la zone avant (4,5 t) dépassée — déplacez la charge vers l'arrière ou réduisez-la."
   },
   "viewer": {
     "iso": "Isométrique",

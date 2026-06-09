@@ -96,7 +96,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
     };
 
     const addProduct = () => {
-        if (products.length >= 20) {
+        if (products.length >= 100) {
             alert(t('wizard.maxProducts'));
             return;
         }
@@ -139,9 +139,24 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
             // "all same size" / tonnage shortcuts and load the full list.
             setSameSize(false);
             setByTonnage(false);
-            setProducts(imported.slice(0, 20));
-            if (imported.length > 20) alert(t('wizard.maxProducts'));
-            alert(t('wizard.excelLoaded', { count: Math.min(imported.length, 20) }));
+            // Auto-calculate the max stack per row from the box height vs the
+            // container height — the Excel template no longer asks the user for
+            // it (mirrors the manual height->maxStack behaviour in updateProduct).
+            const truckH = truckType === 'custom'
+                ? parseFloat(customDimensions.height)
+                : (TRUCK_SPECS[truckType] && TRUCK_SPECS[truckType].height);
+            const withStack = imported.map(p => {
+                const h = parseFloat(p.height);
+                let ms = 1;
+                if (h > 0 && truckH > 0) {
+                    const mp = Math.floor(truckH / h);
+                    ms = mp > 0 ? mp : 1;
+                }
+                return { ...p, maxStack: ms };
+            });
+            setProducts(withStack.slice(0, 100));
+            if (withStack.length > 100) alert(t('wizard.maxProducts'));
+            alert(t('wizard.excelLoaded', { count: Math.min(withStack.length, 100) }));
             setExcelModal(false);
         } catch (err) {
             alert(t('wizard.excelError'));
@@ -863,6 +878,22 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                                 <div style={{ width: `${resultData.balance.frontPct}%`, background: '#3b82f6', transition: 'width 0.3s' }} />
                                 <div style={{ width: `${resultData.balance.rearPct}%`, background: '#f59e0b', transition: 'width 0.3s' }} />
                             </div>
+
+                            {/* Front-axle zone: weight resting on the first 4 m of the deck. */}
+                            {resultData.balance.frontZoneCm > 0 && (
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px', fontSize: '0.75rem' }}>
+                                    <span style={{ color: '#000000' }}>{t('step3.frontZone')}</span>
+                                    <span style={{ fontWeight: 600, color: resultData.balance.frontZoneOver ? '#b91c1c' : '#059669' }}>
+                                        {(resultData.balance.frontZoneKg / 1000).toFixed(2)} / {(resultData.balance.frontZoneLimit / 1000).toFixed(1)} t
+                                    </span>
+                                </div>
+                            )}
+                            {resultData.balance.frontZoneOver && (
+                                <div style={{ fontSize: '0.72rem', color: '#b91c1c', marginTop: '6px', lineHeight: 1.4 }}>
+                                    {t('step3.frontZoneWarn')}
+                                </div>
+                            )}
+
                             {resultData.balance.warning && (
                                 <>
                                     <div style={{ fontSize: '0.75rem', color: '#b91c1c', marginTop: '8px', lineHeight: 1.4 }}>
