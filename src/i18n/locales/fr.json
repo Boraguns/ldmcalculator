@@ -176,7 +176,10 @@
     "addSpanzet": "Ajouter une sangle",
     "spanzetModeActive": "Cliquer sur la charge",
     "frontZone": "Zone avant (4 premiers m)",
-    "frontZoneWarn": "Limite de charge de la zone avant (4,5 t) dépassée — déplacez la charge vers l'arrière ou réduisez-la."
+    "frontZoneWarn": "Limite de charge de la zone avant (4,5 t) dépassée — déplacez la charge vers l'arrière ou réduisez-la.",
+    "notFitNamed": "{name} : {n} unités non chargées",
+    "autoStanga": "Barres anti-bascule auto",
+    "autoStangaNone": "Aucune pile à risque de basculement ; aucune barre nécessaire."
   },
   "viewer": {
     "iso": "Isométrique",

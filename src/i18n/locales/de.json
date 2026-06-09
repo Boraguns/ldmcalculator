@@ -177,7 +177,10 @@
     "addSpanzet": "Zurrgurt hinzufügen",
     "spanzetModeActive": "Klick auf Ladung",
     "frontZone": "Vorderzone (erste 4 m)",
-    "frontZoneWarn": "Lastgrenze der Vorderzone (4,5 t) überschritten — Last nach hinten verlagern oder reduzieren."
+    "frontZoneWarn": "Lastgrenze der Vorderzone (4,5 t) überschritten — Last nach hinten verlagern oder reduzieren.",
+    "notFitNamed": "{name}: {n} Einheiten passten nicht",
+    "autoStanga": "Auto-Sicherungsstangen",
+    "autoStangaNone": "Keine kippgefährdeten Stapel gefunden; keine Stangen nötig."
   },
   "viewer": {
     "iso": "Isometrisch",

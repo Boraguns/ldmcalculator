@@ -176,7 +176,10 @@
     "addSpanzet": "Add Spanzet (Strap)",
     "spanzetModeActive": "Click cargo to add/remove",
     "frontZone": "Front zone (first 4 m)",
-    "frontZoneWarn": "Front-zone load limit (4.5 t) exceeded — shift the load rearward or reduce it if possible."
+    "frontZoneWarn": "Front-zone load limit (4.5 t) exceeded — shift the load rearward or reduce it if possible.",
+    "notFitNamed": "{name}: {n} units left out",
+    "autoStanga": "Auto anti-tip bars",
+    "autoStangaNone": "No tip-prone stacks found; no bars needed."
   },
   "viewer": {
     "iso": "Isometric",

@@ -193,6 +193,61 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
         }
     };
 
+    // Auto-place anti-tip bars (ştanga) on stacked columns that could topple
+    // backwards: any column ≥2 layers high whose space directly behind (+X) is
+    // empty or at least ~one layer shorter is braced with a bar across the
+    // trailer width on its rear face. Mirrors what a loader does in reality for
+    // a load that doesn't fill the deck length / has stepped-down stacks.
+    const handleAutoStanga = () => {
+        const items = packedItems;
+        if (!items || !items.length) return 0;
+
+        // Group placed units into footprint columns.
+        const colMap = new Map();
+        items.forEach((it, idx) => {
+            if (!it.position || !it.dimensions) return;
+            const key = `${Math.round(it.position.x)}|${Math.round(it.position.y)}|${it.dimensions.length}x${it.dimensions.width}`;
+            let c = colMap.get(key);
+            if (!c) {
+                c = { items: [], x: it.position.x, y: it.position.y, len: it.dimensions.length, wid: it.dimensions.width };
+                colMap.set(key, c);
+            }
+            c.items.push({ idx, it });
+        });
+
+        const cols = [...colMap.values()].map(c => {
+            let topIdx = c.items[0].idx, topZ = -Infinity, topH = 0;
+            c.items.forEach(e => {
+                const z = e.it.position.z;
+                if (z > topZ) { topZ = z; topIdx = e.idx; topH = e.it.dimensions.height; }
+            });
+            return { ...c, topIdx, layers: c.items.length, topHeight: topZ + topH, layerH: c.items[0].it.dimensions.height };
+        });
+
+        const next = [];
+        cols.forEach(c => {
+            if (c.layers < 2) return; // only real stacks can topple
+            const rearX = c.x + c.len;
+            // Tallest column directly behind (+X) that overlaps this one in width.
+            let behind = 0;
+            cols.forEach(o => {
+                if (o === c) return;
+                if (o.x + 0.1 < rearX) return; // not behind
+                const overlapY = !(c.y + c.wid <= o.y || o.y + o.wid <= c.y);
+                if (!overlapY) return;
+                if (o.topHeight > behind) behind = o.topHeight;
+            });
+            // Exposed rear face (nothing / something shorter behind) → brace it.
+            if (behind < c.topHeight - c.layerH * 0.5) next.push({ itemIndex: c.topIdx });
+        });
+
+        // De-dupe by itemIndex.
+        const seen = new Set();
+        const deduped = next.filter(s => (seen.has(s.itemIndex) ? false : (seen.add(s.itemIndex), true)));
+        setStangas(deduped);
+        return deduped.length;
+    };
+
     const handleCalculate = (truck, products) => {
         let actualTruck = { ...truck };
 
@@ -631,6 +686,7 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
                 addSpanzetMode={addSpanzetMode}
                 onToggleSpanzetMode={() => { setAddSpanzetMode(v => !v); setAddStangaMode(false); }}
                 spanzetCount={spanzets.length}
+                onAutoStanga={handleAutoStanga}
             />
 
             {/* SCREENSHOT MODAL */}

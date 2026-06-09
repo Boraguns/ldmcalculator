@@ -9,7 +9,7 @@ import { downloadProductTemplate, parseProductsFile } from '../utils/excelProduc
 import { useUsage } from '../usage/UsageContext';
 import { saveDraft, loadDraft } from '../utils/draft';
 
-const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mode = 'truck', customSpecs = null, addStangaMode = false, onToggleStangaMode, stangaCount = 0, addSpanzetMode = false, onToggleSpanzetMode, spanzetCount = 0 }) => {
+const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mode = 'truck', customSpecs = null, addStangaMode = false, onToggleStangaMode, stangaCount = 0, addSpanzetMode = false, onToggleSpanzetMode, spanzetCount = 0, onAutoStanga }) => {
     const { t, lang } = useT();
     const { guard } = useUsage();
     const excelInputRef = useRef(null);
@@ -805,6 +805,21 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                                 <p style={{ color: '#b91c1c', margin: 0, fontSize: '0.82rem' }}>
                                     {isPlane ? t('step3.overloadedDescPlane', { n: resultData.missingCount }) : t('step3.overloadedDescTruck', { n: resultData.missingCount })}
                                 </p>
+                                {/* Which exact products (and how many of each) were left out. */}
+                                {resultData.itemBreakdown && (
+                                    <ul style={{ margin: '6px 0 0', paddingLeft: 18, color: '#b91c1c', fontSize: '0.8rem', lineHeight: 1.5 }}>
+                                        {Object.entries(resultData.itemBreakdown)
+                                            .filter(([, b]) => b.unplaced > 0)
+                                            .map(([id, b]) => {
+                                                const nm = (b.name && !String(b.name).startsWith('#'))
+                                                    ? b.name
+                                                    : `${t('step3.product')} #${id}`;
+                                                return (
+                                                    <li key={id}>{t('step3.notFitNamed', { name: nm, n: b.unplaced })}</li>
+                                                );
+                                            })}
+                                    </ul>
+                                )}
                             </div>
                         </div>
                     )}
@@ -983,6 +998,23 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                                 </button>
                             )}
                         </div>
+                    )}
+
+                    {/* One-tap auto bracing: place anti-tip bars on stacked
+                        columns that are exposed at the rear (could topple). */}
+                    {onAutoStanga && !isPlane && !isShip && (
+                        <button
+                            className="ai-btn"
+                            onClick={() => {
+                                const n = onAutoStanga();
+                                if (!n) alert(t('step3.autoStangaNone'));
+                            }}
+                            style={{ marginTop: '8px', padding: '2px', height: '40px', width: '100%' }}
+                        >
+                            <div className="ai-btn-inner" style={{ padding: '0 12px', height: '100%', fontSize: '0.8rem', gap: '6px', justifyContent: 'center' }}>
+                                🛡️ {t('step3.autoStanga')}
+                            </div>
+                        </button>
                     )}
 
                     <div className="detailed-report" style={{ marginTop: '1.2rem' }}>

@@ -176,7 +176,10 @@
     "addSpanzet": "Spanzet Ekle",
     "spanzetModeActive": "Eklemek için yüke tıkla",
     "frontZone": "Ön bölge (ilk 4 m)",
-    "frontZoneWarn": "Ön bölge yük sınırı (4.5 t) aşıldı — yükü mümkünse arkaya kaydırın veya azaltın."
+    "frontZoneWarn": "Ön bölge yük sınırı (4.5 t) aşıldı — yükü mümkünse arkaya kaydırın veya azaltın.",
+    "notFitNamed": "{name}: {n} adet dışarıda kaldı",
+    "autoStanga": "Otomatik ştanga ekle",
+    "autoStangaNone": "Devrilme riski olan istif bulunamadı; ştangaya gerek yok."
   },
   "viewer": {
     "iso": "İzometrik",
