@@ -732,62 +732,33 @@ const WarehouseEnvironment = ({ floorY, showFlags = true, onFlagClick, bannerUrl
         <group position={[0, floorY, 0]}>
             {/* ============= FLOORING ============= */}
 
-            {/* Epoxy-coated Industrial Floor (main warehouse area) */}
+            {/* Polished grey concrete warehouse floor. The truck is parked
+                INSIDE a depot bay, so this is concrete — not an asphalt road. */}
             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]} receiveShadow>
                 <planeGeometry args={[200, 120]} />
-                <meshStandardMaterial color="#1e293b" roughness={0.4} metalness={0.15} />
+                <meshStandardMaterial color="#a3a8af" roughness={0.8} metalness={0.04} />
             </mesh>
 
-            {/* Asphalt Road (Center Lane - truck driving area) */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} receiveShadow>
-                <planeGeometry args={[200, 8]} />
-                <meshStandardMaterial color="#1a1a1a" roughness={0.92} />
-            </mesh>
-
-            {/* Road Surface Detail (slight texture variation) */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.015, 0]}>
-                <planeGeometry args={[200, 7.5]} />
-                <meshStandardMaterial color="#222222" roughness={0.95} transparent opacity={0.3} />
-            </mesh>
-
-            {/* Road Markings (Dashed Center Line) */}
-            {[...Array(25)].map((_, i) => (
-                <mesh key={`dash${i}`} rotation={[-Math.PI / 2, 0, 0]} position={[-96 + (i * 8), 0.025, 0]} receiveShadow>
-                    <planeGeometry args={[3, 0.12]} />
-                    <meshBasicMaterial color="#e2e8f0" opacity={0.5} transparent />
-                </mesh>
-            ))}
-
-            {/* Safety Lines (Yellow Hazard Stripes) */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.025, 4.2]}>
+            {/* Yellow forklift-lane / bay marking lines on the concrete */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 4.2]}>
                 <planeGeometry args={[200, 0.25]} />
                 <meshBasicMaterial color="#fbbf24" />
             </mesh>
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.025, -4.2]}>
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, -4.2]}>
                 <planeGeometry args={[200, 0.25]} />
                 <meshBasicMaterial color="#fbbf24" />
-            </mesh>
-
-            {/* Pedestrian walkway markings */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 5.5]}>
-                <planeGeometry args={[200, 0.1]} />
-                <meshBasicMaterial color="#ffffff" opacity={0.3} transparent />
-            </mesh>
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, -5.5]}>
-                <planeGeometry args={[200, 0.1]} />
-                <meshBasicMaterial color="#ffffff" opacity={0.3} transparent />
             </mesh>
 
             {/* ============= WALLS ============= */}
 
-            {/* End Walls — close the long road ends so looking down the truck's
+            {/* End Walls — close the long ends so looking down the truck's
                 direction hits a wall instead of an open, glaring foggy horizon.
-                Kept as a single solid concrete slab (no coplanar accent/kick
-                meshes) so there is no z-fighting shimmer at this distance —
-                stable like the side wall. */}
+                Single solid concrete slab, shifted FORWARD so it never overlaps
+                the back wall's volume (the overlap was the source of the
+                z-fighting shimmer). No coplanar detail meshes either. */}
             {[-60, 60].map((x, i) => (
-                <mesh key={`endwall${i}`} position={[x, 15, 0]} receiveShadow>
-                    <boxGeometry args={[1.2, 30, 44]} />
+                <mesh key={`endwall${i}`} position={[x, 15, 2]} receiveShadow>
+                    <boxGeometry args={[1.2, 30, 42]} />
                     <meshStandardMaterial color="#94a3b8" roughness={0.85} metalness={0.05} />
                 </mesh>
             ))}
