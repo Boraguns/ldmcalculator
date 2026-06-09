@@ -32,7 +32,10 @@ export class BinPacking3D {
             height: parseFloat(item.height),
             weight: parseFloat(item.weight),
             quantity: parseInt(item.quantity),
-            maxStack: parseInt(item.maxStack) || 999, // User defined constraint
+            // A non-stackable item must never form a tower of itself, so its
+            // effective max stack is forced to 1. (Cross-product stacking is
+            // handled separately in canPlaceAt.)
+            maxStack: (item.stackable === false) ? 1 : (parseInt(item.maxStack) || 999),
             allowRotation: item.allowRotation !== false,
             // Cross-product stacking control. Default true. When false, no
             // OTHER product may sit on top of this one, and this product may
@@ -318,13 +321,14 @@ export class BinPacking3D {
             }
         }
 
-        // Cross-product stacking check.
-        // If we're stacking (z > 0), look at the items directly below the
-        // candidate footprint. If any directly-below item has a DIFFERENT id,
-        // the placement is only allowed when BOTH items are stackable (true).
-        // Otherwise (either side unstackable + different products) → reject.
+        // Stacking rules (only relevant when placing above the floor).
+        //  - A NON-stackable candidate may rest on the floor ONLY (never on top
+        //    of anything, including more units of itself).
+        //  - NOTHING may be placed on top of a non-stackable item.
+        //  - Otherwise (both stackable) same- and cross-product stacking is OK.
         if (candidateItem && position.z > 0) {
-            const candStackable = candidateItem.stackable !== false;
+            // Non-stackable item: floor placements only.
+            if (candidateItem.stackable === false) return false;
             for (const placed of this.placedItems) {
                 const placedTop = placed.position.z + placed.dimensions.height;
                 if (Math.abs(placedTop - position.z) > 0.001) continue; // not touching from below
@@ -334,11 +338,8 @@ export class BinPacking3D {
                 const overlapY = !(position.y + itemDims.width <= placed.position.y ||
                                     placed.position.y + placed.dimensions.width <= position.y);
                 if (!overlapX || !overlapY) continue;
-                // Item directly below this candidate.
-                if (placed.id !== candidateItem.id) {
-                    const placedStackable = placed.stackable !== false;
-                    if (!candStackable || !placedStackable) return false;
-                }
+                // The item directly below must allow something on top of it.
+                if (placed.stackable === false) return false;
             }
         }
         return true;

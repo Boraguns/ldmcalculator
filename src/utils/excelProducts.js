@@ -32,6 +32,19 @@ const COLUMNS = [
 const NUMERIC = new Set(['length', 'width', 'height', 'weight', 'quantity']);
 const BOOLEAN = new Set(['allowRotation', 'stackable']);
 
+// Yes/No tokens used in the EXAMPLE rows of the downloaded template, matching
+// the (E/H), (Y/N), (J/N)… hint shown in each language's column headers so the
+// header and the sample values are consistent. All of these are recognised by
+// the parser's TRUE_TOKENS / FALSE_TOKENS sets.
+const YESNO = {
+    tr: { y: 'E', n: 'H' },
+    en: { y: 'Y', n: 'N' },
+    de: { y: 'J', n: 'N' },
+    ru: { y: 'Д', n: 'Н' },
+    fr: { y: 'O', n: 'N' },
+    ar: { y: 'نعم', n: 'لا' },
+};
+
 // --- Localised header labels (for the downloaded template) ------------------
 
 const HEADER_LABELS = {
@@ -175,12 +188,13 @@ export const downloadProductTemplate = async (lang = 'en') => {
     const XLSX = await import('xlsx');
     const labels = HEADER_LABELS[lang] || HEADER_LABELS.en;
     const names = COLOR_NAMES[lang] || COLOR_NAMES.en;
+    const yn = YESNO[lang] || YESNO.en;
     const header = COLUMNS.map((c) => labels[c.field]);
     // Example rows use friendly colour NAMES so the user copies the pattern
     // (instead of guessing hex). Colour is optional — leaving it blank lets the
-    // app auto-assign one.
-    const example = ['Box A', 120, 80, 100, 25, 10, 'N', 'Y', names[1]]; // Blue
-    const example2 = ['Box B', 60, 40, 40, 8, 24, 'Y', 'Y', names[0]];   // Red
+    // app auto-assign one. Yes/No values match the header hint for the language.
+    const example = ['Box A', 120, 80, 100, 25, 10, yn.n, yn.y, names[1]]; // Blue
+    const example2 = ['Box B', 60, 40, 40, 8, 24, yn.y, yn.y, names[0]];   // Red
 
     const ws = XLSX.utils.aoa_to_sheet([header, example, example2]);
     ws['!cols'] = COLUMNS.map((c) => ({ wch: c.field === 'name' ? 18 : 14 }));
