@@ -271,8 +271,34 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
 
         setSpecs(actualTruck);
         try {
-            const packer = new BinPacking3D(actualTruck, products);
-            const result = packer.pack();
+            let packer = new BinPacking3D(actualTruck, products);
+            let result = packer.pack();
+            let chosenTruck = actualTruck;
+
+            // For trucks, also try a "lightest cargo to the front" pass so the
+            // weight-capped front zone is filled with lighter products (rather
+            // than being left partly empty while heavy stacks sit behind it).
+            // Keep that pass only if it loads at least as many units AND fills
+            // the front more fully — so packing efficiency never regresses.
+            if (mode === 'truck' && result.success && actualTruck.frontZoneCm > 0) {
+                const zone = actualTruck.frontZoneCm;
+                const frontVol = (r) => (r.placedItems || []).reduce((s, it) => {
+                    const cx = (it.position?.x || 0) + (it.dimensions?.length || 0) / 2;
+                    return cx < zone
+                        ? s + (it.dimensions.length * it.dimensions.width * it.dimensions.height)
+                        : s;
+                }, 0);
+                const lightTruck = { ...actualTruck, lightFirst: true };
+                const packerL = new BinPacking3D(lightTruck, products);
+                const resultL = packerL.pack();
+                if (resultL.success
+                    && resultL.totalItems >= result.totalItems
+                    && frontVol(resultL) > frontVol(result) + 1) {
+                    packer = packerL;
+                    result = resultL;
+                    chosenTruck = lightTruck;
+                }
+            }
 
             if (result.success) {
                 const requestedTotal = products.reduce((sum, p) => sum + (parseInt(p.quantity) || 0), 0);
@@ -288,8 +314,8 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
                     result.isOverloaded = true;
                     result.missingCount = requestedTotal - result.totalItems;
                 }
-                const finalized = finalizePackResult(result, products, actualTruck);
-                setLastInput({ truck: actualTruck, products });
+                const finalized = finalizePackResult(result, products, chosenTruck);
+                setLastInput({ truck: chosenTruck, products });
                 setPackedItems(finalized.placedItems);
                 setStangas([]); // reset manual ştangas on new pack
                 setSpanzets([]);

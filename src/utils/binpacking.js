@@ -24,6 +24,12 @@ export class BinPacking3D {
             : Infinity;
         this.frontZoneWeight = 0;
 
+        // When true, items are packed lightest-per-volume first so the
+        // weight-capped front zone fills with the lightest cargo (heavier
+        // cargo is pushed to the rear). Used to fill the front 4 m fully while
+        // staying under the front-axle limit.
+        this.lightFirst = containerDims.lightFirst === true;
+
         // Items to pack (boxes/pallets)
         this.items = items.map((item) => ({
             id: item.id,
@@ -145,9 +151,26 @@ export class BinPacking3D {
     }
 
     sortItemsByVolume() {
+        const vol = (it) => it.length * it.width * it.height;
+
+        // "Lightest to the front" mode: order by density (kg per cm³) ascending
+        // so low-density cargo is placed first and fills the front zone with the
+        // most volume per kg; denser/heavier cargo comes later and lands at the
+        // rear. Volume desc breaks ties to keep packing tight.
+        if (this.lightFirst) {
+            return [...this.items].sort((a, b) => {
+                const densA = (a.weight || 0) / Math.max(1, vol(a));
+                const densB = (b.weight || 0) / Math.max(1, vol(b));
+                if (Math.abs(densA - densB) > 1e-9) return densA - densB;
+                const vA = vol(a), vB = vol(b);
+                if (vB !== vA) return vB - vA;
+                return String(a.id).localeCompare(String(b.id));
+            });
+        }
+
         return [...this.items].sort((a, b) => {
-            const volA = a.length * a.width * a.height;
-            const volB = b.length * b.width * b.height;
+            const volA = vol(a);
+            const volB = vol(b);
             if (volB !== volA) return volB - volA;
             // Stable tie-break by id so results are reproducible
             return String(a.id).localeCompare(String(b.id));
