@@ -8,6 +8,7 @@ import usePageMeta from '../hooks/usePageMeta';
 import { useUsage } from '../usage/UsageContext';
 import { useAuth } from '../auth/AuthContext';
 import { api } from '../utils/api';
+import { saveDraft, loadDraft } from '../utils/draft';
 import '../cmr.css';
 import '../invoice.css';
 
@@ -152,14 +153,24 @@ const PackingList = () => {
         canonical: 'https://ldmcalculator.com/tools/packing-list',
     });
 
-    const [f, setF] = useState({});
-    const [stamp, setStamp] = useState('');
+    // Restore a saved draft (text fields only — stamp image is not persisted).
+    const plDraft = loadDraft('packing') || {};
     const emptyRow = () => ({ itemNo: '', hs: '', name: '', qty: '', netKg: '', grossKg: '' });
-    const [items, setItems] = useState(() => [emptyRow(), emptyRow(), emptyRow()]);
+
+    const [f, setF] = useState(plDraft.f || {});
+    const [stamp, setStamp] = useState('');
+    const [items, setItems] = useState(() =>
+        (Array.isArray(plDraft.items) && plDraft.items.length)
+            ? plDraft.items
+            : [emptyRow(), emptyRow(), emptyRow()]
+    );
     const signRef = useRef(null);
 
     const set = (k) => (e) => setF(prev => ({ ...prev, [k]: e.target.value }));
     const val = (k) => f[k] ?? '';
+
+    // Auto-save the form so it survives a login/register round-trip.
+    useEffect(() => { saveDraft('packing', { f, items }); }, [f, items]);
 
     // ----- repeater rows -----
     const setItem = (i, k) => (e) =>

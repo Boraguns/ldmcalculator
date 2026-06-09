@@ -5,6 +5,7 @@ import usePageMeta from '../hooks/usePageMeta';
 import { useUsage } from '../usage/UsageContext';
 import { useAuth } from '../auth/AuthContext';
 import { api } from '../utils/api';
+import { saveDraft, loadDraft } from '../utils/draft';
 import '../cmr.css';
 
 /**
@@ -28,11 +29,13 @@ const CmrDocument = () => {
 
     // Only the "NO" prefix is pre-filled; the user types the document number
     // and the place/country themselves (no auto "İstanbul / Türkiye").
-    const [f, setF] = useState({
-        no: 'NO '
-    });
+    const [f, setF] = useState(() => loadDraft('cmr') || { no: 'NO ' });
     const set = (k) => (e) => setF(prev => ({ ...prev, [k]: e.target.value }));
     const val = (k) => f[k] ?? '';
+
+    // Auto-save the form so it survives a login/register round-trip and is
+    // restored when the user returns to this page.
+    useEffect(() => { saveDraft('cmr', f); }, [f]);
 
     // ----- Zoom / fit-to-width (mobile-friendly viewing) -----
     const stageRef = useRef(null);

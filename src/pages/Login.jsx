@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import AuthShell, { Field, SubmitBtn, ErrorMsg } from '../components/AuthShell';
 import { useAuth } from '../auth/AuthContext';
 import { useT } from '../i18n/LanguageContext';
@@ -9,6 +9,10 @@ export default function Login() {
     const { t } = useT();
     const { login } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
+    // When the user was sent here from the paywall on a work page, return them
+    // there afterwards (their input is auto-saved as a draft) instead of /account.
+    const from = location.state?.from;
     usePageMeta({ title: 'Login | LDMCalculator', description: 'Sign in to your LDMCalculator account.' });
 
     const [email, setEmail] = useState('');
@@ -21,7 +25,7 @@ export default function Login() {
         setErr(''); setLoading(true);
         try {
             await login(email.trim(), password);
-            navigate('/account');
+            navigate(from || '/account');
         } catch (e2) {
             setErr(t(`auth.err.${e2.message}`) || t('auth.err.generic'));
         } finally { setLoading(false); }
@@ -32,7 +36,7 @@ export default function Login() {
             title={t('auth.loginTitle')}
             subtitle={t('auth.loginSubtitle')}
             bgImage
-            footer={<>{t('auth.noAccount')} <Link to="/register" style={{ color: '#60a5fa' }}>{t('auth.registerLink')}</Link></>}
+            footer={<>{t('auth.noAccount')} <Link to="/register" state={from ? { from } : undefined} style={{ color: '#60a5fa' }}>{t('auth.registerLink')}</Link></>}
         >
             <form onSubmit={submit}>
                 <ErrorMsg>{err}</ErrorMsg>

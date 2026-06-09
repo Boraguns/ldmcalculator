@@ -8,6 +8,7 @@ import usePageMeta from '../hooks/usePageMeta';
 import { useUsage } from '../usage/UsageContext';
 import { useAuth } from '../auth/AuthContext';
 import { api } from '../utils/api';
+import { saveDraft, loadDraft } from '../utils/draft';
 import '../cmr.css';
 import '../invoice.css';
 
@@ -158,17 +159,28 @@ const Invoice = () => {
         canonical: 'https://ldmcalculator.com/tools/invoice',
     });
 
-    const [f, setF] = useState({});
+    // Restore a saved draft (text fields only — logo/stamp images are not
+    // persisted to keep within localStorage limits).
+    const invoiceDraft = loadDraft('invoice') || {};
+    const emptyRow = () => ({ itemNo: '', hs: '', name: '', qty: '', price: '' });
+
+    const [f, setF] = useState(invoiceDraft.f || {});
     const [logo, setLogo] = useState('');
     const [stamp, setStamp] = useState('');
-    const [currency, setCurrency] = useState('EUR');
-    const [discountType, setDiscountType] = useState('amount'); // 'amount' | 'percent'
-    const emptyRow = () => ({ itemNo: '', hs: '', name: '', qty: '', price: '' });
-    const [items, setItems] = useState(() => [emptyRow(), emptyRow(), emptyRow()]);
+    const [currency, setCurrency] = useState(invoiceDraft.currency || 'EUR');
+    const [discountType, setDiscountType] = useState(invoiceDraft.discountType || 'amount'); // 'amount' | 'percent'
+    const [items, setItems] = useState(() =>
+        (Array.isArray(invoiceDraft.items) && invoiceDraft.items.length)
+            ? invoiceDraft.items
+            : [emptyRow(), emptyRow(), emptyRow()]
+    );
     const signRef = useRef(null);
 
     const set = (k) => (e) => setF(prev => ({ ...prev, [k]: e.target.value }));
     const val = (k) => f[k] ?? '';
+
+    // Auto-save the form so it survives a login/register round-trip.
+    useEffect(() => { saveDraft('invoice', { f, items, currency, discountType }); }, [f, items, currency, discountType]);
 
     // ----- repeater rows -----
     const setItem = (i, k) => (e) =>

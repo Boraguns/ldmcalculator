@@ -1,16 +1,20 @@
 // App-wide paywall modal shown when a visitor exhausts the daily free quota.
 // Anonymous visitors are nudged to register (more free uses) or subscribe;
 // free registered users are nudged straight to a subscription.
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useT } from '../i18n/LanguageContext';
 
 export default function Paywall({ status, onClose }) {
     const { t } = useT();
     const navigate = useNavigate();
+    const location = useLocation();
     const tier = status?.tier || 'anon';
     const limit = status?.limit;
 
     const go = (path) => { onClose?.(); navigate(path); };
+    // Login/register from the paywall should return the user to the page they
+    // were on (truck wizard / a document) — their work is auto-saved as a draft.
+    const goAuth = (path) => { onClose?.(); navigate(path, { state: { from: location.pathname } }); };
 
     return (
         <div className="modal-overlay" onClick={onClose} style={{ zIndex: 5000 }}>
@@ -33,7 +37,7 @@ export default function Paywall({ status, onClose }) {
                     </button>
 
                     {tier === 'anon' && (
-                        <button className="ai-btn" onClick={() => go('/register')} style={{ height: 44 }}>
+                        <button className="ai-btn" onClick={() => goAuth('/register')} style={{ height: 44 }}>
                             <div className="ai-btn-inner">{t('paywall.register')}</div>
                         </button>
                     )}
@@ -41,7 +45,7 @@ export default function Paywall({ status, onClose }) {
                     {tier === 'anon' && (
                         <p style={{ color: '#64748b', fontSize: 13, textAlign: 'center', margin: '4px 0 0' }}>
                             {t('paywall.haveAccount')}{' '}
-                            <a onClick={() => go('/login')} style={{ color: '#60a5fa', cursor: 'pointer' }}>
+                            <a onClick={() => goAuth('/login')} style={{ color: '#60a5fa', cursor: 'pointer' }}>
                                 {t('paywall.login')}
                             </a>
                         </p>

@@ -7,19 +7,29 @@ import { useT, LanguageSwitcher } from '../i18n/LanguageContext';
 import AccountMenu from './AccountMenu';
 import { downloadProductTemplate, parseProductsFile } from '../utils/excelProducts';
 import { useUsage } from '../usage/UsageContext';
+import { saveDraft, loadDraft } from '../utils/draft';
 
 const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mode = 'truck', customSpecs = null, addStangaMode = false, onToggleStangaMode, stangaCount = 0, addSpanzetMode = false, onToggleSpanzetMode, spanzetCount = 0 }) => {
     const { t, lang } = useT();
     const { guard } = useUsage();
     const excelInputRef = useRef(null);
-    const [step, setStep] = useState(1);
-    const [truckType, setTruckType] = useState(null); // 'standard' or 'mega'
-    const [sameSize, setSameSize] = useState(false);
-    const [byTonnage, setByTonnage] = useState(false);
-    const [totalTons, setTotalTons] = useState('');
+
+    // Restore an auto-saved draft (per mode) so a visitor who filled the wizard
+    // and got bounced to login/register comes back to the same values. Read once
+    // at mount; lazy useState initialisers below seed from it.
+    const draftKey = `wizard_${mode}`;
+    const draftRef = useRef(null);
+    if (draftRef.current === null) draftRef.current = loadDraft(draftKey) || {};
+    const d0 = draftRef.current;
+
+    const [step, setStep] = useState(d0.truckType ? 2 : 1);
+    const [truckType, setTruckType] = useState(d0.truckType ?? null); // 'standard' or 'mega'
+    const [sameSize, setSameSize] = useState(d0.sameSize ?? false);
+    const [byTonnage, setByTonnage] = useState(d0.byTonnage ?? false);
+    const [totalTons, setTotalTons] = useState(d0.totalTons ?? '');
     const [tonnageInfo, setTonnageInfo] = useState(null);
     const [resultData, setResultData] = useState(null);
-    const [customDimensions, setCustomDimensions] = useState({ length: 1360, width: 245, height: 275 });
+    const [customDimensions, setCustomDimensions] = useState(d0.customDimensions ?? { length: 1360, width: 245, height: 275 });
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [excelModal, setExcelModal] = useState(false);
     const [excelDragOver, setExcelDragOver] = useState(false);
@@ -33,10 +43,18 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
     const isShip = mode === 'ship';
     const typeLabel = (isTrain || isShip) ? t('truckTypes.type.container') : isPlane ? t('truckTypes.type.uld') : t('truckTypes.type.trailer');
 
-    // Initial product state
-    const [products, setProducts] = useState([
-        { id: 1, name: '', length: '', width: '', height: '', weight: '', quantity: '', maxStack: 1, allowRotation: false, color: '', stackable: true, useTotalWeight: false, totalWeight: '' }
-    ]);
+    // Initial product state (seeded from a saved draft when present)
+    const [products, setProducts] = useState(
+        (Array.isArray(d0.products) && d0.products.length)
+            ? d0.products
+            : [{ id: 1, name: '', length: '', width: '', height: '', weight: '', quantity: '', maxStack: 1, allowRotation: false, color: '', stackable: true, useTotalWeight: false, totalWeight: '' }]
+    );
+
+    // Auto-save the form as the user edits, so it survives a login/register
+    // round-trip (or any navigation) and can be restored on return.
+    useEffect(() => {
+        saveDraft(draftKey, { truckType, customDimensions, sameSize, byTonnage, totalTons, products });
+    }, [draftKey, truckType, customDimensions, sameSize, byTonnage, totalTons, products]);
 
     const handleResetAll = () => {
         setStep(1);
