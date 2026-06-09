@@ -782,29 +782,15 @@ const WarehouseEnvironment = ({ floorY, showFlags = true, onFlagClick, bannerUrl
 
             {/* End Walls — close the long road ends so looking down the truck's
                 direction hits a wall instead of an open, glaring foggy horizon.
-                Perpendicular to the road (thin in X, deep in Z), connected to
-                the back-wall corners. */}
-            {[-60, 60].map((x, i) => {
-                const inner = x < 0 ? 1 : -1; // which side faces the scene centre
-                return (
-                    <group key={`endwall${i}`} position={[x, 0, 0]}>
-                        <mesh position={[0, 15, 0]} receiveShadow>
-                            <boxGeometry args={[0.8, 30, 44]} />
-                            <meshStandardMaterial color="#94a3b8" roughness={0.85} metalness={0.05} />
-                        </mesh>
-                        {/* Lower kick plate (darker), on the inward face */}
-                        <mesh position={[inner * 0.42, 0.75, 0]} receiveShadow>
-                            <boxGeometry args={[0.05, 1.5, 44]} />
-                            <meshStandardMaterial color="#475569" roughness={0.9} />
-                        </mesh>
-                        {/* Blue accent light strip at the top, facing inward */}
-                        <mesh position={[inner * 0.5, 28, 0]}>
-                            <boxGeometry args={[0.3, 0.4, 44]} />
-                            <meshStandardMaterial color="#3b82f6" emissive="#3b82f6" emissiveIntensity={1.5} toneMapped={false} />
-                        </mesh>
-                    </group>
-                );
-            })}
+                Kept as a single solid concrete slab (no coplanar accent/kick
+                meshes) so there is no z-fighting shimmer at this distance —
+                stable like the side wall. */}
+            {[-60, 60].map((x, i) => (
+                <mesh key={`endwall${i}`} position={[x, 15, 0]} receiveShadow>
+                    <boxGeometry args={[1.2, 30, 44]} />
+                    <meshStandardMaterial color="#94a3b8" roughness={0.85} metalness={0.05} />
+                </mesh>
+            ))}
 
             {/* Back Wall - Main Visible Wall (Concrete Panels) */}
             <group position={[0, 0, -20]}>
