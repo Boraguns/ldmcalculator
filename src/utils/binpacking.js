@@ -88,35 +88,26 @@ export class BinPacking3D {
             }
         }
 
-        // ===================== PHASE 2 — STACK OVERFLOW =====================
-        // Stack the remainder on top, biased toward the REAR of the deck, so the
-        // front stays light (target ≈ 20% of the total weight in the first 4 m).
+        // ===================== PHASE 2 — UPPER LAYERS =====================
+        // Fill the upper layers the SAME way as the floor: spread each layer
+        // across the whole deck before starting the next one — only go higher
+        // when the current layer has no room left. Placing ONE unit at a time
+        // (instead of building tall towers) plus the z-ascending corner search
+        // gives a true layer-by-layer fill. Each layer is filled from the REAR
+        // so the topmost (partial) layer keeps the front lighter (~20% target).
         const sortedItems = this.sortItemsByVolume();
         for (let item of sortedItems) {
             let remaining = remainingQty[item.id];
 
             while (remaining > 0) {
-                const currentMaxStack = Math.min(remaining, item.maxStack);
-                let placedAmount = 0;
-
-                if (this.currentWeight + (item.weight * 1) > this.container.maxWeight) {
+                if (this.currentWeight + item.weight > this.container.maxWeight) {
                     break;
                 }
 
-                // Try to place the largest possible stack first (greedy), from the rear.
-                for (let s = currentMaxStack; s >= 1; s--) {
-                    if (this.currentWeight + (item.weight * s) <= this.container.maxWeight) {
-                        if (this.tryPlaceStack(item, s, false, { rearFirst: true })) {
-                            placedAmount = s;
-                            this.currentWeight += (item.weight * s);
-                            break;
-                        }
-                    }
-                }
-
-                if (placedAmount > 0) {
-                    remaining -= placedAmount;
-                    placedPerItem[item.id] = (placedPerItem[item.id] || 0) + placedAmount;
+                if (this.tryPlaceStack(item, 1, false, { rearFirst: true, respectMaxStack: true })) {
+                    this.currentWeight += item.weight;
+                    placedPerItem[item.id] = (placedPerItem[item.id] || 0) + 1;
+                    remaining -= 1;
                 } else {
                     break; // Cannot fit anymore of this item
                 }
@@ -236,7 +227,11 @@ export class BinPacking3D {
 
             // Check if this TOWER fits anywhere
             // We pass a dummy item with infinite maxStack because we are handling the height manually here
-            const position = this.findBestPosition(stackDims, { ...item, maxStack: 99999 }, opts);
+            // For single-unit layer fills we let canPlaceAt enforce the real
+            // max-stack (column height) limit; tower placements handle height
+            // themselves so they bypass it with a large value.
+            const probe = { ...item, maxStack: opts.respectMaxStack ? item.maxStack : 99999 };
+            const position = this.findBestPosition(stackDims, probe, opts);
 
             if (!position) continue;
 
@@ -368,6 +363,24 @@ export class BinPacking3D {
                 if (!overlapX || !overlapY) continue;
                 // The item directly below must allow something on top of it.
                 if (placed.stackable === false) return false;
+            }
+
+            // Max-stack (column height) limit — only enforced when a real
+            // maxStack is supplied (single-unit layer fills). Count how many
+            // units already sit in this footprint column below the candidate;
+            // reject if adding one more would exceed the product's maxStack.
+            const cap = candidateItem.maxStack;
+            if (cap && cap < 9999) {
+                let belowCount = 0;
+                for (const placed of this.placedItems) {
+                    if (placed.position.z >= position.z) continue; // only items below
+                    const overlapX = !(position.x + itemDims.length <= placed.position.x ||
+                                        placed.position.x + placed.dimensions.length <= position.x);
+                    const overlapY = !(position.y + itemDims.width <= placed.position.y ||
+                                        placed.position.y + placed.dimensions.width <= position.y);
+                    if (overlapX && overlapY) belowCount++;
+                }
+                if (belowCount >= cap) return false;
             }
         }
         return true;
