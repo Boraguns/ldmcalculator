@@ -896,12 +896,12 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                             marginTop: '1.2rem',
                             padding: '12px 14px',
                             borderRadius: '10px',
-                            background: resultData.balance.warning ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.08)',
-                            border: `1px solid ${resultData.balance.warning ? 'rgba(239, 68, 68, 0.4)' : 'rgba(16, 185, 129, 0.3)'}`
+                            background: resultData.balance.frontZoneOver ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.08)',
+                            border: `1px solid ${resultData.balance.frontZoneOver ? 'rgba(239, 68, 68, 0.4)' : 'rgba(16, 185, 129, 0.3)'}`
                         }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                                 <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#000000' }}>
-                                    {resultData.balance.warning ? '⚠️ ' : '✓ '}{t('step3.axleBalance') || 'Aks Yük Dengesi'}
+                                    {resultData.balance.frontZoneOver ? '⚠️ ' : '✓ '}{t('step3.axleBalance') || 'Aks Yük Dengesi'}
                                 </span>
                                 <span style={{ fontSize: '0.75rem', color: '#000000' }}>
                                     {t('step3.front') || 'Ön'}: {resultData.balance.frontPct.toFixed(0)}% / {t('step3.rear') || 'Arka'}: {resultData.balance.rearPct.toFixed(0)}%
@@ -912,25 +912,20 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                                 <div style={{ width: `${resultData.balance.rearPct}%`, background: '#f59e0b', transition: 'width 0.3s' }} />
                             </div>
 
-                            {/* Front-axle zone: weight resting on the first 4 m of the deck. */}
+                            {/* Front zone: share of total weight in the first 4 m (target ≈ 20%). */}
                             {resultData.balance.frontZoneCm > 0 && (
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px', fontSize: '0.75rem' }}>
                                     <span style={{ color: '#000000' }}>{t('step3.frontZone')}</span>
                                     <span style={{ fontWeight: 600, color: resultData.balance.frontZoneOver ? '#b91c1c' : '#059669' }}>
-                                        {(resultData.balance.frontZoneKg / 1000).toFixed(2)} / {(resultData.balance.frontZoneLimit / 1000).toFixed(1)} t
+                                        %{(resultData.balance.frontZonePct || 0).toFixed(0)} · {(resultData.balance.frontZoneKg / 1000).toFixed(2)} t
                                     </span>
                                 </div>
                             )}
-                            {resultData.balance.frontZoneOver && (
-                                <div style={{ fontSize: '0.72rem', color: '#b91c1c', marginTop: '6px', lineHeight: 1.4 }}>
-                                    {t('step3.frontZoneWarn')}
-                                </div>
-                            )}
 
-                            {resultData.balance.warning && (
+                            {resultData.balance.frontZoneOver && (
                                 <>
-                                    <div style={{ fontSize: '0.75rem', color: '#b91c1c', marginTop: '8px', lineHeight: 1.4 }}>
-                                        {t('step3.balanceWarn')}
+                                    <div style={{ fontSize: '0.72rem', color: '#b91c1c', marginTop: '8px', lineHeight: 1.4 }}>
+                                        {t('step3.frontZoneWarn')}
                                     </div>
                                     {onRebalance && (
                                         <button

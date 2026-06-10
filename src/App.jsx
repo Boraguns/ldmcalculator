@@ -141,29 +141,36 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
                 rearPct: 100 - frontPct,
                 cogPct,
                 targetFrontPct: 50,
-                // Only flag genuinely rear-biased loads (CoG behind ~58% of the
-                // deck). Front bias is safe and is left unflagged.
-                warning: cogPct > 58
+                // The load is now intentionally rear-biased (light front), so a
+                // rear CoG is the DESIRED state — not a warning. The only real
+                // axle risk is a front that ends up too heavy, which is flagged
+                // by `frontZoneOver` in the front-zone block below.
+                warning: false
             };
         }
 
-        // Front-axle zone load: absolute kg resting on the first `frontZoneCm`
-        // of the deck (NOT a ratio). Only present for trucks (actualTruck holds
-        // the zone config). Each placedItem is one physical unit, so we sum the
-        // per-unit weight directly — no quantity multiplier.
+        // Front zone: how much of the TOTAL weight rests on the first
+        // `frontZoneCm` of the deck. Target ≈ 20% (load spread over the floor
+        // first, overflow stacked toward the rear). Each placedItem is one
+        // physical unit, so we sum per-unit weight directly.
         if (actualTruck.frontZoneCm > 0 && totalDistW > 0) {
             const zone = actualTruck.frontZoneCm;
-            const limit = actualTruck.frontZoneMaxKg || 0;
-            let frontZoneKg = 0;
+            let frontZoneKg = 0, totalKg = 0;
             result.placedItems.forEach(it => {
+                const w = it.weight || 0;
+                totalKg += w;
                 const cx = (it.position?.x || 0) + (it.dimensions?.length || 0) / 2;
-                if (cx < zone) frontZoneKg += (it.weight || 0);
+                if (cx < zone) frontZoneKg += w;
             });
+            const frontPctOfTotal = totalKg > 0 ? (frontZoneKg / totalKg) * 100 : 0;
             result.balance = result.balance || {};
             result.balance.frontZoneCm = zone;
             result.balance.frontZoneKg = frontZoneKg;
-            result.balance.frontZoneLimit = limit;
-            result.balance.frontZoneOver = limit > 0 && frontZoneKg > limit + 1;
+            result.balance.frontZonePct = frontPctOfTotal;
+            result.balance.frontZoneTargetPct = 20;
+            // Flag only when the front is notably HEAVIER than the ~20% target
+            // (front-axle risk); a lighter front is the intended state.
+            result.balance.frontZoneOver = frontPctOfTotal > 32;
         }
         return result;
     };
@@ -271,34 +278,9 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
 
         setSpecs(actualTruck);
         try {
-            let packer = new BinPacking3D(actualTruck, products);
-            let result = packer.pack();
-            let chosenTruck = actualTruck;
-
-            // For trucks, also try a "lightest cargo to the front" pass so the
-            // weight-capped front zone is filled with lighter products (rather
-            // than being left partly empty while heavy stacks sit behind it).
-            // Keep that pass only if it loads at least as many units AND fills
-            // the front more fully — so packing efficiency never regresses.
-            if (mode === 'truck' && result.success && actualTruck.frontZoneCm > 0) {
-                const zone = actualTruck.frontZoneCm;
-                const frontVol = (r) => (r.placedItems || []).reduce((s, it) => {
-                    const cx = (it.position?.x || 0) + (it.dimensions?.length || 0) / 2;
-                    return cx < zone
-                        ? s + (it.dimensions.length * it.dimensions.width * it.dimensions.height)
-                        : s;
-                }, 0);
-                const lightTruck = { ...actualTruck, lightFirst: true };
-                const packerL = new BinPacking3D(lightTruck, products);
-                const resultL = packerL.pack();
-                if (resultL.success
-                    && resultL.totalItems >= result.totalItems
-                    && frontVol(resultL) > frontVol(result) + 1) {
-                    packer = packerL;
-                    result = resultL;
-                    chosenTruck = lightTruck;
-                }
-            }
+            const packer = new BinPacking3D(actualTruck, products);
+            const result = packer.pack();
+            const chosenTruck = actualTruck;
 
             if (result.success) {
                 const requestedTotal = products.reduce((sum, p) => sum + (parseInt(p.quantity) || 0), 0);

@@ -61,31 +61,52 @@ export class BinPacking3D {
      * Main packing algorithm
      */
     pack() {
-        // Sort items by volume (largest first)
-        const sortedItems = this.sortItemsByVolume();
-
-        // Track per-item placed counts so we can report unplaced quantities
+        // Track per-item placed / remaining counts.
         const placedPerItem = {};
-        for (let it of this.items) placedPerItem[it.id] = 0;
+        const remainingQty = {};
+        for (let it of this.items) { placedPerItem[it.id] = 0; remainingQty[it.id] = it.quantity; }
 
+        // ===================== PHASE 1 — FLOOR =====================
+        // Lay a SINGLE layer across the whole deck before any stacking, so the
+        // base is filled first and only the overflow gets stacked. Largest
+        // footprint first so the floor tiles tightly with the fewest gaps.
+        const byArea = [...this.items].sort((a, b) => {
+            const arA = a.length * a.width, arB = b.length * b.width;
+            if (arB !== arA) return arB - arA;
+            return String(a.id).localeCompare(String(b.id));
+        });
+        for (let item of byArea) {
+            while (remainingQty[item.id] > 0) {
+                if (this.currentWeight + item.weight > this.container.maxWeight) break;
+                if (this.tryPlaceStack(item, 1, false, { floorOnly: true })) {
+                    this.currentWeight += item.weight;
+                    placedPerItem[item.id]++;
+                    remainingQty[item.id]--;
+                } else {
+                    break; // no more floor room for this item
+                }
+            }
+        }
+
+        // ===================== PHASE 2 — STACK OVERFLOW =====================
+        // Stack the remainder on top, biased toward the REAR of the deck, so the
+        // front stays light (target ≈ 20% of the total weight in the first 4 m).
+        const sortedItems = this.sortItemsByVolume();
         for (let item of sortedItems) {
-            let remaining = item.quantity;
+            let remaining = remainingQty[item.id];
 
             while (remaining > 0) {
-                // Determine max allowed stack size for this batch
                 const currentMaxStack = Math.min(remaining, item.maxStack);
                 let placedAmount = 0;
 
                 if (this.currentWeight + (item.weight * 1) > this.container.maxWeight) {
-                    console.warn(`⚠️ Weight limit reached for #${item.id}`);
                     break;
                 }
 
-                // Try to place the largest possible stack first (Greedy Stacking)
+                // Try to place the largest possible stack first (greedy), from the rear.
                 for (let s = currentMaxStack; s >= 1; s--) {
-                    // Also check weight for the full stack
                     if (this.currentWeight + (item.weight * s) <= this.container.maxWeight) {
-                        if (this.tryPlaceStack(item, s)) {
+                        if (this.tryPlaceStack(item, s, false, { rearFirst: true })) {
                             placedAmount = s;
                             this.currentWeight += (item.weight * s);
                             break;
@@ -97,7 +118,6 @@ export class BinPacking3D {
                     remaining -= placedAmount;
                     placedPerItem[item.id] = (placedPerItem[item.id] || 0) + placedAmount;
                 } else {
-                    console.warn(`⚠️ Cannot fit remaining ${remaining} items of #${item.id}`);
                     break; // Cannot fit anymore of this item
                 }
             }
@@ -180,7 +200,7 @@ export class BinPacking3D {
     /**
      * Tries to place a stack of 'stackSize' items
      */
-    tryPlaceStack(item, stackSize, isTemp = false) {
+    tryPlaceStack(item, stackSize, isTemp = false, opts = {}) {
         let orientations = this.getAllOrientations(item);
 
         // HEURISTIC: Prioritize orientations that allow MORE items to fit across the container WIDTH.
@@ -216,7 +236,7 @@ export class BinPacking3D {
 
             // Check if this TOWER fits anywhere
             // We pass a dummy item with infinite maxStack because we are handling the height manually here
-            const position = this.findBestPosition(stackDims, { ...item, maxStack: 99999 });
+            const position = this.findBestPosition(stackDims, { ...item, maxStack: 99999 }, opts);
 
             if (!position) continue;
 
@@ -265,17 +285,19 @@ export class BinPacking3D {
         return orientations;
     }
 
-    findBestPosition(itemDims, item, minX = 0) {
+    findBestPosition(itemDims, item, opts = {}) {
         // OPTIMIZATION: Coordinate Point Search (Corner Point Heuristic)
         // Instead of checking every 1cm grid point (which causes millions of checks -> freezing),
         // we only check coordinates defined by the corners of already placed items.
         //
-        // `minX` (optional): forbid any placement whose left edge is before this
-        // X. Used by the front-axle protection to push an over-budget stack
-        // behind the front zone.
+        // opts.floorOnly: only accept floor (z === 0) positions — used by the
+        //   PHASE-1 single-layer floor fill.
+        // opts.rearFirst: scan X from the rear of the deck first — used by the
+        //   PHASE-2 overflow stacking so extra weight settles toward the rear
+        //   (keeps the front ≈ 20% of total weight).
+        const { floorOnly = false, rearFirst = false } = opts;
 
         const xPoints = new Set([0]);
-        if (minX > 0) xPoints.add(minX);
         const yPoints = new Set([0]);
         const zPoints = new Set([0]);
 
@@ -286,7 +308,8 @@ export class BinPacking3D {
             zPoints.add(placed.position.z + placed.dimensions.height);
         }
 
-        const sortedX = [...xPoints].sort((a, b) => a - b);
+        let sortedX = [...xPoints].sort((a, b) => a - b);
+        if (rearFirst) sortedX = sortedX.reverse(); // try the rear (largest X) first
         const sortedY = [...yPoints].sort((a, b) => a - b);
         const sortedZ = [...zPoints].sort((a, b) => a - b);
 
@@ -296,9 +319,10 @@ export class BinPacking3D {
 
         for (let z of sortedZ) {
             if (z > effMaxZ) break;
+            if (floorOnly && z > 0) break; // single-layer pass: floor only
             for (let x of sortedX) {
-                if (x < minX) continue; // front-zone exclusion (axle protection)
-                if (x > effMaxX) break;
+                // x can be visited descending (rearFirst), so bound-check both ways.
+                if (x < 0 || x > effMaxX) continue;
                 for (let y of sortedY) {
                     if (y > effMaxY) break;
 
