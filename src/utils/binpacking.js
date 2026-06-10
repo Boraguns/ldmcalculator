@@ -438,8 +438,11 @@ export class BinPacking3D {
             // Check weight limit against actual container capacity
             if (itemDef.weight > 0 && this.currentWeight + itemDef.weight > this.container.maxWeight) break;
 
-            // Try to place one more item (stack of 1)
-            const placed = this.tryPlaceStack(itemDef, 1, true);
+            // Try to place one more item (stack of 1), honouring the real
+            // stacking rules + max-stack so "remaining" reflects what can
+            // ACTUALLY still fit (previously it ignored max-stack and reported
+            // too many free slots).
+            const placed = this.tryPlaceStack(itemDef, 1, true, { respectMaxStack: true });
             if (!placed) break;
 
             // Reflect the trial item's weight so internal checks stay consistent

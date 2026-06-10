@@ -1057,6 +1057,9 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                                         )}
                                         <div className="report-dims" style={{ fontSize: '0.75rem', color: '#1f2937', marginBottom: '8px', borderBottom: '1px solid #ece4d4', paddingBottom: '4px' }}>
                                             {original.length}x{original.width}x{original.height} cm
+                                            {data.totalWeight > 0 && (
+                                                <span style={{ fontWeight: 600 }}> · {Math.round(data.totalWeight).toLocaleString()} kg</span>
+                                            )}
                                         </div>
                                         <div className="report-stats" style={{ display: 'flex', gap: '12px', fontSize: '0.9rem', color: '#000000' }}>
                                             <div><span style={{ color: '#1f2937' }}>{t('step3.row')}:</span> {data.rows}</div>
