@@ -136,7 +136,9 @@
     "important": "IMPORTANT",
     "excelWarning": "Use only the template above.",
     "excelConfirm": "Did you prepare your file from the template above? Only files based on the template will work.",
-    "excelDrop": "Drag your file here or click to select"
+    "excelDrop": "Drag your file here or click to select",
+    "excelExport": "Export list to Excel",
+    "excelExportHint": "Download your typed-in products as a template (you can re-upload it)."
   },
   "step3": {
     "title": "Result Report",

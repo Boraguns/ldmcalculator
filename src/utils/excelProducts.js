@@ -215,6 +215,68 @@ export const downloadProductTemplate = async (lang = 'en') => {
 };
 
 /**
+ * Export the user's manually-entered products into the SAME template layout so
+ * they can save their work and re-upload it later without retyping. Yes/No and
+ * column headers follow the chosen language; colours are written as hex (the
+ * parser accepts hex or names).
+ * @param {Array} products  InputWizard product objects
+ * @param {'tr'|'en'|'de'|'ru'|'fr'|'ar'} lang
+ */
+export const exportProductsToFile = async (products = [], lang = 'en') => {
+    const XLSX = await import('xlsx');
+    const labels = HEADER_LABELS[lang] || HEADER_LABELS.en;
+    const names = COLOR_NAMES[lang] || COLOR_NAMES.en;
+    const yn = YESNO[lang] || YESNO.en;
+    const header = COLUMNS.map((c) => labels[c.field]);
+
+    // Map a hex colour back to a localised name when possible (else keep raw).
+    const hexToName = {};
+    COLOR_ORDER.forEach((k, i) => { hexToName[COLOR_HEX[k].toLowerCase()] = names[i]; });
+
+    const num = (v) => {
+        const n = parseFloat(v);
+        return Number.isFinite(n) ? n : '';
+    };
+
+    const rows = products.map((p) => {
+        const qty = parseInt(p.quantity);
+        // Always export the PER-UNIT weight (what the template expects), even if
+        // the user entered a total weight.
+        let unitW = num(p.weight);
+        if (p.useTotalWeight && p.totalWeight && qty > 0) {
+            unitW = Math.round((parseFloat(p.totalWeight) / qty) * 100) / 100;
+        }
+        const out = {
+            name: (p.name || '').trim(),
+            length: num(p.length),
+            width: num(p.width),
+            height: num(p.height),
+            weight: unitW,
+            quantity: Number.isFinite(qty) ? qty : '',
+            allowRotation: p.allowRotation ? yn.y : yn.n,
+            stackable: p.stackable === false ? yn.n : yn.y,
+            color: p.color ? (hexToName[String(p.color).toLowerCase()] || p.color) : '',
+        };
+        return COLUMNS.map((c) => out[c.field]);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
+    ws['!cols'] = COLUMNS.map((c) => ({ wch: c.field === 'name' ? 18 : 14 }));
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Products');
+
+    // Same colour reference sheet as the template, for consistency on re-edit.
+    const refRows = [[labels.color, 'HEX']];
+    COLOR_ORDER.forEach((k, i) => refRows.push([names[i], COLOR_HEX[k]]));
+    const refWs = XLSX.utils.aoa_to_sheet(refRows);
+    refWs['!cols'] = [{ wch: 16 }, { wch: 12 }];
+    XLSX.utils.book_append_sheet(wb, refWs, 'Colors');
+
+    XLSX.writeFile(wb, 'ldm-products.xlsx');
+};
+
+/**
  * Parse an uploaded .xlsx / .xls / .csv file into product objects matching the
  * InputWizard product schema. Resolves to an array; rejects on a read error.
  * Rows missing the essential numeric dimensions are skipped.

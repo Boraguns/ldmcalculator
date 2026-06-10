@@ -137,7 +137,9 @@
     "important": "WICHTIG",
     "excelWarning": "Nur die obige Vorlage verwenden.",
     "excelConfirm": "Haben Sie Ihre Datei mit der obigen Vorlage erstellt? Nur auf der Vorlage basierende Dateien funktionieren.",
-    "excelDrop": "Datei hierher ziehen oder zum Auswählen klicken"
+    "excelDrop": "Datei hierher ziehen oder zum Auswählen klicken",
+    "excelExport": "Liste nach Excel exportieren",
+    "excelExportHint": "Ihre eingegebenen Produkte als Vorlage herunterladen (wieder hochladbar)."
   },
   "step3": {
     "title": "Ergebnisbericht",

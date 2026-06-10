@@ -5,7 +5,7 @@ import '../input-style.css';
 import StepLoader from './StepLoader';
 import { useT, LanguageSwitcher } from '../i18n/LanguageContext';
 import AccountMenu from './AccountMenu';
-import { downloadProductTemplate, parseProductsFile } from '../utils/excelProducts';
+import { downloadProductTemplate, parseProductsFile, exportProductsToFile } from '../utils/excelProducts';
 import { useUsage } from '../usage/UsageContext';
 import { saveDraft, loadDraft } from '../utils/draft';
 import StackSwitch from './StackSwitch';
@@ -139,6 +139,22 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
     const handleDownloadTemplate = async () => {
         try {
             await downloadProductTemplate(lang);
+        } catch (e) {
+            alert(t('wizard.excelError'));
+        }
+    };
+
+    // Export the manually-entered products into the template format so users
+    // don't lose their typed-in list. Gated by the usage quota (like the other
+    // tools): beyond the free allowance it opens the paywall.
+    const handleExportProducts = async () => {
+        const rows = (sameSize ? products.slice(0, 1) : products)
+            .filter(p => p.length || p.width || p.height || p.weight || p.quantity || (p.name && p.name.trim()));
+        if (!rows.length) { alert(t('wizard.excelEmpty')); return; }
+        const allowed = await guard('tool', 'excel-export');
+        if (!allowed) return;
+        try {
+            await exportProductsToFile(rows, lang);
         } catch (e) {
             alert(t('wizard.excelError'));
         }
@@ -647,6 +663,22 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                         }}
                     >
                         📤 {t('wizard.excelUpload')}
+                    </button>
+                    {/* Visual separator + the "export typed-in list" action, set
+                        apart from the template/upload buttons. */}
+                    <div style={{ width: '1px', alignSelf: 'stretch', background: 'rgba(16,185,129,0.35)', margin: '0 2px' }} />
+                    <button
+                        type="button"
+                        onClick={handleExportProducts}
+                        title={t('wizard.excelExportHint')}
+                        style={{
+                            flex: '1 1 140px', padding: '8px 10px', cursor: 'pointer',
+                            background: '#0f766e', color: '#ffffff',
+                            border: '1px solid #0f766e', borderRadius: '8px',
+                            fontSize: '0.8rem', fontWeight: 600
+                        }}
+                    >
+                        💾 {t('wizard.excelExport')}
                     </button>
                     <input
                         ref={excelInputRef}
