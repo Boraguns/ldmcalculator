@@ -1150,10 +1150,10 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck', addStan
                     <Suspense fallback={null}>
                         <GLBWheelAssembly
                             targets={[
-                                [tLen / 2 - 1.5, -tHei / 2 - 0.55, tWid / 2],
-                                [tLen / 2 - 1.5, -tHei / 2 - 0.55, -tWid / 2],
-                                [tLen / 2 - 3.2, -tHei / 2 - 0.55, tWid / 2],
-                                [tLen / 2 - 3.2, -tHei / 2 - 0.55, -tWid / 2]
+                                [tLen / 2 - 1.5, -tHei / 2 - 0.7, tWid / 2],
+                                [tLen / 2 - 1.5, -tHei / 2 - 0.7, -tWid / 2],
+                                [tLen / 2 - 3.2, -tHei / 2 - 0.7, tWid / 2],
+                                [tLen / 2 - 3.2, -tHei / 2 - 0.7, -tWid / 2]
                             ]}
                             glbPath="/src/rear-wheel.glb"
                         />

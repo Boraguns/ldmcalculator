@@ -216,27 +216,14 @@ export class BinPacking3D {
 
             // Check if this TOWER fits anywhere
             // We pass a dummy item with infinite maxStack because we are handling the height manually here
-            let position = this.findBestPosition(stackDims, { ...item, maxStack: 99999 });
+            const position = this.findBestPosition(stackDims, { ...item, maxStack: 99999 });
 
             if (!position) continue;
 
-            // Front-axle protection: if this stack's centre lands in the front
-            // zone and would push the front-zone weight past its limit, try to
-            // re-place it behind the zone (the rest of the deck stays packed
-            // solid). If nothing fits behind, fall back to the original spot —
-            // placing beats dropping, and the result then flags a front-zone
-            // overload so the user knows to shed/redistribute weight.
-            const stackWeight = (item.weight || 0) * stackSize;
-            if (this.frontZoneCm > 0 && Number.isFinite(this.frontZoneMaxKg)) {
-                const cx = position.x + stackDims.length / 2;
-                if (cx < this.frontZoneCm && this.frontZoneWeight + stackWeight > this.frontZoneMaxKg) {
-                    const alt = this.findBestPosition(stackDims, { ...item, maxStack: 99999 }, this.frontZoneCm);
-                    if (alt) position = alt;
-                }
-            }
-
-            // Found a spot!
-            // Now place individual items in the stack at this position
+            // Found a spot — pack SOLID from the front (no gaps). Front-axle
+            // balance is handled by ordering (lightest cargo first via
+            // `lightFirst`), NOT by leaving voids in the deck: a real loader
+            // never leaves an air gap mid-trailer.
             for (let i = 0; i < stackSize; i++) {
                 this.placedItems.push({
                     ...item,
@@ -255,12 +242,6 @@ export class BinPacking3D {
                     },
                     rotation: orientation.rotation
                 });
-            }
-
-            // Track committed front-zone weight (ignore temporary trial fills).
-            if (this.frontZoneCm > 0 && !isTemp) {
-                const cx = position.x + stackDims.length / 2;
-                if (cx < this.frontZoneCm) this.frontZoneWeight += stackWeight;
             }
             return true;
         }
