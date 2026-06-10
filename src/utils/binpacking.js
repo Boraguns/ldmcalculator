@@ -344,6 +344,27 @@ export class BinPacking3D {
             }
         }
 
+        // ===================== SUPPORT CHECK (no floating) =====================
+        // Anything above the floor must rest on a (near) full base — the area
+        // directly beneath must be covered by item tops sitting exactly at this
+        // z. Prevents the packer from snapping a box into mid-air at a corner
+        // point where a taller neighbour created a z-level but nothing supports
+        // the box's footprint.
+        if (position.z > 0) {
+            const baseArea = itemDims.length * itemDims.width;
+            let supportArea = 0;
+            for (const placed of this.placedItems) {
+                const placedTop = placed.position.z + placed.dimensions.height;
+                if (Math.abs(placedTop - position.z) > 0.001) continue; // not a direct support
+                const ox = Math.min(position.x + itemDims.length, placed.position.x + placed.dimensions.length)
+                         - Math.max(position.x, placed.position.x);
+                const oy = Math.min(position.y + itemDims.width, placed.position.y + placed.dimensions.width)
+                         - Math.max(position.y, placed.position.y);
+                if (ox > 0 && oy > 0) supportArea += ox * oy;
+            }
+            if (supportArea < baseArea * 0.98) return false; // insufficient support → would float / overhang
+        }
+
         // ===================== STACKING RULES (z > 0 only) =====================
         // A product's max-stack is "unlimited" when >= 99 (the UI's "Sınırsız"
         // option / blank default). The rules:
