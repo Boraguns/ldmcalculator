@@ -8,6 +8,7 @@ import AccountMenu from './AccountMenu';
 import { downloadProductTemplate, parseProductsFile } from '../utils/excelProducts';
 import { useUsage } from '../usage/UsageContext';
 import { saveDraft, loadDraft } from '../utils/draft';
+import StackSwitch from './StackSwitch';
 
 const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mode = 'truck', customSpecs = null, addStangaMode = false, onToggleStangaMode, stangaCount = 0, addSpanzetMode = false, onToggleSpanzetMode, spanzetCount = 0, onAutoStanga }) => {
     const { t, lang } = useT();
@@ -510,20 +511,17 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                                         />
                                         <span>{t('wizard.color')}</span>
                                     </label>
-                                    {/* Stackable / Unstackable toggle */}
-                                    <label className="pulse-checkbox-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', width: 'auto', fontSize: '0.8rem' }}>
-                                        <div className="pulse-checkbox-wrapper" style={{ fontSize: '0.8rem', width: '1.2em', height: '1.2em', minWidth: '1.2em' }}>
-                                            <input
-                                                type="checkbox"
-                                                checked={product.stackable === false}
-                                                onChange={(e) => updateProduct(product.id, 'stackable', !e.target.checked)}
-                                            />
-                                            <div className="checkmark" style={{ height: '1.1em', width: '1.1em' }}></div>
-                                        </div>
+                                    {/* Stackable / Unstackable slider toggle */}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: 'auto', fontSize: '0.8rem' }}>
+                                        <StackSwitch
+                                            on={product.stackable !== false}
+                                            onChange={(v) => updateProduct(product.id, 'stackable', v)}
+                                            title={product.stackable === false ? t('wizard.unstackable') : t('wizard.stackable')}
+                                        />
                                         <span style={{ color: product.stackable === false ? '#b45309' : '#000000', fontWeight: product.stackable === false ? 600 : 400 }}>
                                             {product.stackable === false ? t('wizard.unstackable') : t('wizard.stackable')}
                                         </span>
-                                    </label>
+                                    </div>
                                 </div>
                                 {(!sameSize && products.length > 1) && (
                                     <button className="ai-btn ai-btn-danger ai-btn-icon" onClick={() => removeProduct(product.id)}>
