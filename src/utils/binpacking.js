@@ -114,6 +114,9 @@ export class BinPacking3D {
             }
         }
 
+        // Safety net: physically settle everything so nothing can ever float.
+        this.gravitySettle();
+
         const stats = this.calculateStatistics();
         const remainingWeight = this.container.maxWeight - stats.totalWeight;
 
@@ -415,6 +418,34 @@ export class BinPacking3D {
         return true;
     }
 
+    /**
+     * Gravity pass: drop every placed item straight down until it rests on the
+     * floor or on the top of an overlapping item below it. Guarantees no item
+     * ever floats in mid-air and removes vertical gaps, regardless of how the
+     * placement was produced (packing, rebalance, etc.). A no-op for an already
+     * solid pack. Footprint (x,y) and column membership are unchanged, so
+     * max-stack / stacking rules are preserved.
+     */
+    gravitySettle() {
+        const arr = [...this.placedItems].sort((a, b) => a.position.z - b.position.z);
+        for (let i = 0; i < arr.length; i++) {
+            const it = arr[i];
+            let restZ = 0;
+            for (let j = 0; j < i; j++) {
+                const o = arr[j]; // already settled (lower in the column)
+                const ox = Math.min(it.position.x + it.dimensions.length, o.position.x + o.dimensions.length)
+                         - Math.max(it.position.x, o.position.x);
+                const oy = Math.min(it.position.y + it.dimensions.width, o.position.y + o.dimensions.width)
+                         - Math.max(it.position.y, o.position.y);
+                if (ox > 0 && oy > 0) {
+                    const top = o.position.z + o.dimensions.height;
+                    if (top > restZ) restZ = top;
+                }
+            }
+            it.position.z = restZ;
+        }
+    }
+
     isColliding(pos1, dims1, pos2, dims2) {
         return !(
             pos1.x + dims1.length <= pos2.x ||
@@ -646,6 +677,9 @@ export class BinPacking3D {
             swapsMade++;
             cg = cogX();
         }
+
+        // Re-settle so any swap that moved a support out cannot leave a floater.
+        this.gravitySettle();
 
         // Rebuild the array reference so React state updates detect the change
         // even though individual item positions were mutated in place.
