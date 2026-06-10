@@ -207,6 +207,11 @@ const CameraController = ({ viewMode, onUserInteraction }) => {
             makeDefault
             minDistance={3}
             maxDistance={70}
+            // Never let the camera drop below horizontal (under the floor),
+            // where the view goes black and the truck is no longer visible.
+            // Top-down (0) stays allowed for the "Üst Bakış" preset.
+            minPolarAngle={0}
+            maxPolarAngle={Math.PI / 2 - 0.04}
             enableDamping
             dampingFactor={0.1}
             // Zoom toward the mouse pointer instead of always recentring on the
