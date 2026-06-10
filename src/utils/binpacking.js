@@ -344,43 +344,51 @@ export class BinPacking3D {
             }
         }
 
-        // Stacking rules (only relevant when placing above the floor).
-        //  - A NON-stackable candidate may rest on the floor ONLY (never on top
-        //    of anything, including more units of itself).
-        //  - NOTHING may be placed on top of a non-stackable item.
-        //  - Otherwise (both stackable) same- and cross-product stacking is OK.
+        // ===================== STACKING RULES (z > 0 only) =====================
+        // A product's max-stack is "unlimited" when >= 99 (the UI's "Sınırsız"
+        // option / blank default). The rules:
+        //   1. Nothing may rest on top of a NON-stackable item.
+        //   2. A DIFFERENT product may rest on an item ONLY if that supporting
+        //      item is an "unlimited" base. An item with a SPECIFIC max-stack
+        //      (1..10) is a closed unit — only MORE OF ITSELF may sit on it.
+        //   3. SAME-product self-stacking is capped at that product's max-stack.
+        // (A non-stackable / capped item can still itself be PLACED on top of an
+        //  unlimited base — the flag only governs what goes ABOVE it.)
+        const UNLIMITED = 99;
         if (candidateItem && position.z > 0) {
-            // Non-stackable item: floor placements only.
-            if (candidateItem.stackable === false) return false;
+            // Inspect the item(s) directly supporting this candidate.
             for (const placed of this.placedItems) {
                 const placedTop = placed.position.z + placed.dimensions.height;
                 if (Math.abs(placedTop - position.z) > 0.001) continue; // not touching from below
-                // Footprint overlap in X/Y?
                 const overlapX = !(position.x + itemDims.length <= placed.position.x ||
                                     placed.position.x + placed.dimensions.length <= position.x);
                 const overlapY = !(position.y + itemDims.width <= placed.position.y ||
                                     placed.position.y + placed.dimensions.width <= position.y);
                 if (!overlapX || !overlapY) continue;
-                // The item directly below must allow something on top of it.
+
+                // (1) Nothing on top of a non-stackable item.
                 if (placed.stackable === false) return false;
+                // (2) A different product needs an UNLIMITED base to sit on.
+                if (placed.id !== candidateItem.id && (placed.maxStack || 0) < UNLIMITED) {
+                    return false;
+                }
             }
 
-            // Max-stack (column height) limit — only enforced when a real
-            // maxStack is supplied (single-unit layer fills). Count how many
-            // units already sit in this footprint column below the candidate;
-            // reject if adding one more would exceed the product's maxStack.
-            const cap = candidateItem.maxStack;
-            if (cap && cap < 9999) {
-                let belowCount = 0;
+            // (3) Same-product self-stack cap: count units of the SAME product
+            // already in this footprint column below the candidate.
+            const cap = candidateItem.maxStack || 0;
+            if (cap < UNLIMITED) {
+                let sameBelow = 0;
                 for (const placed of this.placedItems) {
+                    if (placed.id !== candidateItem.id) continue;
                     if (placed.position.z >= position.z) continue; // only items below
                     const overlapX = !(position.x + itemDims.length <= placed.position.x ||
                                         placed.position.x + placed.dimensions.length <= position.x);
                     const overlapY = !(position.y + itemDims.width <= placed.position.y ||
                                         placed.position.y + placed.dimensions.width <= position.y);
-                    if (overlapX && overlapY) belowCount++;
+                    if (overlapX && overlapY) sameBelow++;
                 }
-                if (belowCount >= cap) return false;
+                if (sameBelow >= cap) return false;
             }
         }
         return true;
