@@ -692,5 +692,10 @@
     "required": "erforderlich",
     "leadRequired": "Bitte geben Sie Ihren Namen und Ihre E-Mail-Adresse ein.",
     "invalidEmail": "Bitte geben Sie eine gültige E-Mail-Adresse ein."
+  },
+  "maintenance": {
+    "title": "Hinweis",
+    "body": "Sehr geehrte Nutzerin, sehr geehrter Nutzer,\nwir aktualisieren LDM Calculator, um Ihnen ein genaueres und komfortableres Berechnungserlebnis zu bieten. Während dieser Verbesserung kann es vorübergehend zu Fehlern oder Abweichungen in den Ergebnissen kommen. In Kürze sind wir mit unserer neuesten, optimierten Version wieder für Sie da.\nVielen Dank für Ihr Verständnis.",
+    "ok": "Verstanden"
   }
 }

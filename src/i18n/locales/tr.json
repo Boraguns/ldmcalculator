@@ -691,5 +691,10 @@
     "required": "zorunlu",
     "leadRequired": "Başlamak için lütfen adınızı ve e-postanızı girin.",
     "invalidEmail": "Lütfen geçerli bir e-posta adresi girin."
+  },
+  "maintenance": {
+    "title": "Bilgilendirme",
+    "body": "Değerli Kullanıcımız,\nLDM Calculator'ı, size daha doğru ve kullanışlı bir hesaplama deneyimi sunmak amacıyla güncelliyoruz. Bu geliştirme sürecinde hesaplamalarda geçici hatalar veya tutarsızlıklar görülebilir. En güncel ve geliştirilmiş sürümümüzle kısa süre içinde yeniden hizmetinizde olacağız.\nAnlayışınız için teşekkür ederiz.",
+    "ok": "Anladım"
   }
 }

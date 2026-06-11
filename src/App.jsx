@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import ModelViewer from './components/ModelViewer';
 import InputWizard from './components/InputWizard';
+import MaintenanceNotice from './components/MaintenanceNotice';
 import { BinPacking3D } from './utils/binpacking';
 import Home from './pages/Home';
 import PlaceholderPage from './pages/PlaceholderPage';
@@ -511,6 +512,8 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
 
     return (
         <div className="container" style={{ height: '100vh', width: '100vw', background: '#e7e7e7', display: 'flex', overflow: 'hidden' }}>
+            {/* One-time update/maintenance notice (shown once per user). */}
+            <MaintenanceNotice />
             {/* LEFT: VISUAL SECTION */}
             <div className={`${mode}-section`} style={{
                 flex: 2,
