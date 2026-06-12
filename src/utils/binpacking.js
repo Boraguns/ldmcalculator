@@ -67,23 +67,29 @@ export class BinPacking3D {
         for (let it of this.items) { placedPerItem[it.id] = 0; remainingQty[it.id] = it.quantity; }
 
         // ===================== PHASE 1 — FLOOR =====================
-        // Lay a SINGLE layer across the whole deck before any stacking, so the
-        // base is filled first and only the overflow gets stacked. Largest
-        // footprint first so the floor tiles tightly with the fewest gaps.
+        // Lay a SINGLE layer across the whole deck before any stacking. To avoid
+        // one product hogging the entire floor (which would leave nothing for the
+        // others — and if it's non-stackable they could not stack on it either),
+        // fill the floor ROUND-ROBIN: each pass places one floor unit per product
+        // in turn. This shares the deck fairly so every product gets a base, and
+        // stacking can then build on those bases. Largest footprint first within
+        // a pass keeps the tiling tight.
         const byArea = [...this.items].sort((a, b) => {
             const arA = a.length * a.width, arB = b.length * b.width;
             if (arB !== arA) return arB - arA;
             return String(a.id).localeCompare(String(b.id));
         });
-        for (let item of byArea) {
-            while (remainingQty[item.id] > 0) {
-                if (this.currentWeight + item.weight > this.container.maxWeight) break;
+        let floorProgress = true;
+        while (floorProgress) {
+            floorProgress = false;
+            for (let item of byArea) {
+                if (remainingQty[item.id] <= 0) continue;
+                if (this.currentWeight + item.weight > this.container.maxWeight) continue;
                 if (this.tryPlaceStack(item, 1, false, { floorOnly: true })) {
                     this.currentWeight += item.weight;
                     placedPerItem[item.id]++;
                     remainingQty[item.id]--;
-                } else {
-                    break; // no more floor room for this item
+                    floorProgress = true;
                 }
             }
         }
@@ -369,51 +375,41 @@ export class BinPacking3D {
         }
 
         // ===================== STACKING RULES (z > 0 only) =====================
-        // A product's max-stack is "unlimited" when >= 99 (the UI's "Sınırsız"
-        // option / blank default). The rules:
-        //   1. Nothing may rest on top of a NON-stackable item.
-        //   2. A DIFFERENT product may rest on an item ONLY if that supporting
-        //      item is an "unlimited" base. An item with a SPECIFIC max-stack
-        //      (1..10) is a closed unit — only MORE OF ITSELF may sit on it.
-        //   3. SAME-product self-stacking is capped at that product's max-stack.
-        // (A non-stackable / capped item can still itself be PLACED on top of an
-        //  unlimited base — the flag only governs what goes ABOVE it.)
-        const UNLIMITED = 99;
+        // Column model (matches the agreed behaviour):
+        //   1. Nothing may rest on top of a NON-stackable item (its top is closed).
+        //   2. A column's TOTAL height (item count in a footprint) is capped by
+        //      the BASE (bottom) item's max-stack. So a stackable base with
+        //      max 4 accepts up to 4 items in its column — INCLUDING a different
+        //      product on top — while a base whose stack is already full takes
+        //      nothing more. Same- and cross-product stacking are both allowed
+        //      as long as they fit under the base's cap and the item directly
+        //      below accepts something on top.
         if (candidateItem && position.z > 0) {
-            // Inspect the item(s) directly supporting this candidate.
+            let baseItem = null;
+            let baseZ = Infinity;
+            let columnCount = 0;
+
             for (const placed of this.placedItems) {
-                const placedTop = placed.position.z + placed.dimensions.height;
-                if (Math.abs(placedTop - position.z) > 0.001) continue; // not touching from below
+                if (placed.position.z >= position.z) continue; // only items below
                 const overlapX = !(position.x + itemDims.length <= placed.position.x ||
                                     placed.position.x + placed.dimensions.length <= position.x);
                 const overlapY = !(position.y + itemDims.width <= placed.position.y ||
                                     placed.position.y + placed.dimensions.width <= position.y);
                 if (!overlapX || !overlapY) continue;
 
-                // (1) Nothing on top of a non-stackable item.
-                if (placed.stackable === false) return false;
-                // (2) A different product needs an UNLIMITED base to sit on.
-                if (placed.id !== candidateItem.id && (placed.maxStack || 0) < UNLIMITED) {
+                columnCount++;
+                if (placed.position.z < baseZ) { baseZ = placed.position.z; baseItem = placed; }
+
+                // (1) Nothing on top of a non-stackable item directly below.
+                const placedTop = placed.position.z + placed.dimensions.height;
+                if (Math.abs(placedTop - position.z) <= 0.001 && placed.stackable === false) {
                     return false;
                 }
             }
 
-            // (3) Same-product self-stack cap: count units of the SAME product
-            // already in this footprint column below the candidate.
-            const cap = candidateItem.maxStack || 0;
-            if (cap < UNLIMITED) {
-                let sameBelow = 0;
-                for (const placed of this.placedItems) {
-                    if (placed.id !== candidateItem.id) continue;
-                    if (placed.position.z >= position.z) continue; // only items below
-                    const overlapX = !(position.x + itemDims.length <= placed.position.x ||
-                                        placed.position.x + placed.dimensions.length <= position.x);
-                    const overlapY = !(position.y + itemDims.width <= placed.position.y ||
-                                        placed.position.y + placed.dimensions.width <= position.y);
-                    if (overlapX && overlapY) sameBelow++;
-                }
-                if (sameBelow >= cap) return false;
-            }
+            // (2) Column height capped by the base product's max-stack.
+            const cap = (baseItem && baseItem.maxStack) ? baseItem.maxStack : 999;
+            if (columnCount >= cap) return false;
         }
         return true;
     }
