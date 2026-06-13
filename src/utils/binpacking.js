@@ -67,29 +67,46 @@ export class BinPacking3D {
         for (let it of this.items) { placedPerItem[it.id] = 0; remainingQty[it.id] = it.quantity; }
 
         // ===================== PHASE 1 — FLOOR =====================
-        // Lay a SINGLE layer across the whole deck before any stacking. To avoid
-        // one product hogging the entire floor (which would leave nothing for the
-        // others — and if it's non-stackable they could not stack on it either),
-        // fill the floor ROUND-ROBIN: each pass places one floor unit per product
-        // in turn. This shares the deck fairly so every product gets a base, and
-        // stacking can then build on those bases. Largest footprint first within
-        // a pass keeps the tiling tight.
-        const byArea = [...this.items].sort((a, b) => {
+        // Lay the floor layer, GROUPED per product. Stackable products go first
+        // and only claim the floor columns they need (qty / self-stack height),
+        // so they stack upward in a tight block and leave the rest of the deck
+        // free for the other (often non-stackable) products. This both prevents
+        // one product from hogging the floor AND keeps same products together so
+        // a taller box can later span their grouped tops. A single product still
+        // spreads across the whole floor before stacking.
+        const multiProduct = this.items.length > 1;
+        const floorOrder = [...this.items].sort((a, b) => {
+            // Stackable bases first (they reserve minimal floor and stack up,
+            // leaving room for non-stackable products); larger footprint first.
+            const sa = a.stackable !== false ? 0 : 1;
+            const sb = b.stackable !== false ? 0 : 1;
+            if (sa !== sb) return sa - sb;
             const arA = a.length * a.width, arB = b.length * b.width;
             if (arB !== arA) return arB - arA;
             return String(a.id).localeCompare(String(b.id));
         });
-        let floorProgress = true;
-        while (floorProgress) {
-            floorProgress = false;
-            for (let item of byArea) {
-                if (remainingQty[item.id] <= 0) continue;
-                if (this.currentWeight + item.weight > this.container.maxWeight) continue;
+        for (const item of floorOrder) {
+            // With multiple products, a STACKABLE product only claims the floor
+            // columns it needs (qty / its self-stack height) and keeps them
+            // grouped, so the rest of the deck stays free for other products and
+            // a taller box can later span this product's grouped tops. A single
+            // product (or a non-stackable one) spreads across the whole floor.
+            let cap = Infinity;
+            if (multiProduct && item.stackable !== false) {
+                const hStack = Math.max(1, Math.min(item.maxStack || 1,
+                    Math.floor(this.container.height / item.height) || 1));
+                cap = Math.ceil(item.quantity / hStack);
+            }
+            let floored = 0;
+            while (remainingQty[item.id] > 0 && floored < cap) {
+                if (this.currentWeight + item.weight > this.container.maxWeight) break;
                 if (this.tryPlaceStack(item, 1, false, { floorOnly: true })) {
                     this.currentWeight += item.weight;
                     placedPerItem[item.id]++;
                     remainingQty[item.id]--;
-                    floorProgress = true;
+                    floored++;
+                } else {
+                    break;
                 }
             }
         }
@@ -354,11 +371,13 @@ export class BinPacking3D {
         }
 
         // ===================== SUPPORT CHECK (no floating) =====================
-        // Anything above the floor must rest on a (near) full base — the area
-        // directly beneath must be covered by item tops sitting exactly at this
-        // z. Prevents the packer from snapping a box into mid-air at a corner
-        // point where a taller neighbour created a z-level but nothing supports
-        // the box's footprint.
+        // Anything above the floor must rest on enough base beneath it. We allow
+        // a realistic overhang (e.g. a slightly larger box centred on a smaller
+        // one — its centre of gravity still sits over the support) but reject
+        // mid-air / severe-overhang placements. Threshold = 60% of the placed
+        // box's footprint must be supported. (gravitySettle() is the final
+        // backstop that drops anything onto its actual support, so true floating
+        // is impossible regardless.)
         if (position.z > 0) {
             const baseArea = itemDims.length * itemDims.width;
             let supportArea = 0;
@@ -371,7 +390,7 @@ export class BinPacking3D {
                          - Math.max(position.y, placed.position.y);
                 if (ox > 0 && oy > 0) supportArea += ox * oy;
             }
-            if (supportArea < baseArea * 0.98) return false; // insufficient support → would float / overhang
+            if (supportArea < baseArea * 0.6) return false; // not enough support → would float / topple
         }
 
         // ===================== STACKING RULES (z > 0 only) =====================
