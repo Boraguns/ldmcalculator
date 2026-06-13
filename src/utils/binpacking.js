@@ -61,117 +61,103 @@ export class BinPacking3D {
      * Main packing algorithm
      */
     pack() {
-        // Track per-item placed / remaining counts.
+        // ================= BLOCK LOADING (clean, correct by construction) =====
+        // Real trucks are loaded product-by-product as tight grid BLOCKS placed
+        // flush from the headboard toward the rear: each product fills the full
+        // width (as many rows as fit) and stacks up to its allowed height, in
+        // contiguous slots along the deck length. This guarantees: no boxes
+        // outside the deck, no overlaps, no floating, and no puzzle-gaps inside
+        // a product. Different products simply form adjacent blocks.
+        const C = this.container;
         const placedPerItem = {};
-        const remainingQty = {};
-        for (let it of this.items) { placedPerItem[it.id] = 0; remainingQty[it.id] = it.quantity; }
+        for (const it of this.items) placedPerItem[it.id] = 0;
 
-        // ===================== PHASE 1 — FLOOR =====================
-        // Lay the floor layer, GROUPED per product. Stackable products go first
-        // and only claim the floor columns they need (qty / self-stack height),
-        // so they stack upward in a tight block and leave the rest of the deck
-        // free for the other (often non-stackable) products. This both prevents
-        // one product from hogging the floor AND keeps same products together so
-        // a taller box can later span their grouped tops. A single product still
-        // spreads across the whole floor before stacking.
-        const multiProduct = this.items.length > 1;
-        const floorOrder = [...this.items].sort((a, b) => {
-            // Stackable bases first (they reserve minimal floor and stack up,
-            // leaving room for non-stackable products); larger footprint first.
-            const sa = a.stackable !== false ? 0 : 1;
-            const sb = b.stackable !== false ? 0 : 1;
-            if (sa !== sb) return sa - sb;
-            const arA = a.length * a.width, arB = b.length * b.width;
-            if (arB !== arA) return arB - arA;
-            return String(a.id).localeCompare(String(b.id));
-        });
-        for (const item of floorOrder) {
-            // With multiple products, a STACKABLE product only claims the floor
-            // columns it needs (qty / its self-stack height) and keeps them
-            // grouped, so the rest of the deck stays free for other products and
-            // a taller box can later span this product's grouped tops. A single
-            // product (or a non-stackable one) spreads across the whole floor.
-            let cap = Infinity;
-            if (multiProduct && item.stackable !== false) {
-                const hStack = Math.max(1, Math.min(item.maxStack || 1,
-                    Math.floor(this.container.height / item.height) || 1));
-                cap = Math.ceil(item.quantity / hStack);
+        // Best orientation for a product = the one that packs the most boxes per
+        // box-length slot (rows across the width × layers high). null if it
+        // physically cannot fit the deck at all.
+        const planFor = (item) => {
+            const orients = this.getAllOrientations(item);
+            let best = null;
+            for (const o of orients) {
+                if (o.length > C.length || o.width > C.width || o.height > C.height) continue;
+                const perRow = Math.floor(C.width / o.width);            // across width (y)
+                const maxByHeight = Math.floor(C.height / o.height);
+                const layers = (item.stackable === false)
+                    ? 1                                                  // nothing on top → single layer
+                    : Math.max(1, Math.min(item.maxStack || 1, maxByHeight));
+                if (perRow < 1 || layers < 1) continue;
+                const perSlot = perRow * layers;
+                if (!best || perSlot > best.perSlot) best = { o, perRow, layers, perSlot };
             }
-            let floored = 0;
-            while (remainingQty[item.id] > 0 && floored < cap) {
-                if (this.currentWeight + item.weight > this.container.maxWeight) break;
-                if (this.tryPlaceStack(item, 1, false, { floorOnly: true })) {
-                    this.currentWeight += item.weight;
-                    placedPerItem[item.id]++;
-                    remainingQty[item.id]--;
-                    floored++;
-                } else {
-                    break;
-                }
-            }
-        }
+            return best;
+        };
 
-        // ===================== PHASE 2 — UPPER LAYERS =====================
-        // Fill the upper layers the SAME way as the floor: spread each layer
-        // across the whole deck before starting the next one — only go higher
-        // when the current layer has no room left. Placing ONE unit at a time
-        // (instead of building tall towers) plus the z-ascending corner search
-        // gives a true layer-by-layer fill. Each layer is filled from the REAR
-        // so the topmost (partial) layer keeps the front lighter (~20% target).
-        const sortedItems = this.sortItemsByVolume();
-        for (let item of sortedItems) {
-            let remaining = remainingQty[item.id];
+        let cursorX = 0;          // next free position along the deck length
+        let totalWeight = 0;
 
-            while (remaining > 0) {
-                if (this.currentWeight + item.weight > this.container.maxWeight) {
-                    break;
-                }
+        for (const item of this.items) {
+            const plan = planFor(item);
+            if (!plan) continue;  // cannot fit this product in the deck at all
+            const { o, perRow, layers } = plan;
+            let remaining = item.quantity;
 
-                if (this.tryPlaceStack(item, 1, false, { rearFirst: true, respectMaxStack: true })) {
-                    this.currentWeight += item.weight;
-                    placedPerItem[item.id] = (placedPerItem[item.id] || 0) + 1;
-                    remaining -= 1;
-                } else {
-                    break; // Cannot fit anymore of this item
+            while (remaining > 0 && cursorX + o.length <= C.length + 0.001) {
+                let placedInSlot = 0;
+                for (let row = 0; row < perRow && remaining > 0; row++) {
+                    for (let layer = 0; layer < layers && remaining > 0; layer++) {
+                        if (item.weight > 0 && totalWeight + item.weight > C.maxWeight) {
+                            remaining = 0; break;
+                        }
+                        this.placedItems.push({
+                            ...item,
+                            position: { x: cursorX, y: row * o.width, z: layer * o.height },
+                            dimensions: { length: o.length, width: o.width, height: o.height },
+                            rotation: o.rotation,
+                        });
+                        totalWeight += item.weight;
+                        placedPerItem[item.id]++;
+                        remaining--;
+                        placedInSlot++;
+                    }
                 }
+                if (placedInSlot === 0) break;
+                cursorX += o.length;   // next slot sits flush against this one
             }
         }
-
-        // Tighten the load: slide columns flush together, then settle so
-        // nothing floats.
-        this.compact();
-        this.gravitySettle();
+        this.currentWeight = totalWeight;
 
         const stats = this.calculateStatistics();
-        const remainingWeight = this.container.maxWeight - stats.totalWeight;
+        const remLen = Math.max(0, C.length - cursorX);
 
-        // Calculate remaining capacity for each item type using trial-packing
-        // This actually tests how many more items can physically fit
-        for (let itemDef of this.items) {
-            const remaining = this.calculateRemainingByTrialPacking(itemDef, remainingWeight);
+        // Per-product breakdown + remaining capacity (how many more would fit in
+        // the leftover deck length, also bounded by remaining weight).
+        for (const itemDef of this.items) {
+            const plan = planFor(itemDef);
             const placedCount = placedPerItem[itemDef.id] || 0;
             const unplaced = Math.max(0, (itemDef.quantity || 0) - placedCount);
 
-            // Rotation hint: if rotation was disabled and items couldn't fit,
-            // estimate how many MORE could fit if rotation were enabled.
+            let remainingCapacity = 0;
+            if (plan) {
+                const byLength = Math.floor((remLen + 1e-6) / plan.o.length) * plan.perSlot;
+                const byWeight = itemDef.weight > 0
+                    ? Math.floor((C.maxWeight - totalWeight) / itemDef.weight)
+                    : Number.MAX_SAFE_INTEGER;
+                remainingCapacity = Math.max(0, Math.min(byLength, byWeight));
+            }
+
+            // Rotation hint: would enabling rotation fit more per slot?
             let rotationHint = 0;
             if (unplaced > 0 && !itemDef.allowRotation) {
-                const swapped = { ...itemDef, length: itemDef.width, width: itemDef.length };
-                const withRotation = this.calculateMaxPotential(swapped);
-                const withoutRotation = this.calculateMaxPotential(itemDef);
-                if (withRotation > withoutRotation) {
-                    rotationHint = Math.min(unplaced, withRotation - withoutRotation);
+                const rotPlan = planFor({ ...itemDef, allowRotation: true });
+                if (rotPlan && plan && rotPlan.perSlot > plan.perSlot) {
+                    rotationHint = Math.min(unplaced, rotPlan.perSlot - plan.perSlot);
                 }
             }
 
             const breakdown = stats.itemBreakdown[itemDef.id] || {
-                count: 0,
-                totalWeight: 0,
-                rows: 0,
-                columns: 0,
-                layers: 0
+                count: 0, totalWeight: 0, rows: 0, columns: 0, layers: 0,
             };
-            breakdown.remainingCapacity = remaining;
+            breakdown.remainingCapacity = remainingCapacity;
             breakdown.requestedQuantity = itemDef.quantity || 0;
             breakdown.unplaced = unplaced;
             breakdown.rotationHint = rotationHint;
