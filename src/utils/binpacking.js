@@ -137,7 +137,9 @@ export class BinPacking3D {
             }
         }
 
-        // Safety net: physically settle everything so nothing can ever float.
+        // Tighten the load: slide columns flush together, then settle so
+        // nothing floats.
+        this.compact();
         this.gravitySettle();
 
         const stats = this.calculateStatistics();
@@ -458,6 +460,55 @@ export class BinPacking3D {
                 }
             }
             it.position.z = restZ;
+        }
+    }
+
+    /**
+     * Compaction: slide whole footprint COLUMNS together so boxes sit flush
+     * (no gaps between them) instead of snapping to far-away neighbours' edges.
+     * Columns move as rigid units (X then Y), so stacks stay intact and stacking
+     * rules are preserved. Run gravitySettle afterwards as a Z backstop.
+     */
+    compact() {
+        // Group placed boxes into footprint columns (same x,y origin).
+        const colMap = new Map();
+        for (const it of this.placedItems) {
+            const k = Math.round(it.position.x) + '|' + Math.round(it.position.y);
+            if (!colMap.has(k)) colMap.set(k, []);
+            colMap.get(k).push(it);
+        }
+        const cols = [...colMap.values()].map(boxes => ({
+            boxes,
+            x: Math.min(...boxes.map(b => b.position.x)),
+            y: Math.min(...boxes.map(b => b.position.y)),
+            L: Math.max(...boxes.map(b => b.dimensions.length)),
+            W: Math.max(...boxes.map(b => b.dimensions.width)),
+        }));
+
+        // X-compaction: pull every column toward the front (headboard).
+        cols.sort((a, b) => a.x - b.x);
+        for (const c of cols) {
+            let minX = 0;
+            for (const o of cols) {
+                if (o === c || o.x >= c.x) continue;
+                const overlapY = !(c.y + c.W <= o.y || o.y + o.W <= c.y);
+                if (overlapY) minX = Math.max(minX, o.x + o.L);
+            }
+            const dx = minX - c.x;
+            if (dx !== 0) { c.boxes.forEach(b => { b.position.x += dx; }); c.x = minX; }
+        }
+
+        // Y-compaction: pull every column toward one side.
+        cols.sort((a, b) => a.y - b.y);
+        for (const c of cols) {
+            let minY = 0;
+            for (const o of cols) {
+                if (o === c || o.y >= c.y) continue;
+                const overlapX = !(c.x + c.L <= o.x || o.x + o.L <= c.x);
+                if (overlapX) minY = Math.max(minY, o.y + o.W);
+            }
+            const dy = minY - c.y;
+            if (dy !== 0) { c.boxes.forEach(b => { b.position.y += dy; }); c.y = minY; }
         }
     }
 
