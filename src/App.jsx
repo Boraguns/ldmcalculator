@@ -150,12 +150,14 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
             };
         }
 
-        // Front zone: how much of the TOTAL weight rests on the first
-        // `frontZoneCm` of the deck. Target ≈ 20% (load spread over the floor
-        // first, overflow stacked toward the rear). Each placedItem is one
-        // physical unit, so we sum per-unit weight directly.
+        // Front-axle zone: ABSOLUTE weight resting on the first `frontZoneCm` of
+        // the deck. The meaningful safety rule is a hard tonnage cap
+        // (frontZoneMaxKg, default 4.5 t) over the kingpin / drive axles — not a
+        // percentage (a short load sits entirely at the front, so its % is
+        // naturally high but still safe as long as the tonnage is under the cap).
         if (actualTruck.frontZoneCm > 0 && totalDistW > 0) {
             const zone = actualTruck.frontZoneCm;
+            const limit = actualTruck.frontZoneMaxKg || 4500;
             let frontZoneKg = 0, totalKg = 0;
             result.placedItems.forEach(it => {
                 const w = it.weight || 0;
@@ -163,15 +165,12 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
                 const cx = (it.position?.x || 0) + (it.dimensions?.length || 0) / 2;
                 if (cx < zone) frontZoneKg += w;
             });
-            const frontPctOfTotal = totalKg > 0 ? (frontZoneKg / totalKg) * 100 : 0;
             result.balance = result.balance || {};
             result.balance.frontZoneCm = zone;
             result.balance.frontZoneKg = frontZoneKg;
-            result.balance.frontZonePct = frontPctOfTotal;
-            result.balance.frontZoneTargetPct = 20;
-            // Flag only when the front is notably HEAVIER than the ~20% target
-            // (front-axle risk); a lighter front is the intended state.
-            result.balance.frontZoneOver = frontPctOfTotal > 32;
+            result.balance.frontZoneLimit = limit;
+            result.balance.frontZonePct = totalKg > 0 ? (frontZoneKg / totalKg) * 100 : 0;
+            result.balance.frontZoneOver = frontZoneKg > limit + 1;
         }
         return result;
     };

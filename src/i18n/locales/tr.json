@@ -177,8 +177,8 @@
     "stangaModeActive": "Eklemek için yüke tıkla",
     "addSpanzet": "Spanzet Ekle",
     "spanzetModeActive": "Eklemek için yüke tıkla",
-    "frontZone": "Ön 4m (hedef ~%20)",
-    "frontZoneWarn": "Ön 4 metre, hedeflenen ~%20'nin üzerinde yük taşıyor. Dengelemek için aks dengele'yi kullanın.",
+    "frontZone": "Ön 4m (max 4.5 t)",
+    "frontZoneWarn": "Ön 4 metre 4,5 ton sınırını aşıyor — daha hafif ürünleri öne alın veya yükü azaltın.",
     "notFitNamed": "{name}: {n} adet dışarıda kaldı",
     "autoStanga": "Otomatik ştanga ekle",
     "autoStangaNone": "Devrilme riski olan istif bulunamadı; ştangaya gerek yok."

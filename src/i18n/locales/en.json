@@ -177,8 +177,8 @@
     "stangaModeActive": "Click cargo to add/remove",
     "addSpanzet": "Add Spanzet (Strap)",
     "spanzetModeActive": "Click cargo to add/remove",
-    "frontZone": "Front 4 m (target ~20%)",
-    "frontZoneWarn": "The front 4 m is carrying more than the ~20% target. Use Rebalance to even it out.",
+    "frontZone": "Front 4 m (max 4.5 t)",
+    "frontZoneWarn": "The front 4 m exceeds the 4.5 t limit — move lighter products to the front or reduce the load.",
     "notFitNamed": "{name}: {n} units left out",
     "autoStanga": "Auto anti-tip bars",
     "autoStangaNone": "No tip-prone stacks found; no bars needed."

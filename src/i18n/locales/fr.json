@@ -177,8 +177,8 @@
     "stangaModeActive": "Cliquer sur la charge",
     "addSpanzet": "Ajouter une sangle",
     "spanzetModeActive": "Cliquer sur la charge",
-    "frontZone": "4 m avant (cible ~20%)",
-    "frontZoneWarn": "Les 4 m avant portent plus que la cible ~20%. Utilisez « Rééquilibrer » pour égaliser.",
+    "frontZone": "4 m avant (max 4,5 t)",
+    "frontZoneWarn": "Les 4 m avant dépassent la limite de 4,5 t — placez des produits plus légers à l'avant ou réduisez la charge.",
     "notFitNamed": "{name} : {n} unités non chargées",
     "autoStanga": "Barres anti-bascule auto",
     "autoStangaNone": "Aucune pile à risque de basculement ; aucune barre nécessaire."

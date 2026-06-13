@@ -95,17 +95,27 @@ export class BinPacking3D {
         let cursorX = 0;          // next free position along the deck length
         let totalWeight = 0;
 
-        // Block order: STACKABLE products first (they compress vertically and
-        // use the deck length efficiently), then NON-stackable ones fill the
-        // remaining length. This maximises how much is loaded (a big
-        // non-stackable product placed first would otherwise hog the deck and
-        // starve the others) while keeping each product as one contiguous block
-        // (grouping). Original list order is preserved within each group.
+        // Block order honours all three priorities:
+        //  (1) WEIGHT BALANCE — lighter products go toward the FRONT so the first
+        //      metres of the deck (over the kingpin / drive axles) stay light,
+        //      while heavier products sit further back. We compare each product's
+        //      weight PER DECK-METRE it occupies (weight × boxes-per-slot / slot
+        //      length), so a heavy-but-compact product isn't unfairly pushed back.
+        //  (2) STACKING — stackable products first so they compress vertically and
+        //      a big non-stackable one can't hog the deck and starve the others.
+        //  (3) GROUPING — each product still goes down as one contiguous block.
         const idx = new Map(this.items.map((it, i) => [it, i]));
+        const loadPerMetre = (it) => {
+            const pl = planFor(it);
+            if (!pl) return 0;
+            return (it.weight || 0) * pl.perSlot / Math.max(1, pl.o.length); // kg per cm of deck
+        };
         const placementOrder = [...this.items].sort((a, b) => {
             const sa = a.stackable !== false ? 0 : 1;
             const sb = b.stackable !== false ? 0 : 1;
-            if (sa !== sb) return sa - sb;
+            if (sa !== sb) return sa - sb;                 // stackable first (capacity)
+            const la = loadPerMetre(a), lb = loadPerMetre(b);
+            if (Math.abs(la - lb) > 1e-9) return la - lb;  // lighter-per-metre toward the front
             return idx.get(a) - idx.get(b);
         });
 

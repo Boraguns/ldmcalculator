@@ -178,8 +178,8 @@
     "stangaModeActive": "Klick auf Ladung",
     "addSpanzet": "Zurrgurt hinzufügen",
     "spanzetModeActive": "Klick auf Ladung",
-    "frontZone": "Vordere 4 m (Ziel ~20%)",
-    "frontZoneWarn": "Die vorderen 4 m tragen mehr als die ~20%-Zielmarke. Mit „Ausbalancieren“ ausgleichen.",
+    "frontZone": "Vordere 4 m (max. 4,5 t)",
+    "frontZoneWarn": "Die vorderen 4 m überschreiten das 4,5-t-Limit — leichtere Produkte nach vorne oder Last reduzieren.",
     "notFitNamed": "{name}: {n} Einheiten passten nicht",
     "autoStanga": "Auto-Sicherungsstangen",
     "autoStangaNone": "Keine kippgefährdeten Stapel gefunden; keine Stangen nötig."

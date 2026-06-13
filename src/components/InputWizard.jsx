@@ -947,7 +947,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px', fontSize: '0.75rem' }}>
                                     <span style={{ color: '#000000' }}>{t('step3.frontZone')}</span>
                                     <span style={{ fontWeight: 600, color: resultData.balance.frontZoneOver ? '#b91c1c' : '#059669' }}>
-                                        %{(resultData.balance.frontZonePct || 0).toFixed(0)} · {(resultData.balance.frontZoneKg / 1000).toFixed(2)} t
+                                        {(resultData.balance.frontZoneKg / 1000).toFixed(2)} / {((resultData.balance.frontZoneLimit || 4500) / 1000).toFixed(1)} t
                                     </span>
                                 </div>
                             )}
