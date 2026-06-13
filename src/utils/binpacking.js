@@ -95,7 +95,21 @@ export class BinPacking3D {
         let cursorX = 0;          // next free position along the deck length
         let totalWeight = 0;
 
-        for (const item of this.items) {
+        // Block order: STACKABLE products first (they compress vertically and
+        // use the deck length efficiently), then NON-stackable ones fill the
+        // remaining length. This maximises how much is loaded (a big
+        // non-stackable product placed first would otherwise hog the deck and
+        // starve the others) while keeping each product as one contiguous block
+        // (grouping). Original list order is preserved within each group.
+        const idx = new Map(this.items.map((it, i) => [it, i]));
+        const placementOrder = [...this.items].sort((a, b) => {
+            const sa = a.stackable !== false ? 0 : 1;
+            const sb = b.stackable !== false ? 0 : 1;
+            if (sa !== sb) return sa - sb;
+            return idx.get(a) - idx.get(b);
+        });
+
+        for (const item of placementOrder) {
             const plan = planFor(item);
             if (!plan) continue;  // cannot fit this product in the deck at all
             const { o, perRow, layers } = plan;
