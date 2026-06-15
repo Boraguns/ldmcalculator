@@ -101,18 +101,12 @@ export class BinPacking3D {
             return best;
         };
 
-        let cursorX = 0;          // next free position along the deck length
-        let totalWeight = 0;
-
         // Block order honours all three priorities:
         //  (1) WEIGHT BALANCE — lighter products go toward the FRONT so the first
-        //      metres of the deck (over the kingpin / drive axles) stay light,
-        //      while heavier products sit further back. We compare each product's
-        //      weight PER DECK-METRE it occupies (weight × boxes-per-slot / slot
-        //      length), so a heavy-but-compact product isn't unfairly pushed back.
+        //      metres of the deck (over the kingpin / drive axles) stay light.
         //  (2) STACKING — stackable products first so they compress vertically and
         //      a big non-stackable one can't hog the deck and starve the others.
-        //  (3) GROUPING — each product still goes down as one contiguous block.
+        //  (3) GROUPING — each product is one contiguous block.
         const idx = new Map(this.items.map((it, i) => [it, i]));
         const loadPerMetre = (it) => {
             const pl = planFor(it);
@@ -128,80 +122,94 @@ export class BinPacking3D {
             return idx.get(a) - idx.get(b);
         });
 
-        // SPREAD vs COMPRESS: if a single floor layer of every product fits on
-        // the deck, we SPREAD (everything one layer high — boxes laid out on the
-        // floor, no stacking). Otherwise we COMPRESS (each product takes only the
-        // floor columns it needs and stacks up) so everything still fits.
-        const floorLenForOneLayer = placementOrder.reduce((sum, it) => {
+        // Two floor-allocation strategies. We run BOTH and keep whichever loads
+        // MORE boxes (capacity), preferring SPREAD on a tie so the deck floor is
+        // used edge-to-edge and the load sits low instead of being stacked into a
+        // tall corner block while floor sits empty:
+        //   • SPREAD   — share the whole floor proportionally (fill it, one layer)
+        //                then stack only the overflow.
+        //   • COMPRESS — stackable products take the minimum floor and stack up,
+        //                leaving floor for the non-stackable / large products.
+        const spreadLenOf = (it) => {
             const pl = planFor(it);
-            if (!pl) return sum;
-            return sum + Math.ceil(it.quantity / pl.perRow) * pl.o.length;
-        }, 0);
-        const spreadMode = floorLenForOneLayer <= C.length + 0.001;
+            return pl ? Math.ceil(it.quantity / pl.perRow) * pl.o.length : 0;
+        };
+        const totalSpread = placementOrder.reduce((s, it) => s + spreadLenOf(it), 0);
+        const spreadScale = totalSpread > C.length ? C.length / totalSpread : 1;
+        const spreadColsOf = (it, plan) =>
+            Math.max(1, Math.round(spreadLenOf(it) * spreadScale / plan.o.length));
+        const compressColsOf = (it, plan) =>
+            Math.max(1, Math.ceil(it.quantity / (plan.perRow * plan.layers)));
 
-        // ---- FLOOR PASS: one flush layer, front-to-back, each product grouped.
-        const productCols = new Map(); // item -> { plan, cols:[x...], leftover }
-        for (const item of placementOrder) {
-            const plan = planFor(item);
-            if (!plan) { productCols.set(item, { plan: null, cols: [], leftover: item.quantity }); continue; }
-            const { o, perRow, layers } = plan;
-            // Floor columns this product may claim now: enough to spread its whole
-            // quantity in one layer (spread mode) or just enough that stacking can
-            // hold it all (compress mode) — so it never hogs the deck.
-            const colCap = spreadMode
-                ? Math.ceil(item.quantity / perRow)
-                : Math.max(1, Math.ceil(item.quantity / (perRow * layers)));
-            let remaining = item.quantity;
-            const cols = [];
-            while (remaining > 0 && cols.length < colCap && cursorX + o.length <= C.length + 0.001) {
-                let placed = 0;
-                for (let row = 0; row < perRow && remaining > 0; row++) {
-                    if (item.weight > 0 && totalWeight + item.weight > C.maxWeight) { remaining = 0; break; }
-                    this.placedItems.push({
-                        ...item,
-                        position: { x: cursorX, y: row * o.width, z: 0 },
-                        dimensions: { length: o.length, width: o.width, height: o.height },
-                        rotation: o.rotation,
-                    });
-                    totalWeight += item.weight;
-                    placedPerItem[item.id]++;
-                    remaining--; placed++;
-                }
-                if (placed === 0) break;
-                cols.push(cursorX);
-                cursorX += o.length;   // next column flush against this one
-            }
-            productCols.set(item, { plan, cols, leftover: remaining });
-        }
+        // Run one full floor+stack with a given floor-column allocation.
+        const runPasses = (floorColsOf) => {
+            const placed = [];
+            const perItem = {};
+            for (const it of this.items) perItem[it.id] = 0;
+            let cursorX = 0, tw = 0;
+            const productCols = new Map();
 
-        // ---- STACK PASS: stack each product's overflow on its OWN columns,
-        // filling upper layers from the REAR column toward the front so the first
-        // 4 m stays the lightest (~20% rule). Respects each product's max stack.
-        for (const item of placementOrder) {
-            const pc = productCols.get(item);
-            if (!pc || !pc.plan || pc.leftover <= 0 || !pc.cols.length) continue;
-            const { o, perRow, layers } = pc.plan;
-            let remaining = pc.leftover;
-            const rearCols = [...pc.cols].sort((a, b) => b - a); // rear (largest x) first
-            for (let layer = 1; layer < layers && remaining > 0; layer++) {
-                for (const cx of rearCols) {
-                    if (remaining <= 0) break;
+            // FLOOR PASS — one flush layer, front-to-back, each product grouped.
+            for (const item of placementOrder) {
+                const plan = planFor(item);
+                if (!plan) { productCols.set(item, { plan: null, cols: [], leftover: item.quantity }); continue; }
+                const { o, perRow } = plan;
+                const colCap = floorColsOf(item, plan);
+                let remaining = item.quantity;
+                const cols = [];
+                while (remaining > 0 && cols.length < colCap && cursorX + o.length <= C.length + 0.001) {
+                    let p = 0;
                     for (let row = 0; row < perRow && remaining > 0; row++) {
-                        if (item.weight > 0 && totalWeight + item.weight > C.maxWeight) { remaining = 0; break; }
-                        this.placedItems.push({
+                        if (item.weight > 0 && tw + item.weight > C.maxWeight) { remaining = 0; break; }
+                        placed.push({
                             ...item,
-                            position: { x: cx, y: row * o.width, z: layer * o.height },
+                            position: { x: cursorX, y: row * o.width, z: 0 },
                             dimensions: { length: o.length, width: o.width, height: o.height },
                             rotation: o.rotation,
                         });
-                        totalWeight += item.weight;
-                        placedPerItem[item.id]++;
-                        remaining--;
+                        tw += item.weight; perItem[item.id]++; remaining--; p++;
+                    }
+                    if (p === 0) break;
+                    cols.push(cursorX);
+                    cursorX += o.length;
+                }
+                productCols.set(item, { plan, cols, leftover: remaining });
+            }
+
+            // STACK PASS — overflow on each product's OWN columns, rear column
+            // first so the first 4 m stays lightest. Respects each max stack.
+            for (const item of placementOrder) {
+                const pc = productCols.get(item);
+                if (!pc || !pc.plan || pc.leftover <= 0 || !pc.cols.length) continue;
+                const { o, perRow, layers } = pc.plan;
+                let remaining = pc.leftover;
+                const rearCols = [...pc.cols].sort((a, b) => b - a);
+                for (let layer = 1; layer < layers && remaining > 0; layer++) {
+                    for (const cx of rearCols) {
+                        if (remaining <= 0) break;
+                        for (let row = 0; row < perRow && remaining > 0; row++) {
+                            if (item.weight > 0 && tw + item.weight > C.maxWeight) { remaining = 0; break; }
+                            placed.push({
+                                ...item,
+                                position: { x: cx, y: row * o.width, z: layer * o.height },
+                                dimensions: { length: o.length, width: o.width, height: o.height },
+                                rotation: o.rotation,
+                            });
+                            tw += item.weight; perItem[item.id]++; remaining--;
+                        }
                     }
                 }
             }
-        }
-        this.currentWeight = totalWeight;
+            return { placed, perItem, tw, cursorX };
+        };
+
+        const spread = runPasses(spreadColsOf);
+        const compress = runPasses(compressColsOf);
+        const chosen = spread.placed.length >= compress.placed.length ? spread : compress;
+        this.placedItems = chosen.placed;
+        this.currentWeight = chosen.tw;
+        Object.assign(placedPerItem, chosen.perItem);
+        const cursorX = chosen.cursorX;
 
         const stats = this.calculateStatistics();
         const remLen = Math.max(0, C.length - cursorX);
@@ -217,7 +225,7 @@ export class BinPacking3D {
             if (plan) {
                 const byLength = Math.floor((remLen + 1e-6) / plan.o.length) * plan.perSlot;
                 const byWeight = itemDef.weight > 0
-                    ? Math.floor((C.maxWeight - totalWeight) / itemDef.weight)
+                    ? Math.floor((C.maxWeight - this.currentWeight) / itemDef.weight)
                     : Number.MAX_SAFE_INTEGER;
                 remainingCapacity = Math.max(0, Math.min(byLength, byWeight));
             }
