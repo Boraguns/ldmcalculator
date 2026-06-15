@@ -76,10 +76,19 @@ export class BinPacking3D {
         // box-length slot (rows across the width × layers high). null if it
         // physically cannot fit the deck at all.
         const planFor = (item) => {
-            const orients = this.getAllOrientations(item);
+            let orients = this.getAllOrientations(item);
+            // Fallback: if NONE of the allowed orientations fit the deck (e.g. the
+            // box is wider than the trailer), force the swapped footprint so the
+            // product can still be loaded — turning a box flat on the floor is
+            // standard practice and beats leaving it off the truck entirely.
+            const fitsDeck = (o) => o.length <= C.length && o.width <= C.width && o.height <= C.height;
+            if (!orients.some(fitsDeck)) {
+                const swapped = { length: item.width, width: item.length, height: item.height, rotation: 1 };
+                if (fitsDeck(swapped)) orients = [swapped];
+            }
             let best = null;
             for (const o of orients) {
-                if (o.length > C.length || o.width > C.width || o.height > C.height) continue;
+                if (!fitsDeck(o)) continue;
                 const perRow = Math.floor(C.width / o.width);            // across width (y)
                 const maxByHeight = Math.floor(C.height / o.height);
                 const layers = (item.stackable === false)
