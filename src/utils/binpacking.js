@@ -119,33 +119,77 @@ export class BinPacking3D {
             return idx.get(a) - idx.get(b);
         });
 
+        // SPREAD vs COMPRESS: if a single floor layer of every product fits on
+        // the deck, we SPREAD (everything one layer high — boxes laid out on the
+        // floor, no stacking). Otherwise we COMPRESS (each product takes only the
+        // floor columns it needs and stacks up) so everything still fits.
+        const floorLenForOneLayer = placementOrder.reduce((sum, it) => {
+            const pl = planFor(it);
+            if (!pl) return sum;
+            return sum + Math.ceil(it.quantity / pl.perRow) * pl.o.length;
+        }, 0);
+        const spreadMode = floorLenForOneLayer <= C.length + 0.001;
+
+        // ---- FLOOR PASS: one flush layer, front-to-back, each product grouped.
+        const productCols = new Map(); // item -> { plan, cols:[x...], leftover }
         for (const item of placementOrder) {
             const plan = planFor(item);
-            if (!plan) continue;  // cannot fit this product in the deck at all
+            if (!plan) { productCols.set(item, { plan: null, cols: [], leftover: item.quantity }); continue; }
             const { o, perRow, layers } = plan;
+            // Floor columns this product may claim now: enough to spread its whole
+            // quantity in one layer (spread mode) or just enough that stacking can
+            // hold it all (compress mode) — so it never hogs the deck.
+            const colCap = spreadMode
+                ? Math.ceil(item.quantity / perRow)
+                : Math.max(1, Math.ceil(item.quantity / (perRow * layers)));
             let remaining = item.quantity;
-
-            while (remaining > 0 && cursorX + o.length <= C.length + 0.001) {
-                let placedInSlot = 0;
+            const cols = [];
+            while (remaining > 0 && cols.length < colCap && cursorX + o.length <= C.length + 0.001) {
+                let placed = 0;
                 for (let row = 0; row < perRow && remaining > 0; row++) {
-                    for (let layer = 0; layer < layers && remaining > 0; layer++) {
-                        if (item.weight > 0 && totalWeight + item.weight > C.maxWeight) {
-                            remaining = 0; break;
-                        }
+                    if (item.weight > 0 && totalWeight + item.weight > C.maxWeight) { remaining = 0; break; }
+                    this.placedItems.push({
+                        ...item,
+                        position: { x: cursorX, y: row * o.width, z: 0 },
+                        dimensions: { length: o.length, width: o.width, height: o.height },
+                        rotation: o.rotation,
+                    });
+                    totalWeight += item.weight;
+                    placedPerItem[item.id]++;
+                    remaining--; placed++;
+                }
+                if (placed === 0) break;
+                cols.push(cursorX);
+                cursorX += o.length;   // next column flush against this one
+            }
+            productCols.set(item, { plan, cols, leftover: remaining });
+        }
+
+        // ---- STACK PASS: stack each product's overflow on its OWN columns,
+        // filling upper layers from the REAR column toward the front so the first
+        // 4 m stays the lightest (~20% rule). Respects each product's max stack.
+        for (const item of placementOrder) {
+            const pc = productCols.get(item);
+            if (!pc || !pc.plan || pc.leftover <= 0 || !pc.cols.length) continue;
+            const { o, perRow, layers } = pc.plan;
+            let remaining = pc.leftover;
+            const rearCols = [...pc.cols].sort((a, b) => b - a); // rear (largest x) first
+            for (let layer = 1; layer < layers && remaining > 0; layer++) {
+                for (const cx of rearCols) {
+                    if (remaining <= 0) break;
+                    for (let row = 0; row < perRow && remaining > 0; row++) {
+                        if (item.weight > 0 && totalWeight + item.weight > C.maxWeight) { remaining = 0; break; }
                         this.placedItems.push({
                             ...item,
-                            position: { x: cursorX, y: row * o.width, z: layer * o.height },
+                            position: { x: cx, y: row * o.width, z: layer * o.height },
                             dimensions: { length: o.length, width: o.width, height: o.height },
                             rotation: o.rotation,
                         });
                         totalWeight += item.weight;
                         placedPerItem[item.id]++;
                         remaining--;
-                        placedInSlot++;
                     }
                 }
-                if (placedInSlot === 0) break;
-                cursorX += o.length;   // next slot sits flush against this one
             }
         }
         this.currentWeight = totalWeight;
