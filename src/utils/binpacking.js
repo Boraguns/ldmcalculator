@@ -176,6 +176,34 @@ export class BinPacking3D {
                 productCols.set(item, { plan, cols, leftover: remaining });
             }
 
+            // FILL PASS — if deck floor remains, pull overflow DOWN onto it
+            // (extra floor columns at the rear) instead of stacking it, so the
+            // base is fully covered and the load sits lower. Iterate rear product
+            // first so the extension stays next to that product's block.
+            let filled = true;
+            while (filled) {
+                filled = false;
+                for (let k = placementOrder.length - 1; k >= 0; k--) {
+                    const item = placementOrder[k];
+                    const pc = productCols.get(item);
+                    if (!pc || !pc.plan || pc.leftover <= 0) continue;
+                    const { o, perRow } = pc.plan;
+                    if (cursorX + o.length > C.length + 0.001) continue;
+                    let p = 0;
+                    for (let row = 0; row < perRow && pc.leftover > 0; row++) {
+                        if (item.weight > 0 && tw + item.weight > C.maxWeight) { pc.leftover = 0; break; }
+                        placed.push({
+                            ...item,
+                            position: { x: cursorX, y: row * o.width, z: 0 },
+                            dimensions: { length: o.length, width: o.width, height: o.height },
+                            rotation: o.rotation,
+                        });
+                        tw += item.weight; perItem[item.id]++; pc.leftover--; p++;
+                    }
+                    if (p > 0) { pc.cols.push(cursorX); cursorX += o.length; filled = true; }
+                }
+            }
+
             // STACK PASS — overflow on each product's OWN columns, rear column
             // first so the first 4 m stays lightest. Respects each max stack.
             for (const item of placementOrder) {
