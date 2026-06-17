@@ -33,16 +33,17 @@ export class BinPacking3D {
         // Items to pack (boxes/pallets)
         this.items = items.map((item) => {
             // Four stacking categories, captured per product:
-            //   'none' — neither bears load nor goes on others (floor, alone)
-            //   'bear' — load CAN be placed on top of it (carrier / base)
-            //   'top'  — CAN be placed on top of others, but bears nothing
-            //   'both' — bears load AND can be placed on others
-            // Falls back to the legacy boolean: stackable:false → 'none',
-            // stackable:true → 'both'.
-            const mode = item.stackMode ||
-                (item.stackable === false ? 'none' : 'both');
-            const canBearOther = (mode === 'bear' || mode === 'both'); // others on top of this
-            const canGoOnOther = (mode === 'top' || mode === 'both');  // this on top of others
+            //   'none' — not stackable at all (floor, alone)
+            //   'bear' — carrier: bears OTHER products on top (and self-stacks)
+            //   'top'  — goes on top of carriers, bears nothing
+            //   'self' — stacks only on its OWN kind (no cross-product)
+            // Legacy fallback: stackable:false → 'none', stackable:true → 'self';
+            // the removed 'both' maps to 'bear' (a carrier already does both).
+            let mode = item.stackMode || (item.stackable === false ? 'none' : 'self');
+            if (mode === 'both') mode = 'bear';
+            const canBearOther = (mode === 'bear');  // OTHER products may sit on top
+            const canGoOnOther = (mode === 'top');   // this may sit on OTHER products
+            const selfStack = (mode === 'bear' || mode === 'self'); // own kind on own kind
             return {
                 id: item.id,
                 length: parseFloat(item.length),
@@ -53,12 +54,11 @@ export class BinPacking3D {
                 stackMode: mode,
                 canBearOther,
                 canGoOnOther,
-                // Same-product self-stacking is only possible when the product
-                // can bear its own kind on top; otherwise it stays a single layer.
-                maxStack: canBearOther ? (parseInt(item.maxStack) || 999) : 1,
+                selfStack,
+                // Same-product self-stacking allowed only when selfStack; else 1 layer.
+                maxStack: selfStack ? (parseInt(item.maxStack) || 999) : 1,
                 allowRotation: item.allowRotation !== false,
-                // Legacy flag kept for any external reference.
-                stackable: mode !== 'none',
+                stackable: mode !== 'none', // legacy reference
                 placed: false,
                 position: null,
                 rotation: null,

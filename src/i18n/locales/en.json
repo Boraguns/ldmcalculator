@@ -142,14 +142,14 @@
     "stackMode": {
       "title": "Stacking type",
       "none": "Not stackable (floor only)",
-      "bear": "Bears load on top (carrier)",
-      "top": "Goes on top of others",
-      "both": "Both ways",
+      "bear": "Carrier — bears other loads on top",
+      "top": "Goes on top — bears nothing",
+      "self": "Self-stacks (same product on itself)",
       "short": {
-        "both": "Stack: Both ways",
-        "bear": "Stack: Carrier",
-        "top": "Stack: On top",
-        "none": "Stack: Floor only"
+        "none": "No stacking",
+        "bear": "Carrier (base)",
+        "top": "On top",
+        "self": "Self-stack"
       }
     }
   },

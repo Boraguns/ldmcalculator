@@ -142,14 +142,14 @@
     "stackMode": {
       "title": "Type d'empilage",
       "none": "Non empilable (sol seul)",
-      "bear": "Porte une charge (support)",
-      "top": "Se pose sur d’autres",
-      "both": "Bidirectionnel",
+      "bear": "Support — porte d’autres charges",
+      "top": "Se pose dessus — ne porte rien",
+      "self": "Empilable sur lui-même (même produit)",
       "short": {
-        "both": "Empil.: Bidirectionnel",
-        "bear": "Empil.: Support",
-        "top": "Empil.: Au-dessus",
-        "none": "Empil.: Sol seul"
+        "none": "Non empilable",
+        "bear": "Support (base)",
+        "top": "Au-dessus",
+        "self": "Sur lui-même"
       }
     }
   },

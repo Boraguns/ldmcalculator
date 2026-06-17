@@ -43,11 +43,20 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
     const isShip = mode === 'ship';
     const typeLabel = (isTrain || isShip) ? t('truckTypes.type.container') : isPlane ? t('truckTypes.type.uld') : t('truckTypes.type.trailer');
 
-    // Initial product state (seeded from a saved draft when present)
+    // Initial product state (seeded from a saved draft when present).
+    // Legacy drafts may carry the removed 'both' category — map it to 'bear'
+    // (a carrier already bears load and self-stacks), and fill any missing mode.
+    const migrateStackMode = (p) => {
+        const m = p.stackMode;
+        if (m === 'both' || m == null || m === '') {
+            return { ...p, stackMode: m === 'both' ? 'bear' : 'self' };
+        }
+        return p;
+    };
     const [products, setProducts] = useState(
         (Array.isArray(d0.products) && d0.products.length)
-            ? d0.products
-            : [{ id: 1, name: '', length: '', width: '', height: '', weight: '', quantity: '', maxStack: 1, allowRotation: false, color: '', stackMode: 'both', useTotalWeight: false, totalWeight: '' }]
+            ? d0.products.map(migrateStackMode)
+            : [{ id: 1, name: '', length: '', width: '', height: '', weight: '', quantity: '', maxStack: 1, allowRotation: false, color: '', stackMode: 'self', useTotalWeight: false, totalWeight: '' }]
     );
 
     // Auto-save the form as the user edits, so it survives a login/register
@@ -64,7 +73,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
         setTotalTons('');
         setTonnageInfo(null);
         setResultData(null);
-        setProducts([{ id: 1, name: '', length: '', width: '', height: '', weight: '', quantity: '', maxStack: 1, allowRotation: false, color: '', stackMode: 'both', useTotalWeight: false, totalWeight: '' }]);
+        setProducts([{ id: 1, name: '', length: '', width: '', height: '', weight: '', quantity: '', maxStack: 1, allowRotation: false, color: '', stackMode: 'self', useTotalWeight: false, totalWeight: '' }]);
         if (onFullReset) onFullReset();
     };
 
@@ -125,7 +134,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
             id: newId,
             name: '',
             length: '', width: '', height: '', weight: '', quantity: sameSize ? '' : '1',
-            maxStack: 1, allowRotation: false, color: '', stackMode: 'both',
+            maxStack: 1, allowRotation: false, color: '', stackMode: 'self',
             useTotalWeight: false, totalWeight: ''
         }]);
     };
@@ -526,21 +535,22 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                                         />
                                         <span>{t('wizard.color')}</span>
                                     </label>
-                                    {/* Stacking category (4 modes) */}
+                                    {/* Stacking category (none / carrier / on-top / self) */}
                                     <label
                                         style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#000000', cursor: 'pointer' }}
-                                        title={t('wizard.stackMode.title')}
+                                        title={t(`wizard.stackMode.${product.stackMode || 'self'}`)}
                                     >
                                         <span aria-hidden="true">🧱</span>
                                         <select
-                                            value={product.stackMode || 'both'}
+                                            value={product.stackMode || 'self'}
                                             onChange={(e) => updateProduct(product.id, 'stackMode', e.target.value)}
+                                            title={t(`wizard.stackMode.${product.stackMode || 'self'}`)}
                                             style={{ background: '#fbf8f1', border: '1px solid #d8cfbd', borderRadius: '8px', padding: '5px 8px', fontSize: '0.8rem', color: '#000000', fontFamily: 'inherit', cursor: 'pointer' }}
                                         >
-                                            <option value="both">{t('wizard.stackMode.short.both')}</option>
-                                            <option value="bear">{t('wizard.stackMode.short.bear')}</option>
-                                            <option value="top">{t('wizard.stackMode.short.top')}</option>
-                                            <option value="none">{t('wizard.stackMode.short.none')}</option>
+                                            <option value="bear" title={t('wizard.stackMode.bear')}>{t('wizard.stackMode.short.bear')}</option>
+                                            <option value="top" title={t('wizard.stackMode.top')}>{t('wizard.stackMode.short.top')}</option>
+                                            <option value="self" title={t('wizard.stackMode.self')}>{t('wizard.stackMode.short.self')}</option>
+                                            <option value="none" title={t('wizard.stackMode.none')}>{t('wizard.stackMode.short.none')}</option>
                                         </select>
                                     </label>
                                 </div>

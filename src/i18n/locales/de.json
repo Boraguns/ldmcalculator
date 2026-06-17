@@ -143,14 +143,14 @@
     "stackMode": {
       "title": "Stapelart",
       "none": "Nicht stapelbar (nur Boden)",
-      "bear": "Trägt Last oben (Träger)",
-      "top": "Kommt auf andere",
-      "both": "Beidseitig stapelbar",
+      "bear": "Träger — trägt andere Lasten oben",
+      "top": "Kommt oben drauf — trägt nichts",
+      "self": "Selbststapelnd (gleiches Produkt)",
       "short": {
-        "both": "Stapeln: Beidseitig",
-        "bear": "Stapeln: Träger",
-        "top": "Stapeln: Oben drauf",
-        "none": "Stapeln: Nur Boden"
+        "none": "Nicht stapelbar",
+        "bear": "Träger (Basis)",
+        "top": "Oben drauf",
+        "self": "Selbststapelnd"
       }
     }
   },

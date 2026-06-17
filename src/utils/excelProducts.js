@@ -26,7 +26,7 @@ const COLUMNS = [
     // the user never has to fill it in.
     { field: 'allowRotation', aliases: ['allowrotation', 'rotation', 'dondurulebilir', 'dondur', 'rotierbar', 'povorot', 'aldwran', 'rotate'] },
     // Stacking type, 1-4: 1=floor only, 2=carrier (load on top), 3=goes on top,
-    // 4=both. (Legacy E/H / Y/N is still accepted on import.)
+    // 4=self-stack (same product on itself). (Legacy E/H / Y/N still accepted.)
     { field: 'stackMode',     aliases: ['stackmode', 'istifturu', 'istifleme', 'stackable', 'istiflenebilir', 'stapelbar', 'shtabeliruemyy', 'empilable', 'kabllltkds', 'canstack'] },
     { field: 'color',         aliases: ['color', 'colour', 'renk', 'farbe', 'cvet', 'couleur', 'allwn'] },
 ];
@@ -35,8 +35,8 @@ const NUMERIC = new Set(['length', 'width', 'height', 'weight', 'quantity']);
 const BOOLEAN = new Set(['allowRotation']);
 
 // Stacking-type code <-> mode.
-const STACK_MODE_BY_NUM = { 1: 'none', 2: 'bear', 3: 'top', 4: 'both' };
-const NUM_BY_STACK_MODE = { none: 1, bear: 2, top: 3, both: 4 };
+const STACK_MODE_BY_NUM = { 1: 'none', 2: 'bear', 3: 'top', 4: 'self' };
+const NUM_BY_STACK_MODE = { none: 1, bear: 2, top: 3, self: 4, both: 2 };
 
 // Yes/No tokens used in the EXAMPLE rows of the downloaded template, matching
 // the (E/H), (Y/N), (J/N)… hint shown in each language's column headers so the
@@ -147,16 +147,16 @@ const parseNum = (v) => {
     return Number.isFinite(n) ? n : '';
 };
 
-// Stacking type: a 1-4 code (1=none, 2=bear, 3=top, 4=both). Falls back to the
-// legacy Yes/No (stackable) when a boolean-ish value is given. Default 'both'.
+// Stacking type: a 1-4 code (1=none, 2=bear, 3=top, 4=self). Falls back to the
+// legacy Yes/No (stackable) when a boolean-ish value is given. Default 'self'.
 const parseStackMode = (v) => {
-    if (v == null || v === '') return 'both';
+    if (v == null || v === '') return 'self';
     const n = parseInt(String(v).trim(), 10);
     if (n >= 1 && n <= 4) return STACK_MODE_BY_NUM[n];
     const b = parseBool(v, null);
-    if (b === true) return 'both';
+    if (b === true) return 'self';
     if (b === false) return 'none';
-    return 'both';
+    return 'self';
 };
 
 // Exact localised header -> field lookup, built from every language's
@@ -211,7 +211,7 @@ export const downloadProductTemplate = async (lang = 'en') => {
     // Example rows use friendly colour NAMES so the user copies the pattern
     // (instead of guessing hex). Colour is optional — leaving it blank lets the
     // app auto-assign one. Yes/No values match the header hint for the language.
-    const example = ['Box A', 120, 80, 100, 25, 10, yn.n, 4, names[1]]; // Blue · stacking 4 = both
+    const example = ['Box A', 120, 80, 100, 25, 10, yn.n, 4, names[1]]; // Blue · stacking 4 = self-stack
     const example2 = ['Box B', 60, 40, 40, 8, 24, yn.y, 2, names[0]];   // Red  · stacking 2 = carrier
 
     const ws = XLSX.utils.aoa_to_sheet([header, example, example2]);
@@ -272,7 +272,7 @@ export const exportProductsToFile = async (products = [], lang = 'en') => {
             weight: unitW,
             quantity: Number.isFinite(qty) ? qty : '',
             allowRotation: p.allowRotation ? yn.y : yn.n,
-            stackMode: NUM_BY_STACK_MODE[p.stackMode || (p.stackable === false ? 'none' : 'both')] || 4,
+            stackMode: NUM_BY_STACK_MODE[p.stackMode || (p.stackable === false ? 'none' : 'self')] || 4,
             color: p.color ? (hexToName[String(p.color).toLowerCase()] || p.color) : '',
         };
         return COLUMNS.map((c) => out[c.field]);
