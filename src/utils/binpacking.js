@@ -31,27 +31,39 @@ export class BinPacking3D {
         this.lightFirst = containerDims.lightFirst === true;
 
         // Items to pack (boxes/pallets)
-        this.items = items.map((item) => ({
-            id: item.id,
-            length: parseFloat(item.length),
-            width: parseFloat(item.width),
-            height: parseFloat(item.height),
-            weight: parseFloat(item.weight),
-            quantity: parseInt(item.quantity),
-            // A non-stackable item must never form a tower of itself, so its
-            // effective max stack is forced to 1. (Cross-product stacking is
-            // handled separately in canPlaceAt.)
-            maxStack: (item.stackable === false) ? 1 : (parseInt(item.maxStack) || 999),
-            allowRotation: item.allowRotation !== false,
-            // Cross-product stacking control. Default true. When false, no
-            // OTHER product may sit on top of this one, and this product may
-            // not be placed on top of any other product (only on the floor or
-            // on more units of itself).
-            stackable: item.stackable !== false,
-            placed: false,
-            position: null,
-            rotation: null
-        }));
+        this.items = items.map((item) => {
+            // Four stacking categories, captured per product:
+            //   'none' — neither bears load nor goes on others (floor, alone)
+            //   'bear' — load CAN be placed on top of it (carrier / base)
+            //   'top'  — CAN be placed on top of others, but bears nothing
+            //   'both' — bears load AND can be placed on others
+            // Falls back to the legacy boolean: stackable:false → 'none',
+            // stackable:true → 'both'.
+            const mode = item.stackMode ||
+                (item.stackable === false ? 'none' : 'both');
+            const canBearOther = (mode === 'bear' || mode === 'both'); // others on top of this
+            const canGoOnOther = (mode === 'top' || mode === 'both');  // this on top of others
+            return {
+                id: item.id,
+                length: parseFloat(item.length),
+                width: parseFloat(item.width),
+                height: parseFloat(item.height),
+                weight: parseFloat(item.weight),
+                quantity: parseInt(item.quantity),
+                stackMode: mode,
+                canBearOther,
+                canGoOnOther,
+                // Same-product self-stacking is only possible when the product
+                // can bear its own kind on top; otherwise it stays a single layer.
+                maxStack: canBearOther ? (parseInt(item.maxStack) || 999) : 1,
+                allowRotation: item.allowRotation !== false,
+                // Legacy flag kept for any external reference.
+                stackable: mode !== 'none',
+                placed: false,
+                position: null,
+                rotation: null,
+            };
+        });
 
         this.placedItems = [];
         this.currentWeight = 0;
@@ -107,16 +119,23 @@ export class BinPacking3D {
         //  (2) STACKING — stackable products first so they compress vertically and
         //      a big non-stackable one can't hog the deck and starve the others.
         //  (3) GROUPING — each product is one contiguous block.
+        // Split products: BASES go on the deck floor (and may carry load); pure
+        // TOPPERS (can go on top of others but bear nothing) are placed AFTERWARD
+        // on top of carrier surfaces, falling back to the floor.
+        const isPureTopper = (it) => it.canGoOnOther && !it.canBearOther;
+        const bases = this.items.filter((it) => !isPureTopper(it));
+        const toppers = this.items.filter(isPureTopper);
+
         const idx = new Map(this.items.map((it, i) => [it, i]));
         const loadPerMetre = (it) => {
             const pl = planFor(it);
             if (!pl) return 0;
             return (it.weight || 0) * pl.perSlot / Math.max(1, pl.o.length); // kg per cm of deck
         };
-        const placementOrder = [...this.items].sort((a, b) => {
-            const sa = a.stackable !== false ? 0 : 1;
-            const sb = b.stackable !== false ? 0 : 1;
-            if (sa !== sb) return sa - sb;                 // stackable first (capacity)
+        const placementOrder = [...bases].sort((a, b) => {
+            const sa = a.maxStack > 1 ? 0 : 1;             // self-stackable bases first (capacity)
+            const sb = b.maxStack > 1 ? 0 : 1;
+            if (sa !== sb) return sa - sb;
             const la = loadPerMetre(a), lb = loadPerMetre(b);
             if (Math.abs(la - lb) > 1e-9) return la - lb;  // lighter-per-metre toward the front
             return idx.get(a) - idx.get(b);
@@ -237,7 +256,11 @@ export class BinPacking3D {
         this.placedItems = chosen.placed;
         this.currentWeight = chosen.tw;
         Object.assign(placedPerItem, chosen.perItem);
-        const cursorX = chosen.cursorX;
+
+        // Cross-stack: lay pure-topper products on top of carrier surfaces, then
+        // any leftover on the floor.
+        this._placeToppers(toppers, placedPerItem, planFor);
+        const cursorX = Math.max(0, ...this.placedItems.map((p) => p.position.x + p.dimensions.length), 0);
 
         const stats = this.calculateStatistics();
         const remLen = Math.max(0, C.length - cursorX);
@@ -286,6 +309,101 @@ export class BinPacking3D {
             utilization: stats.utilization,
             itemBreakdown: stats.itemBreakdown
         };
+    }
+
+    /**
+     * Place pure-topper products (can go on top of others, bear nothing) on top
+     * of carrier surfaces (the exposed top of any column whose top item
+     * canBearOther), tiling within each surface. Leftover toppers go on the
+     * floor at the rear. Mutates this.placedItems / this.currentWeight and the
+     * passed placedPerItem.
+     */
+    _placeToppers(toppers, placedPerItem, planFor) {
+        if (!toppers || !toppers.length) return;
+        const C = this.container;
+
+        for (const item of toppers) {
+            let remaining = item.quantity - (placedPerItem[item.id] || 0);
+            if (remaining <= 0) continue;
+
+            // (Re)build carrier surfaces each product, since previous toppers may
+            // have raised some column tops (a topper itself bears nothing, so its
+            // top is NOT a surface).
+            const colMap = new Map();
+            for (const it of this.placedItems) {
+                const k = Math.round(it.position.x) + '|' + Math.round(it.position.y);
+                let c = colMap.get(k);
+                if (!c) { c = { items: [] }; colMap.set(k, c); }
+                c.items.push(it);
+            }
+            const surfaces = [];
+            for (const c of colMap.values()) {
+                let top = c.items[0];
+                for (const e of c.items) if (e.position.z > top.position.z) top = e;
+                if (!top.canBearOther) continue; // nothing may rest on this column's top
+                surfaces.push({
+                    x: top.position.x, y: top.position.y,
+                    l: top.dimensions.length, w: top.dimensions.width,
+                    z: top.position.z + top.dimensions.height,
+                });
+            }
+            surfaces.sort((a, b) => b.x - a.x); // rear surfaces first (keep front light)
+
+            for (const s of surfaces) {
+                if (remaining <= 0) break;
+                // Best topper orientation that fits this surface (tiling within).
+                const orients = this.getAllOrientations(item);
+                let best = null;
+                for (const o of orients) {
+                    if (o.height > C.height - s.z + 0.001) continue;
+                    const nx = Math.floor(s.l / o.length);
+                    const ny = Math.floor(s.w / o.width);
+                    if (nx >= 1 && ny >= 1 && (!best || nx * ny > best.nx * best.ny)) best = { o, nx, ny };
+                }
+                if (!best) continue;
+                const { o, nx, ny } = best;
+                for (let ix = 0; ix < nx && remaining > 0; ix++) {
+                    for (let iy = 0; iy < ny && remaining > 0; iy++) {
+                        if (item.weight > 0 && this.currentWeight + item.weight > C.maxWeight) { remaining = 0; break; }
+                        this.placedItems.push({
+                            ...item,
+                            position: { x: s.x + ix * o.length, y: s.y + iy * o.width, z: s.z },
+                            dimensions: { length: o.length, width: o.width, height: o.height },
+                            rotation: o.rotation,
+                        });
+                        this.currentWeight += item.weight;
+                        placedPerItem[item.id] = (placedPerItem[item.id] || 0) + 1;
+                        remaining--;
+                    }
+                }
+            }
+
+            // Leftover toppers → floor at the rear (single layer; toppers bear nothing).
+            if (remaining > 0) {
+                const plan = planFor(item);
+                if (plan) {
+                    const { o, perRow } = plan;
+                    let cursorX = Math.max(0, ...this.placedItems.map((p) => p.position.x + p.dimensions.length), 0);
+                    while (remaining > 0 && cursorX + o.length <= C.length + 0.001) {
+                        let p = 0;
+                        for (let row = 0; row < perRow && remaining > 0; row++) {
+                            if (item.weight > 0 && this.currentWeight + item.weight > C.maxWeight) { remaining = 0; break; }
+                            this.placedItems.push({
+                                ...item,
+                                position: { x: cursorX, y: row * o.width, z: 0 },
+                                dimensions: { length: o.length, width: o.width, height: o.height },
+                                rotation: o.rotation,
+                            });
+                            this.currentWeight += item.weight;
+                            placedPerItem[item.id] = (placedPerItem[item.id] || 0) + 1;
+                            remaining--; p++;
+                        }
+                        if (p === 0) break;
+                        cursorX += o.length;
+                    }
+                }
+            }
+        }
     }
 
     sortItemsByVolume() {
