@@ -32,18 +32,20 @@ export class BinPacking3D {
 
         // Items to pack (boxes/pallets)
         this.items = items.map((item) => {
-            // Four stacking categories, captured per product:
-            //   'none' — not stackable at all (floor, alone)
-            //   'bear' — carrier: bears OTHER products on top (and self-stacks)
-            //   'top'  — goes on top of carriers, bears nothing
-            //   'self' — stacks only on its OWN kind (no cross-product)
-            // Legacy fallback: stackable:false → 'none', stackable:true → 'self';
-            // the removed 'both' maps to 'bear' (a carrier already does both).
-            let mode = item.stackMode || (item.stackable === false ? 'none' : 'self');
-            if (mode === 'both') mode = 'bear';
-            const canBearOther = (mode === 'bear');  // OTHER products may sit on top
-            const canGoOnOther = (mode === 'top');   // this may sit on OTHER products
-            const selfStack = (mode === 'bear' || mode === 'self'); // own kind on own kind
+            // Three stacking categories, captured per product:
+            //   'none' — not stackable: nothing on top, never stacked (floor only)
+            //   'full' — fully stackable BOTH ways: bears other loads on top AND
+            //            may sit on top of other loads; no restriction (used as a
+            //            carrier). Deck weight balance is handled separately.
+            //   'self' — stacks only on its OWN kind (same product, no cross).
+            // Legacy fallback: stackable:false → 'none', stackable:true → 'full'.
+            // Older categories collapse into this 3-way model: 'both'/'bear'/'top'
+            // all map to 'full' (fully stackable both ways).
+            let mode = item.stackMode || (item.stackable === false ? 'none' : 'full');
+            if (mode === 'both' || mode === 'bear' || mode === 'top') mode = 'full';
+            const canBearOther = (mode === 'full');  // OTHER products may sit on top
+            const canGoOnOther = (mode === 'full');  // this may sit on OTHER products
+            const selfStack = (mode === 'full' || mode === 'self'); // own kind on own kind
             return {
                 id: item.id,
                 length: parseFloat(item.length),
@@ -119,13 +121,13 @@ export class BinPacking3D {
         //  (2) STACKING — stackable products first so they compress vertically and
         //      a big non-stackable one can't hog the deck and starve the others.
         //  (3) GROUPING — each product is one contiguous block.
-        // FLOOR FIRST for everyone: a "topper" (can go on others, bears nothing)
-        // can also sit on the floor, so it joins the normal floor packing. Only
-        // its OVERFLOW — what doesn't fit on the floor — is later stacked on top
-        // of carrier surfaces. So the deck floor is finished before anything is
-        // stacked.
-        const isPureTopper = (it) => it.canGoOnOther && !it.canBearOther;
-        const toppers = this.items.filter(isPureTopper);
+        // FLOOR FIRST for everyone: a "full" product can sit on the floor too, so
+        // it joins the normal floor packing and self-stacks on its own columns.
+        // Only its OVERFLOW — what neither fits on the floor nor on its own column
+        // stack — is later cross-stacked on top of OTHER carrier surfaces. So the
+        // deck floor is finished, then same-product stacks, then cross-product.
+        const isTopper = (it) => it.canGoOnOther;       // full products cross-stack overflow
+        const toppers = this.items.filter(isTopper);
 
         const idx = new Map(this.items.map((it, i) => [it, i]));
         const loadPerMetre = (it) => {
@@ -160,6 +162,13 @@ export class BinPacking3D {
             Math.max(1, Math.round(spreadLenOf(it) * spreadScale / plan.o.length));
         const compressColsOf = (it, plan) =>
             Math.max(1, Math.ceil(it.quantity / (plan.perRow * plan.layers)));
+        //   • CARRIER-FIRST — products that stack two-or-more high give up ALL
+        //     their floor (0 columns) so the deck floor goes entirely to the
+        //     bulky one-layer carriers; the stack-friendly products then
+        //     cross-stack on top of those carriers. Optimal when small stackable
+        //     boxes ride on top of tall pallets that themselves can't be stacked.
+        const carrierColsOf = (it, plan) =>
+            plan.layers >= 2 ? 0 : Math.ceil(it.quantity / plan.perRow);
 
         // Run one full floor+stack with a given floor-column allocation.
         const runPasses = (floorColsOf) => {
@@ -251,16 +260,31 @@ export class BinPacking3D {
             return { placed, perItem, tw, cursorX };
         };
 
-        const spread = runPasses(spreadColsOf);
-        const compress = runPasses(compressColsOf);
-        const chosen = spread.placed.length >= compress.placed.length ? spread : compress;
+        // Evaluate each floor strategy INCLUDING the cross-stacking pass, then
+        // keep whichever loads more overall (preferring spread on a tie). This
+        // matters when products are fully stackable: COMPRESS may place fewer
+        // boxes on the floor but free that floor for bulky carriers, then
+        // cross-stack the overflow on top — a strictly better total that a
+        // pre-cross-stack comparison would miss.
+        const evalStrategy = (floorColsOf) => {
+            const r = runPasses(floorColsOf);
+            this.placedItems = r.placed.slice();   // copy: _placeToppers pushes onto it
+            this.currentWeight = r.tw;
+            const perItem = { ...r.perItem };
+            this._placeToppers(toppers, perItem, planFor);
+            return { placed: this.placedItems, tw: this.currentWeight, perItem, count: this.placedItems.length };
+        };
+        const spread = evalStrategy(spreadColsOf);
+        const compress = evalStrategy(compressColsOf);
+        const carrier = evalStrategy(carrierColsOf);
+        // Most boxes wins; on a tie prefer SPREAD (load sits low, edge-to-edge)
+        // over compress/carrier.
+        const chosen = [spread, compress, carrier]
+            .reduce((best, s) => (s.count > best.count ? s : best), spread);
         this.placedItems = chosen.placed;
         this.currentWeight = chosen.tw;
         Object.assign(placedPerItem, chosen.perItem);
 
-        // Cross-stack: lay pure-topper products on top of carrier surfaces, then
-        // any leftover on the floor.
-        this._placeToppers(toppers, placedPerItem, planFor);
         const cursorX = Math.max(0, ...this.placedItems.map((p) => p.position.x + p.dimensions.length), 0);
 
         const stats = this.calculateStatistics();
@@ -313,11 +337,13 @@ export class BinPacking3D {
     }
 
     /**
-     * Place pure-topper products (can go on top of others, bear nothing) on top
-     * of carrier surfaces (the exposed top of any column whose top item
-     * canBearOther), tiling within each surface. Leftover toppers go on the
-     * floor at the rear. Mutates this.placedItems / this.currentWeight and the
-     * passed placedPerItem.
+     * Cross-stack overflow of "full" products (canGoOnOther) on top of carrier
+     * surfaces (the exposed top of any column whose top item canBearOther),
+     * tiling within each surface. Called only with each product's leftover after
+     * floor + same-product column stacking, so same-product blocks form first and
+     * cross-product stacking is pure overflow. Leftover that still doesn't fit
+     * goes on the floor at the rear. Mutates this.placedItems /
+     * this.currentWeight and the passed placedPerItem.
      */
     _placeToppers(toppers, placedPerItem, planFor) {
         if (!toppers || !toppers.length) return;

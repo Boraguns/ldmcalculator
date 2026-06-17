@@ -141,14 +141,12 @@
     "excelExportHint": "Téléchargez vos produits saisis sous forme de modèle (réimportable).",
     "stackMode": {
       "title": "Type d'empilage",
-      "none": "Non empilable (sol seul)",
-      "bear": "Support — porte d’autres charges",
-      "top": "Se pose dessus — ne porte rien",
-      "self": "Empilable sur lui-même (même produit)",
+      "none": "Non empilable — rien ne peut être posé dessus (sol seul)",
+      "full": "Entièrement empilable — sous ou sur d’autres charges (support, sans limite)",
+      "self": "Empilable sur lui-même — même produit uniquement",
       "short": {
         "none": "Non empilable",
-        "bear": "Support (base)",
-        "top": "Au-dessus",
+        "full": "Empilable",
         "self": "Sur lui-même"
       }
     }

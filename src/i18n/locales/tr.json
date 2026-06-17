@@ -141,14 +141,12 @@
     "excelExportHint": "Elle girdiğiniz ürünleri şablon olarak indirin (tekrar yükleyebilirsiniz).",
     "stackMode": {
       "title": "İstifleme türü",
-      "none": "İstiflenemez (yalnız zemin)",
-      "bear": "Taşıyıcı — üstüne başka yük konur",
-      "top": "Üste konan — kendi üstüne yük taşımaz",
-      "self": "Kendi içinde istiflenir (aynı üründen üst üste)",
+      "none": "İstiflenemez — üstüne hiçbir yük konulamaz (yalnız zemin)",
+      "full": "İstiflenebilir — başka yüklerin altında veya üstünde taşınabilir (taşıyıcı, kısıt yok)",
+      "self": "Kendi içinde istiflenebilir — yalnız aynı üründen üst üste",
       "short": {
         "none": "İstiflenemez",
-        "bear": "Taşıyıcı (alta)",
-        "top": "Üste konan",
+        "full": "İstiflenebilir",
         "self": "Kendi içinde"
       }
     }

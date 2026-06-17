@@ -44,19 +44,19 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
     const typeLabel = (isTrain || isShip) ? t('truckTypes.type.container') : isPlane ? t('truckTypes.type.uld') : t('truckTypes.type.trailer');
 
     // Initial product state (seeded from a saved draft when present).
-    // Legacy drafts may carry the removed 'both' category — map it to 'bear'
-    // (a carrier already bears load and self-stacks), and fill any missing mode.
+    // Stacking model is 3-way (none / full / self). Legacy drafts may carry the
+    // removed categories — 'both'/'bear'/'top' all become 'full' (fully stackable
+    // both ways); fill any missing mode with 'full'.
     const migrateStackMode = (p) => {
         const m = p.stackMode;
-        if (m === 'both' || m == null || m === '') {
-            return { ...p, stackMode: m === 'both' ? 'bear' : 'self' };
-        }
+        if (m === 'both' || m === 'bear' || m === 'top') return { ...p, stackMode: 'full' };
+        if (m == null || m === '') return { ...p, stackMode: 'full' };
         return p;
     };
     const [products, setProducts] = useState(
         (Array.isArray(d0.products) && d0.products.length)
             ? d0.products.map(migrateStackMode)
-            : [{ id: 1, name: '', length: '', width: '', height: '', weight: '', quantity: '', maxStack: 1, allowRotation: false, color: '', stackMode: 'self', useTotalWeight: false, totalWeight: '' }]
+            : [{ id: 1, name: '', length: '', width: '', height: '', weight: '', quantity: '', maxStack: 1, allowRotation: false, color: '', stackMode: 'full', useTotalWeight: false, totalWeight: '' }]
     );
 
     // Auto-save the form as the user edits, so it survives a login/register
@@ -73,7 +73,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
         setTotalTons('');
         setTonnageInfo(null);
         setResultData(null);
-        setProducts([{ id: 1, name: '', length: '', width: '', height: '', weight: '', quantity: '', maxStack: 1, allowRotation: false, color: '', stackMode: 'self', useTotalWeight: false, totalWeight: '' }]);
+        setProducts([{ id: 1, name: '', length: '', width: '', height: '', weight: '', quantity: '', maxStack: 1, allowRotation: false, color: '', stackMode: 'full', useTotalWeight: false, totalWeight: '' }]);
         if (onFullReset) onFullReset();
     };
 
@@ -134,7 +134,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
             id: newId,
             name: '',
             length: '', width: '', height: '', weight: '', quantity: sameSize ? '' : '1',
-            maxStack: 1, allowRotation: false, color: '', stackMode: 'self',
+            maxStack: 1, allowRotation: false, color: '', stackMode: 'full',
             useTotalWeight: false, totalWeight: ''
         }]);
     };
@@ -535,20 +535,19 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                                         />
                                         <span>{t('wizard.color')}</span>
                                     </label>
-                                    {/* Stacking category (none / carrier / on-top / self) */}
+                                    {/* Stacking category (none / full / self) */}
                                     <label
                                         style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#000000', cursor: 'pointer' }}
-                                        title={t(`wizard.stackMode.${product.stackMode || 'self'}`)}
+                                        title={t(`wizard.stackMode.${product.stackMode || 'full'}`)}
                                     >
                                         <span aria-hidden="true">🧱</span>
                                         <select
-                                            value={product.stackMode || 'self'}
+                                            value={product.stackMode || 'full'}
                                             onChange={(e) => updateProduct(product.id, 'stackMode', e.target.value)}
-                                            title={t(`wizard.stackMode.${product.stackMode || 'self'}`)}
+                                            title={t(`wizard.stackMode.${product.stackMode || 'full'}`)}
                                             style={{ background: '#fbf8f1', border: '1px solid #d8cfbd', borderRadius: '8px', padding: '5px 8px', fontSize: '0.8rem', color: '#000000', fontFamily: 'inherit', cursor: 'pointer' }}
                                         >
-                                            <option value="bear" title={t('wizard.stackMode.bear')}>{t('wizard.stackMode.short.bear')}</option>
-                                            <option value="top" title={t('wizard.stackMode.top')}>{t('wizard.stackMode.short.top')}</option>
+                                            <option value="full" title={t('wizard.stackMode.full')}>{t('wizard.stackMode.short.full')}</option>
                                             <option value="self" title={t('wizard.stackMode.self')}>{t('wizard.stackMode.short.self')}</option>
                                             <option value="none" title={t('wizard.stackMode.none')}>{t('wizard.stackMode.short.none')}</option>
                                         </select>
@@ -603,7 +602,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                                 </div>
                                 <div className="ai-input-group">
                                     <span className="ai-input-label">{t('wizard.maxStack')}</span>
-                                    <div className={`ai-input-container ${(product.stackMode === 'none' || product.stackMode === 'top') ? 'maxstack-pulse' : ''}`}>
+                                    <div className={`ai-input-container ${product.stackMode === 'none' ? 'maxstack-pulse' : ''}`}>
                                         <div className="ai-input-inner">
                                             <select value={product.maxStack} onChange={(e) => updateProduct(product.id, 'maxStack', e.target.value)} style={{ color: 'white' }}>
                                                 {[...Array(10)].map((_, i) => <option key={i} value={i + 1} style={{ color: 'black' }}>{i + 1}</option>)}

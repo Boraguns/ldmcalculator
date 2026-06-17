@@ -142,14 +142,12 @@
     "excelExportHint": "Ihre eingegebenen Produkte als Vorlage herunterladen (wieder hochladbar).",
     "stackMode": {
       "title": "Stapelart",
-      "none": "Nicht stapelbar (nur Boden)",
-      "bear": "Träger — trägt andere Lasten oben",
-      "top": "Kommt oben drauf — trägt nichts",
-      "self": "Selbststapelnd (gleiches Produkt)",
+      "none": "Nicht stapelbar — nichts darf darauf (nur Boden)",
+      "full": "Voll stapelbar — unter oder über anderen Lasten (Träger, ohne Limit)",
+      "self": "Nur Selbststapelung — gleiches Produkt aufeinander",
       "short": {
         "none": "Nicht stapelbar",
-        "bear": "Träger (Basis)",
-        "top": "Oben drauf",
+        "full": "Stapelbar",
         "self": "Selbststapelnd"
       }
     }
