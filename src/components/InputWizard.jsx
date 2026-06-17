@@ -450,7 +450,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                             border: '1px solid #e7ded0'
                         }}>
                             <div className="product-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                                <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                                     {/* Editable product name with pencil icon. Empty falls back to "Product #N". */}
                                     <label
                                         className="product-name-edit"
@@ -535,12 +535,12 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                                         <select
                                             value={product.stackMode || 'both'}
                                             onChange={(e) => updateProduct(product.id, 'stackMode', e.target.value)}
-                                            style={{ background: '#fbf8f1', border: '1px solid #d8cfbd', borderRadius: '8px', padding: '5px 8px', fontSize: '0.8rem', color: '#000000', fontFamily: 'inherit', cursor: 'pointer', maxWidth: '230px' }}
+                                            style={{ background: '#fbf8f1', border: '1px solid #d8cfbd', borderRadius: '8px', padding: '5px 8px', fontSize: '0.8rem', color: '#000000', fontFamily: 'inherit', cursor: 'pointer' }}
                                         >
-                                            <option value="both">{t('wizard.stackMode.both')}</option>
-                                            <option value="bear">{t('wizard.stackMode.bear')}</option>
-                                            <option value="top">{t('wizard.stackMode.top')}</option>
-                                            <option value="none">{t('wizard.stackMode.none')}</option>
+                                            <option value="both">{t('wizard.stackMode.short.both')}</option>
+                                            <option value="bear">{t('wizard.stackMode.short.bear')}</option>
+                                            <option value="top">{t('wizard.stackMode.short.top')}</option>
+                                            <option value="none">{t('wizard.stackMode.short.none')}</option>
                                         </select>
                                     </label>
                                 </div>

@@ -144,7 +144,13 @@
       "none": "İstiflemeye uygun değil (yalnız zemin)",
       "bear": "Üzerine yük konulabilir (taşıyıcı)",
       "top": "Başka yüklerin üzerine konulabilir",
-      "both": "Çift yönlü istiflenebilir"
+      "both": "Çift yönlü istiflenebilir",
+      "short": {
+        "both": "İstif: Çift yönlü",
+        "bear": "İstif: Taşıyıcı",
+        "top": "İstif: Üste konur",
+        "none": "İstif: Tek başına"
+      }
     }
   },
   "step3": {

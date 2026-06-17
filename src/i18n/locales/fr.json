@@ -144,7 +144,13 @@
       "none": "Non empilable (sol seul)",
       "bear": "Porte une charge (support)",
       "top": "Se pose sur d’autres",
-      "both": "Bidirectionnel"
+      "both": "Bidirectionnel",
+      "short": {
+        "both": "Empil.: Bidirectionnel",
+        "bear": "Empil.: Support",
+        "top": "Empil.: Au-dessus",
+        "none": "Empil.: Sol seul"
+      }
     }
   },
   "step3": {

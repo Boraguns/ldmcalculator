@@ -144,7 +144,13 @@
       "none": "Not stackable (floor only)",
       "bear": "Bears load on top (carrier)",
       "top": "Goes on top of others",
-      "both": "Both ways"
+      "both": "Both ways",
+      "short": {
+        "both": "Stack: Both ways",
+        "bear": "Stack: Carrier",
+        "top": "Stack: On top",
+        "none": "Stack: Floor only"
+      }
     }
   },
   "step3": {

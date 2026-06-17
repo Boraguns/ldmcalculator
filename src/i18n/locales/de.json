@@ -145,7 +145,13 @@
       "none": "Nicht stapelbar (nur Boden)",
       "bear": "Trägt Last oben (Träger)",
       "top": "Kommt auf andere",
-      "both": "Beidseitig stapelbar"
+      "both": "Beidseitig stapelbar",
+      "short": {
+        "both": "Stapeln: Beidseitig",
+        "bear": "Stapeln: Träger",
+        "top": "Stapeln: Oben drauf",
+        "none": "Stapeln: Nur Boden"
+      }
     }
   },
   "step3": {
