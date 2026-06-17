@@ -8,7 +8,6 @@ import AccountMenu from './AccountMenu';
 import { downloadProductTemplate, parseProductsFile, exportProductsToFile } from '../utils/excelProducts';
 import { useUsage } from '../usage/UsageContext';
 import { saveDraft, loadDraft } from '../utils/draft';
-import StackSwitch from './StackSwitch';
 
 const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mode = 'truck', customSpecs = null, addStangaMode = false, onToggleStangaMode, stangaCount = 0, addSpanzetMode = false, onToggleSpanzetMode, spanzetCount = 0, onAutoStanga }) => {
     const { t, lang } = useT();
@@ -48,7 +47,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
     const [products, setProducts] = useState(
         (Array.isArray(d0.products) && d0.products.length)
             ? d0.products
-            : [{ id: 1, name: '', length: '', width: '', height: '', weight: '', quantity: '', maxStack: 1, allowRotation: false, color: '', stackable: true, useTotalWeight: false, totalWeight: '' }]
+            : [{ id: 1, name: '', length: '', width: '', height: '', weight: '', quantity: '', maxStack: 1, allowRotation: false, color: '', stackMode: 'both', useTotalWeight: false, totalWeight: '' }]
     );
 
     // Auto-save the form as the user edits, so it survives a login/register
@@ -65,7 +64,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
         setTotalTons('');
         setTonnageInfo(null);
         setResultData(null);
-        setProducts([{ id: 1, name: '', length: '', width: '', height: '', weight: '', quantity: '', maxStack: 1, allowRotation: false, color: '', stackable: true, useTotalWeight: false, totalWeight: '' }]);
+        setProducts([{ id: 1, name: '', length: '', width: '', height: '', weight: '', quantity: '', maxStack: 1, allowRotation: false, color: '', stackMode: 'both', useTotalWeight: false, totalWeight: '' }]);
         if (onFullReset) onFullReset();
     };
 
@@ -126,7 +125,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
             id: newId,
             name: '',
             length: '', width: '', height: '', weight: '', quantity: sameSize ? '' : '1',
-            maxStack: 1, allowRotation: false, color: '', stackable: true,
+            maxStack: 1, allowRotation: false, color: '', stackMode: 'both',
             useTotalWeight: false, totalWeight: ''
         }]);
     };
@@ -527,17 +526,23 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                                         />
                                         <span>{t('wizard.color')}</span>
                                     </label>
-                                    {/* Stackable / Unstackable slider toggle */}
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: 'auto', fontSize: '0.8rem' }}>
-                                        <StackSwitch
-                                            on={product.stackable !== false}
-                                            onChange={(v) => updateProduct(product.id, 'stackable', v)}
-                                            title={product.stackable === false ? t('wizard.unstackable') : t('wizard.stackable')}
-                                        />
-                                        <span style={{ color: product.stackable === false ? '#b45309' : '#000000', fontWeight: product.stackable === false ? 600 : 400 }}>
-                                            {product.stackable === false ? t('wizard.unstackable') : t('wizard.stackable')}
-                                        </span>
-                                    </div>
+                                    {/* Stacking category (4 modes) */}
+                                    <label
+                                        style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: '#000000', cursor: 'pointer' }}
+                                        title={t('wizard.stackMode.title')}
+                                    >
+                                        <span aria-hidden="true">🧱</span>
+                                        <select
+                                            value={product.stackMode || 'both'}
+                                            onChange={(e) => updateProduct(product.id, 'stackMode', e.target.value)}
+                                            style={{ background: '#fbf8f1', border: '1px solid #d8cfbd', borderRadius: '8px', padding: '5px 8px', fontSize: '0.8rem', color: '#000000', fontFamily: 'inherit', cursor: 'pointer', maxWidth: '230px' }}
+                                        >
+                                            <option value="both">{t('wizard.stackMode.both')}</option>
+                                            <option value="bear">{t('wizard.stackMode.bear')}</option>
+                                            <option value="top">{t('wizard.stackMode.top')}</option>
+                                            <option value="none">{t('wizard.stackMode.none')}</option>
+                                        </select>
+                                    </label>
                                 </div>
                                 {(!sameSize && products.length > 1) && (
                                     <button className="ai-btn ai-btn-danger ai-btn-icon" onClick={() => removeProduct(product.id)}>
@@ -588,7 +593,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                                 </div>
                                 <div className="ai-input-group">
                                     <span className="ai-input-label">{t('wizard.maxStack')}</span>
-                                    <div className={`ai-input-container ${product.stackable === false ? 'maxstack-pulse' : ''}`}>
+                                    <div className={`ai-input-container ${(product.stackMode === 'none' || product.stackMode === 'top') ? 'maxstack-pulse' : ''}`}>
                                         <div className="ai-input-inner">
                                             <select value={product.maxStack} onChange={(e) => updateProduct(product.id, 'maxStack', e.target.value)} style={{ color: 'white' }}>
                                                 {[...Array(10)].map((_, i) => <option key={i} value={i + 1} style={{ color: 'black' }}>{i + 1}</option>)}

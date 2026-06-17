@@ -138,7 +138,14 @@
     "excelConfirm": "Avez-vous préparé votre fichier à partir du modèle ci-dessus ? Seuls les fichiers basés sur le modèle fonctionnent.",
     "excelDrop": "Glissez votre fichier ici ou cliquez pour le sélectionner",
     "excelExport": "Exporter la liste vers Excel",
-    "excelExportHint": "Téléchargez vos produits saisis sous forme de modèle (réimportable)."
+    "excelExportHint": "Téléchargez vos produits saisis sous forme de modèle (réimportable).",
+    "stackMode": {
+      "title": "Type d'empilage",
+      "none": "Non empilable (sol seul)",
+      "bear": "Porte une charge (support)",
+      "top": "Se pose sur d’autres",
+      "both": "Bidirectionnel"
+    }
   },
   "step3": {
     "title": "Rapport de résultat",

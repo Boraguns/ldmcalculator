@@ -25,12 +25,18 @@ const COLUMNS = [
     // automatically on import from the box height vs the container height, so
     // the user never has to fill it in.
     { field: 'allowRotation', aliases: ['allowrotation', 'rotation', 'dondurulebilir', 'dondur', 'rotierbar', 'povorot', 'aldwran', 'rotate'] },
-    { field: 'stackable',     aliases: ['stackable', 'istiflenebilir', 'stapelbar', 'shtabeliruemyy', 'empilable', 'kabllltkds', 'canstack'] },
+    // Stacking type, 1-4: 1=floor only, 2=carrier (load on top), 3=goes on top,
+    // 4=both. (Legacy E/H / Y/N is still accepted on import.)
+    { field: 'stackMode',     aliases: ['stackmode', 'istifturu', 'istifleme', 'stackable', 'istiflenebilir', 'stapelbar', 'shtabeliruemyy', 'empilable', 'kabllltkds', 'canstack'] },
     { field: 'color',         aliases: ['color', 'colour', 'renk', 'farbe', 'cvet', 'couleur', 'allwn'] },
 ];
 
 const NUMERIC = new Set(['length', 'width', 'height', 'weight', 'quantity']);
-const BOOLEAN = new Set(['allowRotation', 'stackable']);
+const BOOLEAN = new Set(['allowRotation']);
+
+// Stacking-type code <-> mode.
+const STACK_MODE_BY_NUM = { 1: 'none', 2: 'bear', 3: 'top', 4: 'both' };
+const NUM_BY_STACK_MODE = { none: 1, bear: 2, top: 3, both: 4 };
 
 // Yes/No tokens used in the EXAMPLE rows of the downloaded template, matching
 // the (E/H), (Y/N), (J/N)… hint shown in each language's column headers so the
@@ -48,12 +54,12 @@ const YESNO = {
 // --- Localised header labels (for the downloaded template) ------------------
 
 const HEADER_LABELS = {
-    tr: { name: 'Ürün Adı', length: 'Uzunluk (cm)', width: 'Genişlik (cm)', height: 'Yükseklik (cm)', weight: 'Ağırlık (kg)', quantity: 'Adet', maxStack: 'Max İstif', allowRotation: 'Döndürülebilir (E/H)', stackable: 'İstiflenebilir (E/H)', color: 'Renk (isim)' },
-    en: { name: 'Product Name', length: 'Length (cm)', width: 'Width (cm)', height: 'Height (cm)', weight: 'Weight (kg)', quantity: 'Quantity', maxStack: 'Max Stack', allowRotation: 'Rotation (Y/N)', stackable: 'Stackable (Y/N)', color: 'Color (name)' },
-    de: { name: 'Produktname', length: 'Länge (cm)', width: 'Breite (cm)', height: 'Höhe (cm)', weight: 'Gewicht (kg)', quantity: 'Menge', maxStack: 'Max Stapel', allowRotation: 'Drehung (J/N)', stackable: 'Stapelbar (J/N)', color: 'Farbe (Name)' },
-    ru: { name: 'Название', length: 'Длина (см)', width: 'Ширина (см)', height: 'Высота (см)', weight: 'Вес (кг)', quantity: 'Количество', maxStack: 'Макс. штабель', allowRotation: 'Поворот (Д/Н)', stackable: 'Штабелируемый (Д/Н)', color: 'Цвет (название)' },
-    fr: { name: 'Nom du produit', length: 'Longueur (cm)', width: 'Largeur (cm)', height: 'Hauteur (cm)', weight: 'Poids (kg)', quantity: 'Quantité', maxStack: 'Empilage max', allowRotation: 'Rotation (O/N)', stackable: 'Empilable (O/N)', color: 'Couleur (nom)' },
-    ar: { name: 'اسم المنتج', length: 'الطول (سم)', width: 'العرض (سم)', height: 'الارتفاع (سم)', weight: 'الوزن (كجم)', quantity: 'الكمية', maxStack: 'أقصى تكديس', allowRotation: 'الدوران (نعم/لا)', stackable: 'قابل للتكديس (نعم/لا)', color: 'اللون (الاسم)' },
+    tr: { name: 'Ürün Adı', length: 'Uzunluk (cm)', width: 'Genişlik (cm)', height: 'Yükseklik (cm)', weight: 'Ağırlık (kg)', quantity: 'Adet', maxStack: 'Max İstif', allowRotation: 'Döndürülebilir (E/H)', stackMode: 'İstif Türü (1-4)', color: 'Renk (isim)' },
+    en: { name: 'Product Name', length: 'Length (cm)', width: 'Width (cm)', height: 'Height (cm)', weight: 'Weight (kg)', quantity: 'Quantity', maxStack: 'Max Stack', allowRotation: 'Rotation (Y/N)', stackMode: 'Stacking (1-4)', color: 'Color (name)' },
+    de: { name: 'Produktname', length: 'Länge (cm)', width: 'Breite (cm)', height: 'Höhe (cm)', weight: 'Gewicht (kg)', quantity: 'Menge', maxStack: 'Max Stapel', allowRotation: 'Drehung (J/N)', stackMode: 'Stapelart (1-4)', color: 'Farbe (Name)' },
+    ru: { name: 'Название', length: 'Длина (см)', width: 'Ширина (см)', height: 'Высота (см)', weight: 'Вес (кг)', quantity: 'Количество', maxStack: 'Макс. штабель', allowRotation: 'Поворот (Д/Н)', stackMode: 'Тип штабел. (1-4)', color: 'Цвет (название)' },
+    fr: { name: 'Nom du produit', length: 'Longueur (cm)', width: 'Largeur (cm)', height: 'Hauteur (cm)', weight: 'Poids (kg)', quantity: 'Quantité', maxStack: 'Empilage max', allowRotation: 'Rotation (O/N)', stackMode: 'Empilage (1-4)', color: 'Couleur (nom)' },
+    ar: { name: 'اسم المنتج', length: 'الطول (سم)', width: 'العرض (سم)', height: 'الارتفاع (سم)', weight: 'الوزن (كجم)', quantity: 'الكمية', maxStack: 'أقصى تكديس', allowRotation: 'الدوران (نعم/لا)', stackMode: 'نوع التكديس (1-4)', color: 'اللون (الاسم)' },
 };
 
 // --- Named colours ----------------------------------------------------------
@@ -141,6 +147,18 @@ const parseNum = (v) => {
     return Number.isFinite(n) ? n : '';
 };
 
+// Stacking type: a 1-4 code (1=none, 2=bear, 3=top, 4=both). Falls back to the
+// legacy Yes/No (stackable) when a boolean-ish value is given. Default 'both'.
+const parseStackMode = (v) => {
+    if (v == null || v === '') return 'both';
+    const n = parseInt(String(v).trim(), 10);
+    if (n >= 1 && n <= 4) return STACK_MODE_BY_NUM[n];
+    const b = parseBool(v, null);
+    if (b === true) return 'both';
+    if (b === false) return 'none';
+    return 'both';
+};
+
 // Exact localised header -> field lookup, built from every language's
 // HEADER_LABELS using the unicode-preserving normaliser, so Cyrillic/Arabic
 // headers (which normalizeKey would strip to nothing) still match.
@@ -193,8 +211,8 @@ export const downloadProductTemplate = async (lang = 'en') => {
     // Example rows use friendly colour NAMES so the user copies the pattern
     // (instead of guessing hex). Colour is optional — leaving it blank lets the
     // app auto-assign one. Yes/No values match the header hint for the language.
-    const example = ['Box A', 120, 80, 100, 25, 10, yn.n, yn.y, names[1]]; // Blue
-    const example2 = ['Box B', 60, 40, 40, 8, 24, yn.y, yn.y, names[0]];   // Red
+    const example = ['Box A', 120, 80, 100, 25, 10, yn.n, 4, names[1]]; // Blue · stacking 4 = both
+    const example2 = ['Box B', 60, 40, 40, 8, 24, yn.y, 2, names[0]];   // Red  · stacking 2 = carrier
 
     const ws = XLSX.utils.aoa_to_sheet([header, example, example2]);
     ws['!cols'] = COLUMNS.map((c) => ({ wch: c.field === 'name' ? 18 : 14 }));
@@ -254,7 +272,7 @@ export const exportProductsToFile = async (products = [], lang = 'en') => {
             weight: unitW,
             quantity: Number.isFinite(qty) ? qty : '',
             allowRotation: p.allowRotation ? yn.y : yn.n,
-            stackable: p.stackable === false ? yn.n : yn.y,
+            stackMode: NUM_BY_STACK_MODE[p.stackMode || (p.stackable === false ? 'none' : 'both')] || 4,
             color: p.color ? (hexToName[String(p.color).toLowerCase()] || p.color) : '',
         };
         return COLUMNS.map((c) => out[c.field]);
@@ -328,7 +346,7 @@ export const parseProductsFile = async (file) => {
             quantity: String(quantity),
             maxStack: rec.maxStack != null && parseNum(rec.maxStack) ? parseNum(rec.maxStack) : 1,
             allowRotation: parseBool(rec.allowRotation, false),
-            stackable: parseBool(rec.stackable, true),
+            stackMode: parseStackMode(rec.stackMode),
             color: resolveColor(rec.color),
             useTotalWeight: false,
             totalWeight: '',

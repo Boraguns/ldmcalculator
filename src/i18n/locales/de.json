@@ -139,7 +139,14 @@
     "excelConfirm": "Haben Sie Ihre Datei mit der obigen Vorlage erstellt? Nur auf der Vorlage basierende Dateien funktionieren.",
     "excelDrop": "Datei hierher ziehen oder zum Auswählen klicken",
     "excelExport": "Liste nach Excel exportieren",
-    "excelExportHint": "Ihre eingegebenen Produkte als Vorlage herunterladen (wieder hochladbar)."
+    "excelExportHint": "Ihre eingegebenen Produkte als Vorlage herunterladen (wieder hochladbar).",
+    "stackMode": {
+      "title": "Stapelart",
+      "none": "Nicht stapelbar (nur Boden)",
+      "bear": "Trägt Last oben (Träger)",
+      "top": "Kommt auf andere",
+      "both": "Beidseitig stapelbar"
+    }
   },
   "step3": {
     "title": "Ergebnisbericht",

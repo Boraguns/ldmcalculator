@@ -138,7 +138,14 @@
     "excelConfirm": "Dosyanızı yukarıdaki şablondan mı hazırladınız? Yalnızca şablona dayalı dosyalar çalışır.",
     "excelDrop": "Dosyayı buraya sürükleyin veya seçmek için tıklayın",
     "excelExport": "Listeyi Excel'e aktar",
-    "excelExportHint": "Elle girdiğiniz ürünleri şablon olarak indirin (tekrar yükleyebilirsiniz)."
+    "excelExportHint": "Elle girdiğiniz ürünleri şablon olarak indirin (tekrar yükleyebilirsiniz).",
+    "stackMode": {
+      "title": "İstifleme türü",
+      "none": "İstiflemeye uygun değil (yalnız zemin)",
+      "bear": "Üzerine yük konulabilir (taşıyıcı)",
+      "top": "Başka yüklerin üzerine konulabilir",
+      "both": "Çift yönlü istiflenebilir"
+    }
   },
   "step3": {
     "title": "Sonuç Raporu",
