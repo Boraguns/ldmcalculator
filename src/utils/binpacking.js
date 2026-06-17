@@ -119,11 +119,12 @@ export class BinPacking3D {
         //  (2) STACKING — stackable products first so they compress vertically and
         //      a big non-stackable one can't hog the deck and starve the others.
         //  (3) GROUPING — each product is one contiguous block.
-        // Split products: BASES go on the deck floor (and may carry load); pure
-        // TOPPERS (can go on top of others but bear nothing) are placed AFTERWARD
-        // on top of carrier surfaces, falling back to the floor.
+        // FLOOR FIRST for everyone: a "topper" (can go on others, bears nothing)
+        // can also sit on the floor, so it joins the normal floor packing. Only
+        // its OVERFLOW — what doesn't fit on the floor — is later stacked on top
+        // of carrier surfaces. So the deck floor is finished before anything is
+        // stacked.
         const isPureTopper = (it) => it.canGoOnOther && !it.canBearOther;
-        const bases = this.items.filter((it) => !isPureTopper(it));
         const toppers = this.items.filter(isPureTopper);
 
         const idx = new Map(this.items.map((it, i) => [it, i]));
@@ -132,7 +133,7 @@ export class BinPacking3D {
             if (!pl) return 0;
             return (it.weight || 0) * pl.perSlot / Math.max(1, pl.o.length); // kg per cm of deck
         };
-        const placementOrder = [...bases].sort((a, b) => {
+        const placementOrder = [...this.items].sort((a, b) => {
             const sa = a.maxStack > 1 ? 0 : 1;             // self-stackable bases first (capacity)
             const sb = b.maxStack > 1 ? 0 : 1;
             if (sa !== sb) return sa - sb;
