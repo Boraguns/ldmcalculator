@@ -141,20 +141,41 @@ export class BinPacking3D {
             return idx.get(a) - idx.get(b);
         });
 
-        // DENSE CONTIGUOUS BLOCK LOADER — the general "dip dibe" rule.
+        // DENSE CONTIGUOUS BLOCK LOADER — the general "dip dibe" rule, SPREAD
+        // across the deck for balance.
         // Each product is loaded as ONE solid block: full deck width (perRow rows
         // side by side), columns flush along the deck length (no air gap between
         // columns), stacked to an EVEN height. Blocks sit directly adjacent in
-        // placementOrder (lightest to the front). This guarantees same products
-        // stay packed tight together, with no gaps and no small remainder
-        // marooned elsewhere on the deck. A product whose own block would run
-        // past the deck end keeps its overflow for the cross-stack pass, which
-        // lays it as a flush cap on the (now contiguous) carrier tops — never as
-        // a separate, gappy rear stack.
+        // placementOrder (lightest to the front). To keep the load LOW and
+        // BALANCED (not piled into tall front stacks with an empty rear), each
+        // block is WIDENED to its proportional share of the deck length — using
+        // more floor and fewer layers, down to a single floor layer when the
+        // whole load fits flat. We only stack a product taller when the spread
+        // floor truly cannot hold it. A product whose block would run past the
+        // deck end keeps its overflow for the cross-stack pass, laid flush on the
+        // contiguous carrier tops — never as a separate, gappy rear stack.
         this.placedItems = [];
         this.currentWeight = 0;
         let cursorX = 0;
         const weightOK = (w) => !(w > 0 && this.currentWeight + w > C.maxWeight);
+
+        // SPREAD scale: if the whole load laid out as a SINGLE floor layer would
+        // overrun the deck, shrink every block's floor share by the same factor
+        // so the blocks together just span the deck; otherwise (load fits flat)
+        // keep single-layer so the load sits as low and spread as possible.
+        const singleCols = (it, pl) => Math.max(1, Math.ceil(it.quantity / pl.perRow));
+        let totalSingleLen = 0;
+        for (const it of placementOrder) {
+            const pl = planFor(it);
+            if (pl) totalSingleLen += singleCols(it, pl) * pl.o.length;
+        }
+        const spreadScale = totalSingleLen > C.length ? C.length / totalSingleLen : 1;
+
+        // BALANCE: when the load does not fill the deck, CENTRE the whole
+        // contiguous load on the deck so its weight sits between the axles
+        // instead of all over the front. (When it fills the deck, no offset.)
+        const startOffset = spreadScale >= 1 ? Math.max(0, (C.length - totalSingleLen) / 2) : 0;
+        cursorX = startOffset;
 
         for (const item of placementOrder) {
             const plan = planFor(item);
@@ -163,9 +184,13 @@ export class BinPacking3D {
             // Columns of this product that still fit on the remaining deck.
             const colsAvail = Math.floor((C.length - cursorX + 1e-6) / o.length);
             if (colsAvail < 1) continue; // no floor room; overflow handled below
-            // Columns needed to hold the whole quantity when stacked `layers` high.
+            // Min columns to hold the quantity when stacked `layers` high, and the
+            // SPREAD target (proportional share of the deck). Use the spread
+            // target so the block is wide and low, but never fewer than needed to
+            // fit, nor more than the deck has left.
             const colsNeeded = Math.ceil(item.quantity / (perRow * layers));
-            const nCols = Math.min(colsNeeded, colsAvail);
+            const colsSpread = Math.round(singleCols(item, plan) * spreadScale);
+            const nCols = Math.min(Math.max(colsNeeded, colsSpread, 1), colsAvail);
             const cols = [];
             for (let c = 0; c < nCols; c++) { cols.push(cursorX); cursorX += o.length; }
 
