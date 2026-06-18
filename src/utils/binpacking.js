@@ -141,41 +141,45 @@ export class BinPacking3D {
             return idx.get(a) - idx.get(b);
         });
 
-        // DENSE CONTIGUOUS BLOCK LOADER — the general "dip dibe" rule, SPREAD
-        // across the deck for balance.
-        // Each product is loaded as ONE solid block: full deck width (perRow rows
-        // side by side), columns flush along the deck length (no air gap between
-        // columns), stacked to an EVEN height. Blocks sit directly adjacent in
-        // placementOrder (lightest to the front). To keep the load LOW and
-        // BALANCED (not piled into tall front stacks with an empty rear), each
-        // block is WIDENED to its proportional share of the deck length — using
-        // more floor and fewer layers, down to a single floor layer when the
-        // whole load fits flat. We only stack a product taller when the spread
-        // floor truly cannot hold it. A product whose block would run past the
-        // deck end keeps its overflow for the cross-stack pass, laid flush on the
-        // contiguous carrier tops — never as a separate, gappy rear stack.
+        // FLOOR-FIRST BLOCK LOADER — the general rule.
+        // "Stackable" does NOT mean "pile up": it means spread on the deck FLOOR
+        // first, and only start stacking on top once the floor cannot hold any
+        // more. So we find the LOWEST uniform stack height H (in layers) at which
+        // the whole load fits on the deck as contiguous full-width blocks:
+        //   H = 1  → everything lies in a single floor layer (no stacking);
+        //   H rises by one only when the floor is too short to hold the load flat.
+        // Each product is then ONE solid block — full deck width (perRow rows),
+        // columns flush (no gaps), stacked to an even height of about H — blocks
+        // sitting directly adjacent, lightest to the front. "Not stackable"
+        // products are capped at a single layer; "self" stacks only its own kind;
+        // a "full" product whose share overruns the deck has its overflow laid
+        // flush on top of carrier blocks by the cross-stack pass below.
         this.placedItems = [];
         this.currentWeight = 0;
         let cursorX = 0;
         const weightOK = (w) => !(w > 0 && this.currentWeight + w > C.maxWeight);
 
-        // SPREAD scale: if the whole load laid out as a SINGLE floor layer would
-        // overrun the deck, shrink every block's floor share by the same factor
-        // so the blocks together just span the deck; otherwise (load fits flat)
-        // keep single-layer so the load sits as low and spread as possible.
-        const singleCols = (it, pl) => Math.max(1, Math.ceil(it.quantity / pl.perRow));
-        let totalSingleLen = 0;
-        for (const it of placementOrder) {
+        // Columns a product needs when stacked H high (bounded by its own max),
+        // and the total deck length the whole load needs at height H.
+        const colsAtHeight = (it, pl, H) =>
+            Math.max(1, Math.ceil(it.quantity / (pl.perRow * Math.min(H, pl.layers))));
+        const lenAtHeight = (H) => placementOrder.reduce((s, it) => {
             const pl = planFor(it);
-            if (pl) totalSingleLen += singleCols(it, pl) * pl.o.length;
-        }
-        const spreadScale = totalSingleLen > C.length ? C.length / totalSingleLen : 1;
+            return pl ? s + colsAtHeight(it, pl, H) * pl.o.length : s;
+        }, 0);
+        const maxLayersAll = Math.max(1, ...placementOrder.map((it) => {
+            const pl = planFor(it); return pl ? pl.layers : 1;
+        }));
+        // Raise H from 1 until the load fits the deck length (or until the
+        // tallest any product can stack — any remaining overflow then goes to the
+        // cross-stack pass). H=1 stays whenever the load fits flat on the floor.
+        let H = 1;
+        while (H < maxLayersAll && lenAtHeight(H) > C.length) H++;
 
-        // BALANCE: when the load does not fill the deck, CENTRE the whole
-        // contiguous load on the deck so its weight sits between the axles
-        // instead of all over the front. (When it fills the deck, no offset.)
-        const startOffset = spreadScale >= 1 ? Math.max(0, (C.length - totalSingleLen) / 2) : 0;
-        cursorX = startOffset;
+        // BALANCE: when the load does not fill the deck, CENTRE it so its weight
+        // sits between the axles instead of all over the front.
+        const usedLen = Math.min(C.length, lenAtHeight(H));
+        cursorX = Math.max(0, (C.length - usedLen) / 2);
 
         for (const item of placementOrder) {
             const plan = planFor(item);
@@ -184,13 +188,9 @@ export class BinPacking3D {
             // Columns of this product that still fit on the remaining deck.
             const colsAvail = Math.floor((C.length - cursorX + 1e-6) / o.length);
             if (colsAvail < 1) continue; // no floor room; overflow handled below
-            // Min columns to hold the quantity when stacked `layers` high, and the
-            // SPREAD target (proportional share of the deck). Use the spread
-            // target so the block is wide and low, but never fewer than needed to
-            // fit, nor more than the deck has left.
-            const colsNeeded = Math.ceil(item.quantity / (perRow * layers));
-            const colsSpread = Math.round(singleCols(item, plan) * spreadScale);
-            const nCols = Math.min(Math.max(colsNeeded, colsSpread, 1), colsAvail);
+            // Wide floor share at the chosen height H: spread across the floor,
+            // stacked only ~H high (never taller than needed to make it fit).
+            const nCols = Math.min(colsAtHeight(item, plan, H), colsAvail);
             const cols = [];
             for (let c = 0; c < nCols; c++) { cols.push(cursorX); cursorX += o.length; }
 
