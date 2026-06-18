@@ -277,10 +277,15 @@ export class BinPacking3D {
         const spread = evalStrategy(spreadColsOf);
         const compress = evalStrategy(compressColsOf);
         const carrier = evalStrategy(carrierColsOf);
-        // Most boxes wins; on a tie prefer SPREAD (load sits low, edge-to-edge)
-        // over compress/carrier.
+        // Pick the realistic, stable load — NOT merely the most boxes. A loader
+        // builds a solid, even prism (floor full, flat tops, no marooned towers
+        // or low valleys). We score each strategy by boxes placed MINUS a
+        // penalty for an uneven (non-monotonic) top profile, so a strategy that
+        // wins on raw count by piling isolated rear towers is rejected unless it
+        // is ALSO clean. SPREAD is the tie-break (load sits low, edge-to-edge).
+        const score = (s) => s.count - 25 * this._profileRoughness(s.placed);
         const chosen = [spread, compress, carrier]
-            .reduce((best, s) => (s.count > best.count ? s : best), spread);
+            .reduce((best, s) => (score(s) > score(best) ? s : best), spread);
         this.placedItems = chosen.placed;
         this.currentWeight = chosen.tw;
         Object.assign(placedPerItem, chosen.perItem);
@@ -431,6 +436,41 @@ export class BinPacking3D {
                 }
             }
         }
+    }
+
+    /**
+     * Roughness of the load's side profile: how "tower-and-valley" it looks.
+     * Builds the top-height of each 40 cm slice along the deck length, then
+     * counts, over the occupied span, the interior VALLEYS (a slice lower than
+     * both neighbours) and isolated PEAKS (a slice higher than both neighbours
+     * by more than one box layer). A solid even prism or a clean monotonic
+     * taper scores 0; a low middle with separate rear towers scores high. Used
+     * to reject high-count-but-unstable strategies. Returns an integer count.
+     */
+    _profileRoughness(placed) {
+        if (!placed || !placed.length) return 0;
+        const SL = 40;
+        const n = Math.ceil(this.container.length / SL);
+        const h = new Array(n).fill(0);
+        let minLayer = Infinity;
+        for (const p of placed) {
+            const a = Math.floor(p.position.x / SL);
+            const b = Math.floor((p.position.x + p.dimensions.length - 1) / SL);
+            const top = p.position.z + p.dimensions.height;
+            if (p.dimensions.height < minLayer) minLayer = p.dimensions.height;
+            for (let i = a; i <= b && i < n; i++) if (top > h[i]) h[i] = top;
+        }
+        if (!isFinite(minLayer)) minLayer = 1;
+        // occupied span [lo, hi]
+        let lo = 0; while (lo < n && h[lo] === 0) lo++;
+        let hi = n - 1; while (hi >= 0 && h[hi] === 0) hi--;
+        let rough = 0;
+        for (let i = lo + 1; i < hi; i++) {
+            const L = h[i - 1], M = h[i], R = h[i + 1];
+            if (M < L - 1 && M < R - 1) rough++;                    // valley (incl. empty floor gap)
+            else if (M > L + minLayer && M > R + minLayer) rough++; // isolated spike (> 1 layer above both)
+        }
+        return rough;
     }
 
     sortItemsByVolume() {
