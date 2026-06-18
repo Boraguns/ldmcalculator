@@ -120,12 +120,9 @@ export class BinPacking3D {
         //      metres of the deck (over the kingpin / drive axles) stay light.
         //  (2) STACKING — stackable products first so they compress vertically and
         //      a big non-stackable one can't hog the deck and starve the others.
-        //  (3) GROUPING — each product is one contiguous block.
-        // FLOOR FIRST for everyone: a "full" product can sit on the floor too, so
-        // it joins the normal floor packing and self-stacks on its own columns.
-        // Only its OVERFLOW — what neither fits on the floor nor on its own column
-        // stack — is later cross-stacked on top of OTHER carrier surfaces. So the
-        // deck floor is finished, then same-product stacks, then cross-product.
+        //  (3) GROUPING — each product is one contiguous, gap-free block.
+        // A "full" product that overflows its own block (deck ran out) may have
+        // the remainder cross-stacked flush on top of carrier blocks.
         const isTopper = (it) => it.canGoOnOther;       // full products cross-stack overflow
         const toppers = this.items.filter(isTopper);
 
@@ -144,153 +141,61 @@ export class BinPacking3D {
             return idx.get(a) - idx.get(b);
         });
 
-        // Two floor-allocation strategies. We run BOTH and keep whichever loads
-        // MORE boxes (capacity), preferring SPREAD on a tie so the deck floor is
-        // used edge-to-edge and the load sits low instead of being stacked into a
-        // tall corner block while floor sits empty:
-        //   • SPREAD   — share the whole floor proportionally (fill it, one layer)
-        //                then stack only the overflow.
-        //   • COMPRESS — stackable products take the minimum floor and stack up,
-        //                leaving floor for the non-stackable / large products.
-        const spreadLenOf = (it) => {
-            const pl = planFor(it);
-            return pl ? Math.ceil(it.quantity / pl.perRow) * pl.o.length : 0;
-        };
-        const totalSpread = placementOrder.reduce((s, it) => s + spreadLenOf(it), 0);
-        const spreadScale = totalSpread > C.length ? C.length / totalSpread : 1;
-        const spreadColsOf = (it, plan) =>
-            Math.max(1, Math.round(spreadLenOf(it) * spreadScale / plan.o.length));
-        const compressColsOf = (it, plan) =>
-            Math.max(1, Math.ceil(it.quantity / (plan.perRow * plan.layers)));
-        //   • CARRIER-FIRST — products that stack two-or-more high give up ALL
-        //     their floor (0 columns) so the deck floor goes entirely to the
-        //     bulky one-layer carriers; the stack-friendly products then
-        //     cross-stack on top of those carriers. Optimal when small stackable
-        //     boxes ride on top of tall pallets that themselves can't be stacked.
-        const carrierColsOf = (it, plan) =>
-            plan.layers >= 2 ? 0 : Math.ceil(it.quantity / plan.perRow);
+        // DENSE CONTIGUOUS BLOCK LOADER — the general "dip dibe" rule.
+        // Each product is loaded as ONE solid block: full deck width (perRow rows
+        // side by side), columns flush along the deck length (no air gap between
+        // columns), stacked to an EVEN height. Blocks sit directly adjacent in
+        // placementOrder (lightest to the front). This guarantees same products
+        // stay packed tight together, with no gaps and no small remainder
+        // marooned elsewhere on the deck. A product whose own block would run
+        // past the deck end keeps its overflow for the cross-stack pass, which
+        // lays it as a flush cap on the (now contiguous) carrier tops — never as
+        // a separate, gappy rear stack.
+        this.placedItems = [];
+        this.currentWeight = 0;
+        let cursorX = 0;
+        const weightOK = (w) => !(w > 0 && this.currentWeight + w > C.maxWeight);
 
-        // Run one full floor+stack with a given floor-column allocation.
-        const runPasses = (floorColsOf) => {
-            const placed = [];
-            const perItem = {};
-            for (const it of this.items) perItem[it.id] = 0;
-            let cursorX = 0, tw = 0;
-            const productCols = new Map();
+        for (const item of placementOrder) {
+            const plan = planFor(item);
+            if (!plan) continue;
+            const { o, perRow, layers } = plan;
+            // Columns of this product that still fit on the remaining deck.
+            const colsAvail = Math.floor((C.length - cursorX + 1e-6) / o.length);
+            if (colsAvail < 1) continue; // no floor room; overflow handled below
+            // Columns needed to hold the whole quantity when stacked `layers` high.
+            const colsNeeded = Math.ceil(item.quantity / (perRow * layers));
+            const nCols = Math.min(colsNeeded, colsAvail);
+            const cols = [];
+            for (let c = 0; c < nCols; c++) { cols.push(cursorX); cursorX += o.length; }
 
-            // FLOOR PASS — one flush layer, front-to-back, each product grouped.
-            for (const item of placementOrder) {
-                const plan = planFor(item);
-                if (!plan) { productCols.set(item, { plan: null, cols: [], leftover: item.quantity }); continue; }
-                const { o, perRow } = plan;
-                const colCap = floorColsOf(item, plan);
-                let remaining = item.quantity;
-                const cols = [];
-                while (remaining > 0 && cols.length < colCap && cursorX + o.length <= C.length + 0.001) {
-                    let p = 0;
+            // EVEN FILL — layer by layer across ALL columns, so the block top is
+            // flat; any partial top layer falls on contiguous front columns (a
+            // clean step, never an isolated spike). Bottom-up keeps it grounded.
+            let remaining = item.quantity;
+            for (let layer = 0; layer < layers && remaining > 0; layer++) {
+                for (let c = 0; c < nCols && remaining > 0; c++) {
                     for (let row = 0; row < perRow && remaining > 0; row++) {
-                        if (item.weight > 0 && tw + item.weight > C.maxWeight) { remaining = 0; break; }
-                        placed.push({
+                        if (!weightOK(item.weight)) { remaining = 0; break; }
+                        this.placedItems.push({
                             ...item,
-                            position: { x: cursorX, y: row * o.width, z: 0 },
+                            position: { x: cols[c], y: row * o.width, z: layer * o.height },
                             dimensions: { length: o.length, width: o.width, height: o.height },
                             rotation: o.rotation,
                         });
-                        tw += item.weight; perItem[item.id]++; remaining--; p++;
-                    }
-                    if (p === 0) break;
-                    cols.push(cursorX);
-                    cursorX += o.length;
-                }
-                productCols.set(item, { plan, cols, leftover: remaining });
-            }
-
-            // FILL PASS — if deck floor remains, pull overflow DOWN onto it
-            // (extra floor columns at the rear) instead of stacking it, so the
-            // base is fully covered and the load sits lower. Iterate rear product
-            // first so the extension stays next to that product's block.
-            let filled = true;
-            while (filled) {
-                filled = false;
-                for (let k = placementOrder.length - 1; k >= 0; k--) {
-                    const item = placementOrder[k];
-                    const pc = productCols.get(item);
-                    if (!pc || !pc.plan || pc.leftover <= 0) continue;
-                    const { o, perRow } = pc.plan;
-                    if (cursorX + o.length > C.length + 0.001) continue;
-                    let p = 0;
-                    for (let row = 0; row < perRow && pc.leftover > 0; row++) {
-                        if (item.weight > 0 && tw + item.weight > C.maxWeight) { pc.leftover = 0; break; }
-                        placed.push({
-                            ...item,
-                            position: { x: cursorX, y: row * o.width, z: 0 },
-                            dimensions: { length: o.length, width: o.width, height: o.height },
-                            rotation: o.rotation,
-                        });
-                        tw += item.weight; perItem[item.id]++; pc.leftover--; p++;
-                    }
-                    if (p > 0) { pc.cols.push(cursorX); cursorX += o.length; filled = true; }
-                }
-            }
-
-            // STACK PASS — overflow on each product's OWN columns, rear column
-            // first so the first 4 m stays lightest. Respects each max stack.
-            for (const item of placementOrder) {
-                const pc = productCols.get(item);
-                if (!pc || !pc.plan || pc.leftover <= 0 || !pc.cols.length) continue;
-                const { o, perRow, layers } = pc.plan;
-                let remaining = pc.leftover;
-                const rearCols = [...pc.cols].sort((a, b) => b - a);
-                for (let layer = 1; layer < layers && remaining > 0; layer++) {
-                    for (const cx of rearCols) {
-                        if (remaining <= 0) break;
-                        for (let row = 0; row < perRow && remaining > 0; row++) {
-                            if (item.weight > 0 && tw + item.weight > C.maxWeight) { remaining = 0; break; }
-                            placed.push({
-                                ...item,
-                                position: { x: cx, y: row * o.width, z: layer * o.height },
-                                dimensions: { length: o.length, width: o.width, height: o.height },
-                                rotation: o.rotation,
-                            });
-                            tw += item.weight; perItem[item.id]++; remaining--;
-                        }
+                        this.currentWeight += item.weight;
+                        placedPerItem[item.id]++;
+                        remaining--;
                     }
                 }
             }
-            return { placed, perItem, tw, cursorX };
-        };
+        }
 
-        // Evaluate each floor strategy INCLUDING the cross-stacking pass, then
-        // keep whichever loads more overall (preferring spread on a tie). This
-        // matters when products are fully stackable: COMPRESS may place fewer
-        // boxes on the floor but free that floor for bulky carriers, then
-        // cross-stack the overflow on top — a strictly better total that a
-        // pre-cross-stack comparison would miss.
-        const evalStrategy = (floorColsOf) => {
-            const r = runPasses(floorColsOf);
-            this.placedItems = r.placed.slice();   // copy: _placeToppers pushes onto it
-            this.currentWeight = r.tw;
-            const perItem = { ...r.perItem };
-            this._placeToppers(toppers, perItem, planFor);
-            return { placed: this.placedItems, tw: this.currentWeight, perItem, count: this.placedItems.length };
-        };
-        const spread = evalStrategy(spreadColsOf);
-        const compress = evalStrategy(compressColsOf);
-        const carrier = evalStrategy(carrierColsOf);
-        // Pick the realistic, stable load — NOT merely the most boxes. A loader
-        // builds a solid, even prism (floor full, flat tops, no marooned towers
-        // or low valleys). We score each strategy by boxes placed MINUS a
-        // penalty for an uneven (non-monotonic) top profile, so a strategy that
-        // wins on raw count by piling isolated rear towers is rejected unless it
-        // is ALSO clean. SPREAD is the tie-break (load sits low, edge-to-edge).
-        const score = (s) => s.count - 25 * this._profileRoughness(s.placed);
-        const chosen = [spread, compress, carrier]
-            .reduce((best, s) => (score(s) > score(best) ? s : best), spread);
-        this.placedItems = chosen.placed;
-        this.currentWeight = chosen.tw;
-        Object.assign(placedPerItem, chosen.perItem);
+        // CROSS-STACK — only genuine overflow (a product that did not fit as its
+        // own block) is laid flush on top of contiguous carrier tops, rear first.
+        this._placeToppers(toppers, placedPerItem, planFor);
 
-        const cursorX = Math.max(0, ...this.placedItems.map((p) => p.position.x + p.dimensions.length), 0);
+        cursorX = Math.max(0, ...this.placedItems.map((p) => p.position.x + p.dimensions.length), 0);
 
         const stats = this.calculateStatistics();
         const remLen = Math.max(0, C.length - cursorX);
@@ -436,41 +341,6 @@ export class BinPacking3D {
                 }
             }
         }
-    }
-
-    /**
-     * Roughness of the load's side profile: how "tower-and-valley" it looks.
-     * Builds the top-height of each 40 cm slice along the deck length, then
-     * counts, over the occupied span, the interior VALLEYS (a slice lower than
-     * both neighbours) and isolated PEAKS (a slice higher than both neighbours
-     * by more than one box layer). A solid even prism or a clean monotonic
-     * taper scores 0; a low middle with separate rear towers scores high. Used
-     * to reject high-count-but-unstable strategies. Returns an integer count.
-     */
-    _profileRoughness(placed) {
-        if (!placed || !placed.length) return 0;
-        const SL = 40;
-        const n = Math.ceil(this.container.length / SL);
-        const h = new Array(n).fill(0);
-        let minLayer = Infinity;
-        for (const p of placed) {
-            const a = Math.floor(p.position.x / SL);
-            const b = Math.floor((p.position.x + p.dimensions.length - 1) / SL);
-            const top = p.position.z + p.dimensions.height;
-            if (p.dimensions.height < minLayer) minLayer = p.dimensions.height;
-            for (let i = a; i <= b && i < n; i++) if (top > h[i]) h[i] = top;
-        }
-        if (!isFinite(minLayer)) minLayer = 1;
-        // occupied span [lo, hi]
-        let lo = 0; while (lo < n && h[lo] === 0) lo++;
-        let hi = n - 1; while (hi >= 0 && h[hi] === 0) hi--;
-        let rough = 0;
-        for (let i = lo + 1; i < hi; i++) {
-            const L = h[i - 1], M = h[i], R = h[i + 1];
-            if (M < L - 1 && M < R - 1) rough++;                    // valley (incl. empty floor gap)
-            else if (M > L + minLayer && M > R + minLayer) rough++; // isolated spike (> 1 layer above both)
-        }
-        return rough;
     }
 
     sortItemsByVolume() {
