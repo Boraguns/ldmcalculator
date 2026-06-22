@@ -110,7 +110,17 @@ export class BinPacking3D {
                     : Math.max(1, Math.min(item.maxStack || 1, maxByHeight));
                 if (perRow < 1 || layers < 1) continue;
                 const perSlot = perRow * layers;
-                if (!best || perSlot > best.perSlot) best = { o, perRow, layers, perSlot };
+                // Tertiary tie-break: among equally dense orientations, prefer the
+                // one that FILLS THE DECK HEIGHT best (tallest full stack), so a
+                // box like 80×120×100 lies down to 3×80 = 240 cm instead of
+                // 2×100 = 200 cm — less wasted airspace above the block, hence
+                // more cargo fits. (Only affects the orientation; whether we
+                // actually stack that high is decided later by the floor-first H.)
+                const usedH = layers * o.height;
+                if (!best || perSlot > best.perSlot ||
+                    (perSlot === best.perSlot && usedH > best.usedH)) {
+                    best = { o, perRow, layers, perSlot, usedH };
+                }
             }
             return best;
         };
@@ -307,11 +317,25 @@ export class BinPacking3D {
                     x: top.position.x, y: top.position.y,
                     l: top.dimensions.length, w: top.dimensions.width,
                     z: top.position.z + top.dimensions.height,
+                    carrierId: top.id,
                 });
             }
-            surfaces.sort((a, b) => b.x - a.x); // rear surfaces first (keep front light)
-
+            // CLEAN CAP: only cap each carrier product's EVEN top — its maximum
+            // top height. A block whose quantity doesn't fill its last layer has
+            // some columns one box shorter; capping those dips would drop lone
+            // toppers into pits (the messy look the user rejected). So we keep
+            // only the surfaces at each carrier's max height and ignore the dips.
+            const maxZByCarrier = new Map();
             for (const s of surfaces) {
+                const m = maxZByCarrier.get(s.carrierId) || 0;
+                if (s.z > m) maxZByCarrier.set(s.carrierId, s.z);
+            }
+            const evenSurfaces = surfaces.filter(
+                (s) => s.z >= maxZByCarrier.get(s.carrierId) - 0.5
+            );
+            evenSurfaces.sort((a, b) => b.x - a.x); // rear surfaces first (keep front light)
+
+            for (const s of evenSurfaces) {
                 if (remaining <= 0) break;
                 // Best topper orientation that fits this surface (tiling within).
                 const orients = this.getAllOrientations(item);
@@ -340,31 +364,11 @@ export class BinPacking3D {
                 }
             }
 
-            // Leftover toppers → floor at the rear (single layer; toppers bear nothing).
-            if (remaining > 0) {
-                const plan = planFor(item);
-                if (plan) {
-                    const { o, perRow } = plan;
-                    let cursorX = Math.max(0, ...this.placedItems.map((p) => p.position.x + p.dimensions.length), 0);
-                    while (remaining > 0 && cursorX + o.length <= C.length + 0.001) {
-                        let p = 0;
-                        for (let row = 0; row < perRow && remaining > 0; row++) {
-                            if (item.weight > 0 && this.currentWeight + item.weight > C.maxWeight) { remaining = 0; break; }
-                            this.placedItems.push({
-                                ...item,
-                                position: { x: cursorX, y: row * o.width, z: 0 },
-                                dimensions: { length: o.length, width: o.width, height: o.height },
-                                rotation: o.rotation,
-                            });
-                            this.currentWeight += item.weight;
-                            placedPerItem[item.id] = (placedPerItem[item.id] || 0) + 1;
-                            remaining--; p++;
-                        }
-                        if (p === 0) break;
-                        cursorX += o.length;
-                    }
-                }
-            }
+            // NOTE: no rear-floor fallback. Overflow that cannot cap a carrier
+            // top stays unplaced — starting a separate rear floor block would
+            // SPLIT the product (a contiguous block at the front plus a marooned
+            // block at the rear) and re-introduce the gaps the user rejected.
+            // Genuine overflow is reported as "did not fit" instead.
         }
     }
 
