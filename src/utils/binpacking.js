@@ -334,27 +334,65 @@ export class BinPacking3D {
             const evenSurfaces = surfaces.filter(
                 (s) => s.z >= maxZByCarrier.get(s.carrierId) - 0.5
             );
-            evenSurfaces.sort((a, b) => b.x - a.x); // rear surfaces first (keep front light)
-
+            // Merge each carrier's even surfaces into ONE region and tile the
+            // topper as a SINGLE CONTINUOUS grid across it — boxes butting flush
+            // against each other, ignoring where the carrier boxes underneath
+            // start/end. (Tiling per carrier-box left periodic gaps wherever the
+            // topper didn't divide the carrier-box footprint evenly — the gappy
+            // cap the user rejected.) A topper cell is placed only where its whole
+            // base rests on support, so edges/dips never float.
+            const byCarrier = new Map();
             for (const s of evenSurfaces) {
+                const g = byCarrier.get(s.carrierId) || [];
+                g.push(s); byCarrier.set(s.carrierId, g);
+            }
+            // Carriers rear-first (keep the front light).
+            const carrierRegions = [...byCarrier.values()].sort(
+                (A, B) => Math.max(...B.map((s) => s.x)) - Math.max(...A.map((s) => s.x))
+            );
+            for (const surfs of carrierRegions) {
                 if (remaining <= 0) break;
-                // Best topper orientation that fits this surface (tiling within).
-                const orients = this.getAllOrientations(item);
+                const z = Math.max(...surfs.map((s) => s.z));
+                const minX = Math.min(...surfs.map((s) => s.x));
+                const maxX = Math.max(...surfs.map((s) => s.x + s.l));
+                const minY = Math.min(...surfs.map((s) => s.y));
+                const maxY = Math.max(...surfs.map((s) => s.y + s.w));
+                // Is the cell [x..x+l]×[y..y+w] fully on the carrier's top surface?
+                const supported = (x, y, l, w) => {
+                    const pts = [[0.2, 0.2], [0.8, 0.2], [0.2, 0.8], [0.8, 0.8], [0.5, 0.5]];
+                    return pts.every(([fx, fy]) => {
+                        const px = x + fx * l, py = y + fy * w;
+                        return surfs.some((s) =>
+                            px >= s.x - 0.5 && px <= s.x + s.l + 0.5 &&
+                            py >= s.y - 0.5 && py <= s.y + s.w + 0.5);
+                    });
+                };
+                // Orientation that fits the height and tiles the region densest.
+                const orients = this.getAllOrientations(item).filter((o) => o.height <= C.height - z + 0.001);
                 let best = null;
                 for (const o of orients) {
-                    if (o.height > C.height - s.z + 0.001) continue;
-                    const nx = Math.floor(s.l / o.length);
-                    const ny = Math.floor(s.w / o.width);
+                    const nx = Math.floor((maxX - minX + 0.001) / o.length);
+                    const ny = Math.floor((maxY - minY + 0.001) / o.width);
                     if (nx >= 1 && ny >= 1 && (!best || nx * ny > best.nx * best.ny)) best = { o, nx, ny };
                 }
                 if (!best) continue;
                 const { o, nx, ny } = best;
                 for (let ix = 0; ix < nx && remaining > 0; ix++) {
                     for (let iy = 0; iy < ny && remaining > 0; iy++) {
+                        const px = minX + ix * o.length, py = minY + iy * o.width;
+                        if (!supported(px, py, o.length, o.width)) continue;
+                        // Collision guard: never overlap an existing item (e.g. a
+                        // taller neighbouring block whose edge falls inside this
+                        // carrier's bounding box).
+                        const collides = this.placedItems.some((q) =>
+                            px < q.position.x + q.dimensions.length - 0.01 && px + o.length > q.position.x + 0.01 &&
+                            py < q.position.y + q.dimensions.width - 0.01 && py + o.width > q.position.y + 0.01 &&
+                            z < q.position.z + q.dimensions.height - 0.01 && z + o.height > q.position.z + 0.01);
+                        if (collides) continue;
                         if (item.weight > 0 && this.currentWeight + item.weight > C.maxWeight) { remaining = 0; break; }
                         this.placedItems.push({
                             ...item,
-                            position: { x: s.x + ix * o.length, y: s.y + iy * o.width, z: s.z },
+                            position: { x: px, y: py, z },
                             dimensions: { length: o.length, width: o.width, height: o.height },
                             rotation: o.rotation,
                         });
