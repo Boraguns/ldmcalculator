@@ -56,7 +56,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
     const [products, setProducts] = useState(
         (Array.isArray(d0.products) && d0.products.length)
             ? d0.products.map(migrateStackMode)
-            : [{ id: 1, name: '', length: '', width: '', height: '', weight: '', quantity: '', maxStack: 1, allowRotation: false, color: '', stackMode: 'full', useTotalWeight: false, totalWeight: '' }]
+            : [{ id: 1, name: '', length: '', width: '', height: '', weight: '', quantity: '', maxStack: 1, allowRotation: false, allowTip: false, color: '', stackMode: 'full', useTotalWeight: false, totalWeight: '' }]
     );
 
     // Auto-save the form as the user edits, so it survives a login/register
@@ -73,7 +73,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
         setTotalTons('');
         setTonnageInfo(null);
         setResultData(null);
-        setProducts([{ id: 1, name: '', length: '', width: '', height: '', weight: '', quantity: '', maxStack: 1, allowRotation: false, color: '', stackMode: 'full', useTotalWeight: false, totalWeight: '' }]);
+        setProducts([{ id: 1, name: '', length: '', width: '', height: '', weight: '', quantity: '', maxStack: 1, allowRotation: false, allowTip: false, color: '', stackMode: 'full', useTotalWeight: false, totalWeight: '' }]);
         if (onFullReset) onFullReset();
     };
 
@@ -134,7 +134,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
             id: newId,
             name: '',
             length: '', width: '', height: '', weight: '', quantity: sameSize ? '' : '1',
-            maxStack: 1, allowRotation: false, color: '', stackMode: 'full',
+            maxStack: 1, allowRotation: false, allowTip: false, color: '', stackMode: 'full',
             useTotalWeight: false, totalWeight: ''
         }]);
     };
@@ -234,6 +234,13 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
         setProducts(products.map(p => {
             if (p.id !== id) return p;
             return { ...p, allowRotation: !p.allowRotation };
+        }));
+    };
+
+    const toggleTip = (id) => {
+        setProducts(products.map(p => {
+            if (p.id !== id) return p;
+            return { ...p, allowTip: !p.allowTip };
         }));
     };
 
@@ -504,6 +511,22 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                                                 <div className="checkmark" style={{ height: '1.1em', width: '1.1em' }}></div>
                                             </div>
                                             <span style={{ color: '#000000' }}>{t('wizard.rotate')}</span>
+                                        </label>
+                                    </div>
+                                    {/* Tip toggle — allow the box to rest on any face (lay on its
+                                        side) so it can fit more across the deck. Off by default;
+                                        pallets should stay upright. */}
+                                    <div className="rotation-control">
+                                        <label className="pulse-checkbox-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', width: 'auto', fontSize: '0.8rem' }} title={t('wizard.tipTitle')}>
+                                            <div className="pulse-checkbox-wrapper" style={{ fontSize: '0.8rem', width: '1.2em', height: '1.2em', minWidth: '1.2em' }}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={product.allowTip || false}
+                                                    onChange={() => toggleTip(product.id)}
+                                                />
+                                                <div className="checkmark" style={{ height: '1.1em', width: '1.1em' }}></div>
+                                            </div>
+                                            <span style={{ color: '#000000' }}>{t('wizard.tip')}</span>
                                         </label>
                                     </div>
                                     {/* Color picker — overrides the auto-assigned palette color in the 3D scene. */}
@@ -864,6 +887,10 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                                             })}
                                     </ul>
                                 )}
+                                {/* Reminder: tipping often makes the leftover fit. */}
+                                <p style={{ color: '#92400e', margin: '8px 0 0', fontSize: '0.78rem', background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: '8px', padding: '6px 9px' }}>
+                                    💡 {t('step3.tipHint')}
+                                </p>
                             </div>
                         </div>
                     )}

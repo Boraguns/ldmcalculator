@@ -149,7 +149,9 @@
         "full": "Stackable",
         "self": "Self-stack"
       }
-    }
+    },
+    "tip": "Lay on side",
+    "tipTitle": "May this product be laid on its side? When on, the box can rest on any face for tighter loading. Keep off for pallets."
   },
   "step3": {
     "title": "Result Report",
@@ -192,7 +194,8 @@
     "frontZoneWarn": "The front 4 m exceeds the 4.5 t limit — move lighter products to the front or reduce the load.",
     "notFitNamed": "{name}: {n} units left out",
     "autoStanga": "Auto anti-tip bars",
-    "autoStangaNone": "No tip-prone stacks found; no bars needed."
+    "autoStangaNone": "No tip-prone stacks found; no bars needed.",
+    "tipHint": "For the products that did not fit, try enabling “Lay on side” in that product’s settings — boxes usually all fit once they can be tipped."
   },
   "viewer": {
     "iso": "Isometric",

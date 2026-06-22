@@ -150,7 +150,9 @@
         "full": "Stapelbar",
         "self": "Selbststapelnd"
       }
-    }
+    },
+    "tip": "Kippen",
+    "tipTitle": "Darf dieses Produkt auf die Seite gelegt werden? Wenn aktiv, kann die Kiste auf jeder Fläche liegen. Für Paletten ausgeschaltet lassen."
   },
   "step3": {
     "title": "Ergebnisbericht",
@@ -193,7 +195,8 @@
     "frontZoneWarn": "Die vorderen 4 m überschreiten das 4,5-t-Limit — leichtere Produkte nach vorne oder Last reduzieren.",
     "notFitNamed": "{name}: {n} Einheiten passten nicht",
     "autoStanga": "Auto-Sicherungsstangen",
-    "autoStangaNone": "Keine kippgefährdeten Stapel gefunden; keine Stangen nötig."
+    "autoStangaNone": "Keine kippgefährdeten Stapel gefunden; keine Stangen nötig.",
+    "tipHint": "Aktivieren Sie für nicht passende Produkte „Kippen“ in deren Einstellungen — gekippt passt meist alles."
   },
   "viewer": {
     "iso": "Isometrisch",

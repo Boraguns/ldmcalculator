@@ -60,6 +60,7 @@ export class BinPacking3D {
                 // Same-product self-stacking allowed only when selfStack; else 1 layer.
                 maxStack: selfStack ? (parseInt(item.maxStack) || 999) : 1,
                 allowRotation: item.allowRotation !== false,
+                allowTip: item.allowTip === true, // may rest on any face (off by default)
                 stackable: mode !== 'none', // legacy reference
                 placed: false,
                 position: null,
@@ -476,17 +477,31 @@ export class BinPacking3D {
 
     getAllOrientations(item) {
         const orientations = [];
-        // Orientation 0: Original
-        orientations.push({ length: item.length, width: item.width, height: item.height, rotation: 0 });
+        const seen = new Set();
+        const add = (l, w, h, rotation) => {
+            const k = l + 'x' + w + 'x' + h;
+            if (!seen.has(k)) { seen.add(k); orientations.push({ length: l, width: w, height: h, rotation }); }
+        };
+        // Orientation 0: Original (upright, on its given base).
+        add(item.length, item.width, item.height, 0);
 
-        if (item.allowRotation) {
-            // Rotation 1: Swap L & W (Standard Z-axis rotation)
-            orientations.push({ length: item.width, width: item.length, height: item.height, rotation: 1 });
+        if (item.allowTip) {
+            // TIPPING ALLOWED (per product): the box may rest on ANY face, so all
+            // six axis-aligned orientations are valid. This lets a carton lie on
+            // its side to fit more across the deck width / height. Off by default
+            // (pallets should not be tipped) — enabled with the product's
+            // "can be laid on its side" toggle.
+            const d = [item.length, item.width, item.height];
+            add(d[0], d[1], d[2], 0);
+            add(d[1], d[0], d[2], 1);
+            add(d[0], d[2], d[1], 2);
+            add(d[2], d[1], d[0], 3);
+            add(d[1], d[2], d[0], 4);
+            add(d[2], d[0], d[1], 5);
+        } else if (item.allowRotation) {
+            // Rotation only: spin on the floor (Z-axis), height unchanged.
+            add(item.width, item.length, item.height, 1);
         }
-
-        // TIPPING (Changing Height) DISABLED
-        // Users reported "wrong placement", often caused by unrealistic tipping of pallets.
-        // We restrict rotation to only spinning on the floor (Z-axis).
 
         return orientations;
     }

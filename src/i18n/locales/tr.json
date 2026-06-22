@@ -149,7 +149,9 @@
         "full": "İstiflenebilir",
         "self": "Kendi içinde"
       }
-    }
+    },
+    "tip": "Yan yatır",
+    "tipTitle": "Bu ürün yan yatırılabilir mi? Açık olduğunda kutu herhangi bir yüzeyine yatırılarak daha sıkı yerleştirilebilir. Paletler için kapalı tutun."
   },
   "step3": {
     "title": "Sonuç Raporu",
@@ -192,7 +194,8 @@
     "frontZoneWarn": "Ön 4 metre 4,5 ton sınırını aşıyor — daha hafif ürünleri öne alın veya yükü azaltın.",
     "notFitNamed": "{name}: {n} adet dışarıda kaldı",
     "autoStanga": "Otomatik ştanga ekle",
-    "autoStangaNone": "Devrilme riski olan istif bulunamadı; ştangaya gerek yok."
+    "autoStangaNone": "Devrilme riski olan istif bulunamadı; ştangaya gerek yok.",
+    "tipHint": "Sığmayan ürünler için o ürünün ayarlarındaki “Yan yatır” seçeneğini açmayı deneyin — kutular yan yatırılınca genelde hepsi sığar."
   },
   "viewer": {
     "iso": "İzometrik",
