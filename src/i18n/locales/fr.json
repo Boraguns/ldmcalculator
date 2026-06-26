@@ -151,7 +151,11 @@
       }
     },
     "tip": "Sur le côté",
-    "tipTitle": "Ce produit peut-il être couché sur le côté ? Activé, la boîte peut reposer sur n’importe quelle face. À laisser désactivé pour les palettes."
+    "tipTitle": "Ce produit peut-il être couché sur le côté ? Activé, la boîte peut reposer sur n’importe quelle face. À laisser désactivé pour les palettes.",
+    "carrier": "Support",
+    "carrierTitle": "Définir comme support : placé en bas en priorité, les autres produits sont empilés dessus. Désactivé = calcul standard.",
+    "goesOnTop": "Se pose dessus",
+    "goesOnTopTitle": "Ce produit peut aussi se poser sur d’autres : d’abord au sol, son surplus coiffe les supports."
   },
   "step3": {
     "title": "Rapport de résultat",

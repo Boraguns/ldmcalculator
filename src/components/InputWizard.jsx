@@ -244,6 +244,20 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
         }));
     };
 
+    const toggleCarrier = (id) => {
+        setProducts(products.map(p => {
+            if (p.id !== id) return p;
+            return { ...p, isCarrier: !p.isCarrier };
+        }));
+    };
+
+    const toggleGoesOnTop = (id) => {
+        setProducts(products.map(p => {
+            if (p.id !== id) return p;
+            return { ...p, goesOnTop: !p.goesOnTop };
+        }));
+    };
+
     // Mobile drawer orchestration:
     //  - Step 2 (product entry): auto-open so the user sees the form immediately after picking a type.
     //  - Step 3 (results): auto-close so the 3D scene with the packed truck is visible.
@@ -527,6 +541,35 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                                                 <div className="checkmark" style={{ height: '1.1em', width: '1.1em' }}></div>
                                             </div>
                                             <span style={{ color: '#000000' }}>{t('wizard.tip')}</span>
+                                        </label>
+                                    </div>
+                                    {/* Optional role flags — only meaningful when set; default
+                                        off keeps the standard calculation. Carrier = base
+                                        priority (others cap it); goesOnTop = may sit on others. */}
+                                    <div className="rotation-control">
+                                        <label className="pulse-checkbox-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', width: 'auto', fontSize: '0.8rem' }} title={t('wizard.carrierTitle')}>
+                                            <div className="pulse-checkbox-wrapper" style={{ fontSize: '0.8rem', width: '1.2em', height: '1.2em', minWidth: '1.2em' }}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={product.isCarrier || false}
+                                                    onChange={() => toggleCarrier(product.id)}
+                                                />
+                                                <div className="checkmark" style={{ height: '1.1em', width: '1.1em' }}></div>
+                                            </div>
+                                            <span style={{ color: '#000000' }}>{t('wizard.carrier')}</span>
+                                        </label>
+                                    </div>
+                                    <div className="rotation-control">
+                                        <label className="pulse-checkbox-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', width: 'auto', fontSize: '0.8rem' }} title={t('wizard.goesOnTopTitle')}>
+                                            <div className="pulse-checkbox-wrapper" style={{ fontSize: '0.8rem', width: '1.2em', height: '1.2em', minWidth: '1.2em' }}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={product.goesOnTop || false}
+                                                    onChange={() => toggleGoesOnTop(product.id)}
+                                                />
+                                                <div className="checkmark" style={{ height: '1.1em', width: '1.1em' }}></div>
+                                            </div>
+                                            <span style={{ color: '#000000' }}>{t('wizard.goesOnTop')}</span>
                                         </label>
                                     </div>
                                     {/* Color picker — overrides the auto-assigned palette color in the 3D scene. */}

@@ -151,7 +151,11 @@
       }
     },
     "tip": "Yan yatır",
-    "tipTitle": "Bu ürün yan yatırılabilir mi? Açık olduğunda kutu herhangi bir yüzeyine yatırılarak daha sıkı yerleştirilebilir. Paletler için kapalı tutun."
+    "tipTitle": "Bu ürün yan yatırılabilir mi? Açık olduğunda kutu herhangi bir yüzeyine yatırılarak daha sıkı yerleştirilebilir. Paletler için kapalı tutun.",
+    "carrier": "Taşıyıcı",
+    "carrierTitle": "Bu ürün taşıyıcı olsun: önce alta yerleştirilir (taban önceliği) ve üzerine başka ürünler istiflenir. İşaretlenmezse mevcut hesaplama korunur.",
+    "goesOnTop": "Üste de konur",
+    "goesOnTopTitle": "Bu ürün başka ürünlerin üstüne de konabilir: önce zemine yayılır, taşan kısmı taşıyıcıların üstüne istiflenir."
   },
   "step3": {
     "title": "Sonuç Raporu",

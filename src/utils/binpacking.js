@@ -43,9 +43,19 @@ export class BinPacking3D {
             // all map to 'full' (fully stackable both ways).
             let mode = item.stackMode || (item.stackable === false ? 'none' : 'full');
             if (mode === 'both' || mode === 'bear' || mode === 'top') mode = 'full';
-            const canBearOther = (mode === 'full');  // OTHER products may sit on top
-            const canGoOnOther = (mode === 'full');  // this may sit on OTHER products
-            const selfStack = (mode === 'full' || mode === 'self'); // own kind on own kind
+            // Optional, user-set role flags (default off). They AUGMENT the mode
+            // so the loader can be steered without changing the default result:
+            //   isCarrier — bears OTHER products on top and is given floor/base
+            //               priority (placed first), so the user can pin which
+            //               product stays at the bottom.
+            //   goesOnTop — may sit on top of OTHER products (floor first, then
+            //               its overflow caps carriers) — like the "full" role.
+            const isCarrier = item.isCarrier === true;
+            const goesOnTop = item.goesOnTop === true;
+            const canBearOther = (mode === 'full') || isCarrier; // OTHER products may sit on top
+            const canGoOnOther = (mode === 'full') || goesOnTop; // this may sit on OTHER products
+            // own kind on own kind (a carrier also self-stacks)
+            const selfStack = (mode === 'full' || mode === 'self') || isCarrier;
             return {
                 id: item.id,
                 length: parseFloat(item.length),
@@ -54,6 +64,8 @@ export class BinPacking3D {
                 weight: parseFloat(item.weight),
                 quantity: parseInt(item.quantity),
                 stackMode: mode,
+                isCarrier,
+                goesOnTop,
                 canBearOther,
                 canGoOnOther,
                 selfStack,
@@ -144,6 +156,9 @@ export class BinPacking3D {
             return (it.weight || 0) * pl.perSlot / Math.max(1, pl.o.length); // kg per cm of deck
         };
         const placementOrder = [...this.items].sort((a, b) => {
+            // User-pinned carriers get floor/base priority — placed first so they
+            // stay at the bottom and other products' overflow caps them.
+            if (!!a.isCarrier !== !!b.isCarrier) return a.isCarrier ? -1 : 1;
             const sa = a.maxStack > 1 ? 0 : 1;             // self-stackable bases first (capacity)
             const sb = b.maxStack > 1 ? 0 : 1;
             if (sa !== sb) return sa - sb;

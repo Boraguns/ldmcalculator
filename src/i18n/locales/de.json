@@ -152,7 +152,11 @@
       }
     },
     "tip": "Kippen",
-    "tipTitle": "Darf dieses Produkt auf die Seite gelegt werden? Wenn aktiv, kann die Kiste auf jeder Fläche liegen. Für Paletten ausgeschaltet lassen."
+    "tipTitle": "Darf dieses Produkt auf die Seite gelegt werden? Wenn aktiv, kann die Kiste auf jeder Fläche liegen. Für Paletten ausgeschaltet lassen.",
+    "carrier": "Träger",
+    "carrierTitle": "Als Träger festlegen: zuerst unten platziert (Basis-Priorität), andere Produkte werden darauf gestapelt. Aus = Standardberechnung.",
+    "goesOnTop": "Kommt oben drauf",
+    "goesOnTopTitle": "Dieses Produkt darf auch auf andere gestapelt werden: zuerst auf den Boden, Überschuss deckt Träger ab."
   },
   "step3": {
     "title": "Ergebnisbericht",

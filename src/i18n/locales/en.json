@@ -151,7 +151,11 @@
       }
     },
     "tip": "Lay on side",
-    "tipTitle": "May this product be laid on its side? When on, the box can rest on any face for tighter loading. Keep off for pallets."
+    "tipTitle": "May this product be laid on its side? When on, the box can rest on any face for tighter loading. Keep off for pallets.",
+    "carrier": "Carrier",
+    "carrierTitle": "Make this a carrier: placed at the bottom first (base priority) with other products stacked on top. If left off, the standard calculation is kept.",
+    "goesOnTop": "Goes on top",
+    "goesOnTopTitle": "This product may also sit on top of others: spread on the floor first, its overflow caps carriers."
   },
   "step3": {
     "title": "Result Report",
