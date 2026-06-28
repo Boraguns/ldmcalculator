@@ -148,8 +148,12 @@
       "short": {
         "none": "Nicht stapelbar",
         "full": "Stapelbar",
-        "self": "Selbststapelnd"
-      }
+        "self": "Selbststapelnd",
+        "carrier": "Träger",
+        "topper": "Auf andere stapeln"
+      },
+      "carrier": "Träger — zuerst unten (Basis), andere Produkte werden darauf gestapelt",
+      "topper": "Wird auf andere gestapelt — zuerst Boden, Überschuss auf Trägern; nichts darauf"
     },
     "tip": "Kippen",
     "tipTitle": "Darf dieses Produkt auf die Seite gelegt werden? Wenn aktiv, kann die Kiste auf jeder Fläche liegen. Für Paletten ausgeschaltet lassen.",

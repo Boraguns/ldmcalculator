@@ -44,14 +44,19 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
     const typeLabel = (isTrain || isShip) ? t('truckTypes.type.container') : isPlane ? t('truckTypes.type.uld') : t('truckTypes.type.trailer');
 
     // Initial product state (seeded from a saved draft when present).
-    // Stacking model is 3-way (none / full / self). Legacy drafts may carry the
-    // removed categories — 'both'/'bear'/'top' all become 'full' (fully stackable
-    // both ways); fill any missing mode with 'full'.
+    // Stacking modes: none / full / self / carrier / topper. Legacy drafts:
+    // 'both'→'full', 'bear'→'carrier', 'top'→'topper'; missing → 'full'. Also
+    // fold the short-lived per-product isCarrier/goesOnTop flags into the mode.
     const migrateStackMode = (p) => {
-        const m = p.stackMode;
-        if (m === 'both' || m === 'bear' || m === 'top') return { ...p, stackMode: 'full' };
-        if (m == null || m === '') return { ...p, stackMode: 'full' };
-        return p;
+        let m = p.stackMode;
+        if (m === 'both') m = 'full';
+        else if (m === 'bear') m = 'carrier';
+        else if (m === 'top') m = 'topper';
+        else if (m == null || m === '') m = 'full';
+        if (p.isCarrier && m === 'full') m = 'carrier';
+        else if (p.goesOnTop && m === 'full') m = 'topper';
+        const { isCarrier, goesOnTop, ...rest } = p;
+        return { ...rest, stackMode: m };
     };
     const [products, setProducts] = useState(
         (Array.isArray(d0.products) && d0.products.length)
@@ -244,19 +249,6 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
         }));
     };
 
-    const toggleCarrier = (id) => {
-        setProducts(products.map(p => {
-            if (p.id !== id) return p;
-            return { ...p, isCarrier: !p.isCarrier };
-        }));
-    };
-
-    const toggleGoesOnTop = (id) => {
-        setProducts(products.map(p => {
-            if (p.id !== id) return p;
-            return { ...p, goesOnTop: !p.goesOnTop };
-        }));
-    };
 
     // Mobile drawer orchestration:
     //  - Step 2 (product entry): auto-open so the user sees the form immediately after picking a type.
@@ -543,35 +535,6 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                                             <span style={{ color: '#000000' }}>{t('wizard.tip')}</span>
                                         </label>
                                     </div>
-                                    {/* Optional role flags — only meaningful when set; default
-                                        off keeps the standard calculation. Carrier = base
-                                        priority (others cap it); goesOnTop = may sit on others. */}
-                                    <div className="rotation-control">
-                                        <label className="pulse-checkbox-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', width: 'auto', fontSize: '0.8rem' }} title={t('wizard.carrierTitle')}>
-                                            <div className="pulse-checkbox-wrapper" style={{ fontSize: '0.8rem', width: '1.2em', height: '1.2em', minWidth: '1.2em' }}>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={product.isCarrier || false}
-                                                    onChange={() => toggleCarrier(product.id)}
-                                                />
-                                                <div className="checkmark" style={{ height: '1.1em', width: '1.1em' }}></div>
-                                            </div>
-                                            <span style={{ color: '#000000' }}>{t('wizard.carrier')}</span>
-                                        </label>
-                                    </div>
-                                    <div className="rotation-control">
-                                        <label className="pulse-checkbox-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', width: 'auto', fontSize: '0.8rem' }} title={t('wizard.goesOnTopTitle')}>
-                                            <div className="pulse-checkbox-wrapper" style={{ fontSize: '0.8rem', width: '1.2em', height: '1.2em', minWidth: '1.2em' }}>
-                                                <input
-                                                    type="checkbox"
-                                                    checked={product.goesOnTop || false}
-                                                    onChange={() => toggleGoesOnTop(product.id)}
-                                                />
-                                                <div className="checkmark" style={{ height: '1.1em', width: '1.1em' }}></div>
-                                            </div>
-                                            <span style={{ color: '#000000' }}>{t('wizard.goesOnTop')}</span>
-                                        </label>
-                                    </div>
                                     {/* Color picker — overrides the auto-assigned palette color in the 3D scene. */}
                                     <label
                                         className="color-picker-control"
@@ -614,6 +577,8 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
                                             style={{ background: '#fbf8f1', border: '1px solid #d8cfbd', borderRadius: '8px', padding: '5px 8px', fontSize: '0.8rem', color: '#000000', fontFamily: 'inherit', cursor: 'pointer' }}
                                         >
                                             <option value="full" title={t('wizard.stackMode.full')}>{t('wizard.stackMode.short.full')}</option>
+                                            <option value="carrier" title={t('wizard.stackMode.carrier')}>{t('wizard.stackMode.short.carrier')}</option>
+                                            <option value="topper" title={t('wizard.stackMode.topper')}>{t('wizard.stackMode.short.topper')}</option>
                                             <option value="self" title={t('wizard.stackMode.self')}>{t('wizard.stackMode.short.self')}</option>
                                             <option value="none" title={t('wizard.stackMode.none')}>{t('wizard.stackMode.short.none')}</option>
                                         </select>

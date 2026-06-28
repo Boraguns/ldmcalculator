@@ -147,8 +147,12 @@
       "short": {
         "none": "İstiflenemez",
         "full": "İstiflenebilir",
-        "self": "Kendi içinde"
-      }
+        "self": "Kendi içinde",
+        "carrier": "Taşıyıcı",
+        "topper": "Başka Ürünün Üstüne İstiflenir"
+      },
+      "carrier": "Taşıyıcı — önce alta yerleştirilir (taban) ve üzerine başka ürünler istiflenir",
+      "topper": "Başka ürünün üstüne istiflenir — önce zemine, taşan kısmı taşıyıcıların üstüne konur; üstüne yük konmaz"
     },
     "tip": "Yan yatır",
     "tipTitle": "Bu ürün yan yatırılabilir mi? Açık olduğunda kutu herhangi bir yüzeyine yatırılarak daha sıkı yerleştirilebilir. Paletler için kapalı tutun.",

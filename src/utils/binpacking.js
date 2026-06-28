@@ -41,21 +41,27 @@ export class BinPacking3D {
             // Legacy fallback: stackable:false → 'none', stackable:true → 'full'.
             // Older categories collapse into this 3-way model: 'both'/'bear'/'top'
             // all map to 'full' (fully stackable both ways).
+            // Five stacking modes (chosen in the product's stacking dropdown):
+            //   'none'    — floor only, nothing on top.
+            //   'self'    — stacks only on its OWN kind.
+            //   'full'    — fully stackable both ways (bears others AND rides others).
+            //   'carrier' — a BASE: bears other products on top and gets floor/base
+            //               priority (placed first) so the user pins what stays at
+            //               the bottom; it does not ride on top of others.
+            //   'topper'  — rides on top of OTHER products (and the floor); nothing
+            //               is placed on top of it.
+            // Legacy: both→full, bear→carrier, top→topper, stackable flags as before.
             let mode = item.stackMode || (item.stackable === false ? 'none' : 'full');
-            if (mode === 'both' || mode === 'bear' || mode === 'top') mode = 'full';
-            // Optional, user-set role flags (default off). They AUGMENT the mode
-            // so the loader can be steered without changing the default result:
-            //   isCarrier — bears OTHER products on top and is given floor/base
-            //               priority (placed first), so the user can pin which
-            //               product stays at the bottom.
-            //   goesOnTop — may sit on top of OTHER products (floor first, then
-            //               its overflow caps carriers) — like the "full" role.
-            const isCarrier = item.isCarrier === true;
-            const goesOnTop = item.goesOnTop === true;
-            const canBearOther = (mode === 'full') || isCarrier; // OTHER products may sit on top
-            const canGoOnOther = (mode === 'full') || goesOnTop; // this may sit on OTHER products
-            // own kind on own kind (a carrier also self-stacks)
-            const selfStack = (mode === 'full' || mode === 'self') || isCarrier;
+            if (mode === 'both') mode = 'full';
+            else if (mode === 'bear') mode = 'carrier';
+            else if (mode === 'top') mode = 'topper';
+            // Legacy per-product flag drafts still honoured.
+            const isCarrier = (mode === 'carrier') || item.isCarrier === true;
+            const goesOnTop = (mode === 'topper') || item.goesOnTop === true;
+            const canBearOther = (mode === 'full' || mode === 'carrier') || item.isCarrier === true; // OTHERS may sit on top
+            const canGoOnOther = (mode === 'full' || mode === 'topper') || item.goesOnTop === true;   // this may sit on OTHERS
+            // own kind on own kind (every stackable mode self-stacks; 'none' doesn't)
+            const selfStack = (mode === 'full' || mode === 'self' || mode === 'carrier' || mode === 'topper') || isCarrier;
             return {
                 id: item.id,
                 length: parseFloat(item.length),

@@ -147,8 +147,12 @@
       "short": {
         "none": "No stacking",
         "full": "Stackable",
-        "self": "Self-stack"
-      }
+        "self": "Self-stack",
+        "carrier": "Carrier",
+        "topper": "Stacks on other products"
+      },
+      "carrier": "Carrier — placed at the bottom first (base) with other products stacked on top",
+      "topper": "Stacks onto other products — floor first, overflow rides on carriers; nothing on top of it"
     },
     "tip": "Lay on side",
     "tipTitle": "May this product be laid on its side? When on, the box can rest on any face for tighter loading. Keep off for pallets.",
