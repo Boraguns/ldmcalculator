@@ -252,6 +252,37 @@ export class BinPacking3D {
         // own block) is laid flush on top of contiguous carrier tops, rear first.
         this._placeToppers(toppers, placedPerItem, planFor);
 
+        // Snapshot the block-loader result so we can compare it against the
+        // extreme-point optimiser below and keep whichever loads better.
+        const blockResult = {
+            placed: this.placedItems,
+            perItem: { ...placedPerItem },
+            weight: this.currentWeight,
+            count: this.placedItems.length,
+            usedLen: Math.max(0, ...this.placedItems.map((p) => p.position.x + p.dimensions.length), 0),
+        };
+
+        // EXTREME-POINT OPTIMISER — a gap-filling, compacting packer (deepest-
+        // bottom-left-fill). It places big pieces first and slots small ones into
+        // the gaps between/over them, rotating as allowed, pushing everything
+        // toward the front to minimise the loading metres used. We run it and
+        // adopt it only when it is at least as good (more boxes, or the same
+        // boxes in less length) — so it never makes a case worse than the block
+        // loader, but wins on the mixed loads where greedy block-loading wastes
+        // gaps.
+        const totalRequested = this.items.reduce((s, it) => s + (it.quantity || 0), 0);
+        // Skip the optimiser when the block loader already placed everything — it
+        // cannot do better than 100%, so we save the extra pass.
+        const epResult = blockResult.count >= totalRequested ? null : this._packExtreme();
+        // Adopt the optimiser only when it loads strictly MORE boxes — that is
+        // the real win (e.g. fitting cargo the block loader left out). When both
+        // fit the same amount we keep the block layout, which spreads/centres the
+        // load for balance instead of compacting it all to the front.
+        const better = (epResult && epResult.count > blockResult.count) ? epResult : blockResult;
+        this.placedItems = better.placed;
+        this.currentWeight = better.weight;
+        for (const k of Object.keys(placedPerItem)) placedPerItem[k] = better.perItem[k] || 0;
+
         cursorX = Math.max(0, ...this.placedItems.map((p) => p.position.x + p.dimensions.length), 0);
 
         const stats = this.calculateStatistics();
@@ -430,6 +461,143 @@ export class BinPacking3D {
             // block at the rear) and re-introduce the gaps the user rejected.
             // Genuine overflow is reported as "did not fit" instead.
         }
+    }
+
+    /**
+     * EXTREME-POINT 3D PACKER (deepest-bottom-left-fill with gap filling).
+     *
+     * A more global heuristic than the block loader: it places the biggest
+     * pieces first and slots smaller ones into the gaps between and on top of
+     * them, trying every allowed orientation, and always choosing the deepest-
+     * bottom-left feasible spot — which compacts the load toward the front and
+     * fills holes instead of leaving them (the EasyCargo-style behaviour).
+     *
+     * Hard rules enforced for every placement: inside the deck, no overlap,
+     * fully supported (floor or box tops — never floating), weight cap, and the
+     * stacking model (none = floor only; self = only its own kind above/below;
+     * carrier bears others; topper rides others but nothing rests on it; full =
+     * both ways). Returns null if nothing could be placed.
+     */
+    _packExtreme() {
+        const C = this.container;
+        // Expand to units; skip products that physically cannot fit at all.
+        const fits = (it) => this.getAllOrientations(it).some(
+            (o) => o.length <= C.length && o.width <= C.width && o.height <= C.height);
+        const units = [];
+        for (const it of this.items) {
+            if (!(it.quantity > 0) || !fits(it)) continue;
+            for (let i = 0; i < it.quantity; i++) units.push(it);
+        }
+        if (!units.length) return null;
+        // Guard: this per-unit search is O(units · points · placed); for very
+        // large counts fall back to the block loader (return null).
+        if (units.length > 2200) return null;
+
+        // Order: carriers (base) first, toppers last; within that, biggest
+        // footprint/volume first so big pieces anchor and small ones fill gaps.
+        const role = (it) => (it.isCarrier ? 0 : it.goesOnTop ? 2 : 1);
+        units.sort((a, b) => {
+            if (role(a) !== role(b)) return role(a) - role(b);
+            const fa = a.length * a.width, fb = b.length * b.width;
+            if (fb !== fa) return fb - fa;
+            const va = fa * a.height, vb = fb * b.height;
+            if (vb !== va) return vb - va;
+            return String(a.id).localeCompare(String(b.id));
+        });
+
+        const placed = [];
+        const perItem = {};
+        for (const it of this.items) perItem[it.id] = 0;
+        let weight = 0;
+        let points = [{ x: 0, y: 0, z: 0 }];
+
+        const collides = (x, y, z, l, w, h) => placed.some((q) =>
+            x < q.position.x + q.dimensions.length - 0.01 && x + l > q.position.x + 0.01 &&
+            y < q.position.y + q.dimensions.width - 0.01 && y + w > q.position.y + 0.01 &&
+            z < q.position.z + q.dimensions.height - 0.01 && z + h > q.position.z + 0.01);
+
+        // Boxes whose TOP is exactly at z and overlap the [x..x+l]×[y..y+w] base.
+        const supportersOf = (x, y, z, l, w) => placed.filter((q) =>
+            Math.abs(q.position.z + q.dimensions.height - z) < 0.5 &&
+            Math.min(x + l, q.position.x + q.dimensions.length) - Math.max(x, q.position.x) > 0.01 &&
+            Math.min(y + w, q.position.y + q.dimensions.width) - Math.max(y, q.position.y) > 0.01);
+
+        const supportFrac = (x, y, z, l, w, sup) => {
+            if (z < 0.5) return 1; // floor
+            let area = 0;
+            for (const q of sup) {
+                const ox = Math.min(x + l, q.position.x + q.dimensions.length) - Math.max(x, q.position.x);
+                const oy = Math.min(y + w, q.position.y + q.dimensions.width) - Math.max(y, q.position.y);
+                area += Math.max(0, ox) * Math.max(0, oy);
+            }
+            return area / (l * w);
+        };
+
+        const feasible = (it, x, y, z, o) => {
+            const { length: l, width: w, height: h } = o;
+            if (x + l > C.length + 0.01 || y + w > C.width + 0.01 || z + h > C.height + 0.01) return false;
+            if (it.weight > 0 && weight + it.weight > C.maxWeight) return false;
+            if (collides(x, y, z, l, w, h)) return false;
+            if (z < 0.5) {
+                return true; // on the floor — always allowed
+            }
+            // On top of something: must be fully supported and obey stack rules.
+            if (it.stackMode === 'none') return false; // never rides
+            const sup = supportersOf(x, y, z, l, w);
+            if (!sup.length) return false;
+            if (supportFrac(x, y, z, l, w, sup) < 0.92) return false;
+            const allSame = sup.every((s) => s.id === it.id);
+            const selfOK = allSame && it.selfStack;                       // same product on itself
+            const crossOK = it.canGoOnOther && sup.every((s) => s.canBearOther); // rides carriers/full
+            return selfOK || crossOK;
+        };
+
+        for (const it of units) {
+            const orients = this.getAllOrientations(it).filter(
+                (o) => o.length <= C.length && o.width <= C.width && o.height <= C.height);
+            // Deepest-bottom-left: front (x) first, then low (z), then side (y).
+            points.sort((a, b) => a.x - b.x || a.z - b.z || a.y - b.y);
+            let best = null;
+            for (const p of points) {
+                for (const o of orients) {
+                    if (feasible(it, p.x, p.y, p.z, o)) { best = { x: p.x, y: p.y, z: p.z, o }; break; }
+                }
+                if (best) break;
+            }
+            if (!best) continue; // this unit does not fit anywhere
+            placed.push({
+                ...it,
+                position: { x: best.x, y: best.y, z: best.z },
+                dimensions: { length: best.o.length, width: best.o.width, height: best.o.height },
+                rotation: best.o.rotation,
+            });
+            weight += it.weight;
+            perItem[it.id]++;
+            // New extreme points at the three exposed corners of the placed box.
+            const nx = best.x + best.o.length, ny = best.y + best.o.width, nz = best.z + best.o.height;
+            points.push({ x: nx, y: best.y, z: best.z });
+            points.push({ x: best.x, y: ny, z: best.z });
+            points.push({ x: best.x, y: best.y, z: nz });
+            // Drop points that now sit inside a box, and de-duplicate, to keep
+            // the candidate list small and fast.
+            const seen = new Set();
+            points = points.filter((q) => {
+                const k = Math.round(q.x) + '|' + Math.round(q.y) + '|' + Math.round(q.z);
+                if (seen.has(k)) return false; seen.add(k);
+                return !placed.some((b) =>
+                    q.x > b.position.x + 0.01 && q.x < b.position.x + b.dimensions.length - 0.01 &&
+                    q.y > b.position.y + 0.01 && q.y < b.position.y + b.dimensions.width - 0.01 &&
+                    q.z > b.position.z + 0.01 && q.z < b.position.z + b.dimensions.height - 0.01);
+            });
+        }
+
+        return {
+            placed,
+            perItem,
+            weight,
+            count: placed.length,
+            usedLen: Math.max(0, ...placed.map((p) => p.position.x + p.dimensions.length), 0),
+        };
     }
 
     sortItemsByVolume() {
