@@ -265,20 +265,18 @@ export class BinPacking3D {
         // EXTREME-POINT OPTIMISER — a gap-filling, compacting packer (deepest-
         // bottom-left-fill). It places big pieces first and slots small ones into
         // the gaps between/over them, rotating as allowed, pushing everything
-        // toward the front to minimise the loading metres used. We run it and
-        // adopt it only when it is at least as good (more boxes, or the same
-        // boxes in less length) — so it never makes a case worse than the block
-        // loader, but wins on the mixed loads where greedy block-loading wastes
-        // gaps.
-        const totalRequested = this.items.reduce((s, it) => s + (it.quantity || 0), 0);
-        // Skip the optimiser when the block loader already placed everything — it
-        // cannot do better than 100%, so we save the extra pass.
-        const epResult = blockResult.count >= totalRequested ? null : this._packExtreme();
-        // Adopt the optimiser only when it loads strictly MORE boxes — that is
-        // the real win (e.g. fitting cargo the block loader left out). When both
-        // fit the same amount we keep the block layout, which spreads/centres the
-        // load for balance instead of compacting it all to the front.
-        const better = (epResult && epResult.count > blockResult.count) ? epResult : blockResult;
+        // toward the front to fill every reachable space and minimise the loading
+        // metres used. This is the PRIMARY goal now (maximum-density packing):
+        // we run both the block loader and the optimiser and keep whichever
+        // packs best — more boxes wins; on a tie the more compact (smaller used
+        // length) result wins, so the load is always filled as densely as
+        // possible across every scenario.
+        const epResult = this._packExtreme();
+        let better = blockResult;
+        if (epResult) {
+            if (epResult.count > blockResult.count) better = epResult;
+            else if (epResult.count === blockResult.count && epResult.usedLen < blockResult.usedLen - 0.5) better = epResult;
+        }
         this.placedItems = better.placed;
         this.currentWeight = better.weight;
         for (const k of Object.keys(placedPerItem)) placedPerItem[k] = better.perItem[k] || 0;
@@ -559,10 +557,17 @@ export class BinPacking3D {
             points.sort((a, b) => a.x - b.x || a.z - b.z || a.y - b.y);
             let best = null;
             for (const p of points) {
+                // Among the orientations that fit at this (deepest-bottom-left)
+                // point, take the flattest / largest-base one so the box sits low
+                // and stable; tie → shortest. Take the first point that fits any.
+                let bo = null;
                 for (const o of orients) {
-                    if (feasible(it, p.x, p.y, p.z, o)) { best = { x: p.x, y: p.y, z: p.z, o }; break; }
+                    if (!feasible(it, p.x, p.y, p.z, o)) continue;
+                    const base = o.length * o.width;
+                    if (!bo || base > bo.length * bo.width ||
+                        (base === bo.length * bo.width && o.height < bo.height)) bo = o;
                 }
-                if (best) break;
+                if (bo) { best = { x: p.x, y: p.y, z: p.z, o: bo }; break; }
             }
             if (!best) continue; // this unit does not fit anywhere
             placed.push({
