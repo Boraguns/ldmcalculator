@@ -271,11 +271,29 @@ export class BinPacking3D {
         // packs best — more boxes wins; on a tie the more compact (smaller used
         // length) result wins, so the load is always filled as densely as
         // possible across every scenario.
-        const epResult = this._packExtreme();
+        // MULTI-START: run the optimiser with several "big first" orderings and
+        // keep the densest result. Different loads pack best under different
+        // criteria (footprint, volume, height, longest side), so trying a few and
+        // picking the winner gets noticeably closer to an optimal fill. Capped by
+        // unit count so big loads stay fast (one pass only).
+        const totalUnits = this.items.reduce((s, it) => s + (it.quantity || 0), 0);
+        const keys = totalUnits <= 600
+            ? [
+                (it) => it.length * it.width,                    // footprint
+                (it) => it.length * it.width * it.height,        // volume
+                (it) => it.height,                               // tallest first
+                (it) => Math.max(it.length, it.width, it.height),// longest side
+                (it) => it.length,                               // longest along deck
+            ]
+            : [(it) => it.length * it.width * it.height];
         let better = blockResult;
-        if (epResult) {
-            if (epResult.count > blockResult.count) better = epResult;
-            else if (epResult.count === blockResult.count && epResult.usedLen < blockResult.usedLen - 0.5) better = epResult;
+        for (const k of keys) {
+            const ep = this._packExtreme(k);
+            if (!ep) continue;
+            if (ep.count > better.count ||
+                (ep.count === better.count && ep.usedLen < better.usedLen - 0.5)) {
+                better = ep;
+            }
         }
         this.placedItems = better.placed;
         this.currentWeight = better.weight;
@@ -476,7 +494,7 @@ export class BinPacking3D {
      * carrier bears others; topper rides others but nothing rests on it; full =
      * both ways). Returns null if nothing could be placed.
      */
-    _packExtreme() {
+    _packExtreme(secondaryKey) {
         const C = this.container;
         // Expand to units; skip products that physically cannot fit at all.
         const fits = (it) => this.getAllOrientations(it).some(
@@ -491,15 +509,16 @@ export class BinPacking3D {
         // large counts fall back to the block loader (return null).
         if (units.length > 2200) return null;
 
-        // Order: carriers (base) first, toppers last; within that, biggest
-        // footprint/volume first so big pieces anchor and small ones fill gaps.
+        // Order: carriers (base) first, toppers last; within that, by the given
+        // secondary key (descending) so the chosen "big first" criterion anchors
+        // the load and small pieces fill the gaps. pack() tries several keys and
+        // keeps the best result (multi-start search).
         const role = (it) => (it.isCarrier ? 0 : it.goesOnTop ? 2 : 1);
+        const key = secondaryKey || ((it) => it.length * it.width); // default: footprint
         units.sort((a, b) => {
             if (role(a) !== role(b)) return role(a) - role(b);
-            const fa = a.length * a.width, fb = b.length * b.width;
-            if (fb !== fa) return fb - fa;
-            const va = fa * a.height, vb = fb * b.height;
-            if (vb !== va) return vb - va;
+            const ka = key(a), kb = key(b);
+            if (kb !== ka) return kb - ka;
             return String(a.id).localeCompare(String(b.id));
         });
 
@@ -553,13 +572,15 @@ export class BinPacking3D {
         for (const it of units) {
             const orients = this.getAllOrientations(it).filter(
                 (o) => o.length <= C.length && o.width <= C.width && o.height <= C.height);
-            // Deepest-bottom-left: front (x) first, then low (z), then side (y).
+            // First-fit deepest-bottom-left: front (x) first, then low (z), then
+            // side (y) — compacts the load toward the front (minimises loading
+            // metres). The rich extreme-point set (below) provides candidate
+            // spots inside the gaps so they get filled rather than left as holes.
             points.sort((a, b) => a.x - b.x || a.z - b.z || a.y - b.y);
             let best = null;
             for (const p of points) {
-                // Among the orientations that fit at this (deepest-bottom-left)
-                // point, take the flattest / largest-base one so the box sits low
-                // and stable; tie → shortest. Take the first point that fits any.
+                // At the first feasible point, take its flattest/largest-base
+                // orientation (sits low and stable); tie → shortest.
                 let bo = null;
                 for (const o of orients) {
                     if (!feasible(it, p.x, p.y, p.z, o)) continue;
@@ -578,11 +599,16 @@ export class BinPacking3D {
             });
             weight += it.weight;
             perItem[it.id]++;
-            // New extreme points at the three exposed corners of the placed box.
+            // New extreme points at the box's exposed corners (floor-level
+            // adjacents + tops), so later boxes have candidate spots to fill the
+            // gaps around and on this one.
             const nx = best.x + best.o.length, ny = best.y + best.o.width, nz = best.z + best.o.height;
             points.push({ x: nx, y: best.y, z: best.z });
             points.push({ x: best.x, y: ny, z: best.z });
             points.push({ x: best.x, y: best.y, z: nz });
+            points.push({ x: nx, y: ny, z: best.z });
+            points.push({ x: nx, y: best.y, z: nz });
+            points.push({ x: best.x, y: ny, z: nz });
             // Drop points that now sit inside a box, and de-duplicate, to keep
             // the candidate list small and fast.
             const seen = new Set();
