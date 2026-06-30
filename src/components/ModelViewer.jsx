@@ -1082,7 +1082,11 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck', addStan
 
             {/* Solid trailer frame (replaces the ghostly wireframe). Slim metallic
                 corner posts + bottom side rails so boxes inside stay visible while
-                the trailer itself reads as a real structure, not a hologram. */}
+                the trailer itself reads as a real structure, not a hologram.
+                Lifted by the same +0.3 the cargo gets, so the cage floor/ceiling
+                line up with the boxes — otherwise a load stacked to the full deck
+                height appears to poke out the top of the frame. */}
+            <group position={[0, 0.3, 0]}>
             {(() => {
                 const t = 0.06; // strut thickness
                 const hx = tLen / 2, hy = tHei / 2, hz = tWid / 2;
@@ -1112,6 +1116,7 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck', addStan
                     </mesh>
                 ));
             })()}
+            </group>
 
             {/* 3D GLB Truck Model (Cabin) - Only for Truck mode */}
             {!isTrain && !isPlane && !isShip && (
