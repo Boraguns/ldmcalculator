@@ -112,12 +112,16 @@ export class BinPacking3D {
         // physically cannot fit the deck at all.
         const planFor = (item) => {
             let orients = this.getAllOrientations(item);
-            // Fallback: if NONE of the allowed orientations fit the deck (e.g. the
-            // box is wider than the trailer), force the swapped footprint so the
-            // product can still be loaded — turning a box flat on the floor is
-            // standard practice and beats leaving it off the truck entirely.
             const fitsDeck = (o) => o.length <= C.length && o.width <= C.width && o.height <= C.height;
-            if (!orients.some(fitsDeck)) {
+            // "Rotate"/"tip" are PERMISSION, not obligation: keep the box in its
+            // ENTERED (upright) orientation whenever it fits the deck, and only
+            // consider the allowed rotations if upright does not fit at all.
+            const upright = { length: item.length, width: item.width, height: item.height, rotation: 0 };
+            if (fitsDeck(upright)) {
+                orients = [upright];
+            } else if (!orients.some(fitsDeck)) {
+                // Not even upright fits — last resort: force the swapped footprint
+                // so the product can still be loaded rather than dropped.
                 const swapped = { length: item.width, width: item.length, height: item.height, rotation: 1 };
                 if (fitsDeck(swapped)) orients = [swapped];
             }
@@ -579,18 +583,30 @@ export class BinPacking3D {
             // metres). The rich extreme-point set (below) provides candidate
             // spots inside the gaps so they get filled rather than left as holes.
             points.sort((a, b) => a.x - b.x || a.z - b.z || a.y - b.y);
+            // ORIENTATION PERMISSION, not obligation: "rotate"/"tip" mean the
+            // system MAY turn the box only if it does not otherwise fit. So we
+            // first try to place it in its ENTERED (upright) orientation; only if
+            // it fits nowhere upright do we fall back to the allowed rotations.
+            const enteredFits = it.length <= C.length && it.width <= C.width && it.height <= C.height;
+            const upright = enteredFits ? { length: it.length, width: it.width, height: it.height, rotation: 0 } : null;
             let best = null;
-            for (const p of points) {
-                // At the first feasible point, take its flattest/largest-base
-                // orientation (sits low and stable); tie → shortest.
-                let bo = null;
-                for (const o of orients) {
-                    if (!feasible(it, p.x, p.y, p.z, o)) continue;
-                    const base = o.length * o.width;
-                    if (!bo || base > bo.length * bo.width ||
-                        (base === bo.length * bo.width && o.height < bo.height)) bo = o;
+            if (upright) {
+                for (const p of points) {
+                    if (feasible(it, p.x, p.y, p.z, upright)) { best = { x: p.x, y: p.y, z: p.z, o: upright }; break; }
                 }
-                if (bo) { best = { x: p.x, y: p.y, z: p.z, o: bo }; break; }
+            }
+            if (!best) {
+                // Could not fit upright anywhere — now the rotations are allowed.
+                for (const p of points) {
+                    let bo = null;
+                    for (const o of orients) {
+                        if (!feasible(it, p.x, p.y, p.z, o)) continue;
+                        const base = o.length * o.width;
+                        if (!bo || base > bo.length * bo.width ||
+                            (base === bo.length * bo.width && o.height < bo.height)) bo = o;
+                    }
+                    if (bo) { best = { x: p.x, y: p.y, z: p.z, o: bo }; break; }
+                }
             }
             if (!best) continue; // this unit does not fit anywhere
             placed.push({
