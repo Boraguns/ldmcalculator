@@ -71,6 +71,10 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
     const [stangas, setStangas] = useState([]); // [{itemIndex}]
     const [addSpanzetMode, setAddSpanzetMode] = useState(false);
     const [spanzets, setSpanzets] = useState([]); // [{itemIndex}]
+    // Legend isolation: when set, only this product id's boxes are shown in the
+    // 3D scene (click a legend row to see exactly where that product sits in
+    // the stack; click again to show everything).
+    const [isolatedId, setIsolatedId] = useState(null);
     const navigate = useNavigate();
 
     const isTrain = mode === 'train';
@@ -193,6 +197,7 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
             }
             const finalized = finalizePackResult(result, products, truck);
             setPackedItems(finalized.placedItems);
+            setIsolatedId(null);
             return finalized;
         } catch (e) {
             console.error('Rebalance error:', e);
@@ -299,6 +304,7 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
                 const finalized = finalizePackResult(result, products, chosenTruck);
                 setLastInput({ truck: chosenTruck, products });
                 setPackedItems(finalized.placedItems);
+                setIsolatedId(null); // show all products on a fresh pack
                 setStangas([]); // reset manual ştangas on new pack
                 setSpanzets([]);
                 setAddStangaMode(false);
@@ -497,6 +503,7 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
     const handleClearPacked = () => {
         setPackedItems([]);
         setHoveredItem(null);
+        setIsolatedId(null);
     };
 
     const legendItems = Object.values(
@@ -537,6 +544,7 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
                     <ModelViewer
                         truckType={specs || initialSpecs}
                         packedItems={packedItems}
+                        isolatedId={isolatedId}
                         viewMode={viewMode}
                         onHoverItem={handleHover}
                         onUserInteraction={() => setViewMode(null)}
@@ -641,12 +649,39 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
                             zIndex: 10
                         }}>
                             <h4 style={{ margin: '0 0 8px 0', color: 'white', fontSize: '0.9rem' }}>{t('viewer.loadedProducts')}</h4>
-                            {legendItems.map(l => (
-                                <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', color: 'white', fontSize: '0.8rem' }}>
-                                    <div style={{ width: '12px', height: '12px', borderRadius: '2px', background: l.color || colors[l.colorId % colors.length] }}></div>
-                                    <span>{l.name && !l.name.startsWith('#') ? l.name : `#${l.id}`} - {l.count} {t('viewer.qty')}</span>
+                            {/* Click a row to ISOLATE that product in the 3D view
+                                (all other boxes hide so you can see exactly where
+                                it sits in the stack). Click again to show all. */}
+                            {legendItems.map(l => {
+                                const active = isolatedId === l.id;
+                                const dimmed = isolatedId != null && !active;
+                                return (
+                                    <div
+                                        key={l.id}
+                                        onClick={() => setIsolatedId(active ? null : l.id)}
+                                        title={t('viewer.isolateHint')}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: '8px',
+                                            marginBottom: '2px', color: 'white', fontSize: '0.8rem',
+                                            cursor: 'pointer', userSelect: 'none',
+                                            padding: '2px 6px', borderRadius: '6px',
+                                            background: active ? 'rgba(59,130,246,0.45)' : 'transparent',
+                                            opacity: dimmed ? 0.45 : 1,
+                                        }}
+                                    >
+                                        <div style={{ width: '12px', height: '12px', borderRadius: '2px', background: l.color || colors[l.colorId % colors.length] }}></div>
+                                        <span>{l.name && !l.name.startsWith('#') ? l.name : `#${l.id}`} - {l.count} {t('viewer.qty')}</span>
+                                    </div>
+                                );
+                            })}
+                            {isolatedId != null && (
+                                <div
+                                    onClick={() => setIsolatedId(null)}
+                                    style={{ marginTop: '6px', color: '#93c5fd', fontSize: '0.75rem', cursor: 'pointer', userSelect: 'none' }}
+                                >
+                                    ✕ {t('viewer.showAll')}
                                 </div>
-                            ))}
+                            )}
                         </div>
                     )}
 

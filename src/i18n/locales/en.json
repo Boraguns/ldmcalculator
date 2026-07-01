@@ -224,7 +224,9 @@
     "companyName": "Enter Your Company Name",
     "companyPlaceholder": "Company Name (optional)",
     "cancel": "Cancel",
-    "download": "Download Screenshot"
+    "download": "Download Screenshot",
+    "isolateHint": "Show where this product sits in the load (hide others)",
+    "showAll": "Show all"
   },
   "truckTypes": {
     "type": {

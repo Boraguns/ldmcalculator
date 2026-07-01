@@ -224,7 +224,9 @@
     "companyName": "Firmanızın Adını Yazınız",
     "companyPlaceholder": "Firma Adı (opsiyonel)",
     "cancel": "Vazgeç",
-    "download": "Ekran Görüntüsünü İndir"
+    "download": "Ekran Görüntüsünü İndir",
+    "isolateHint": "Bu ürünün istifteki yerini göster (diğerlerini gizle)",
+    "showAll": "Tümünü göster"
   },
   "truckTypes": {
     "type": {

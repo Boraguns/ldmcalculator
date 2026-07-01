@@ -216,7 +216,9 @@
     "companyName": "اسم الشركة",
     "companyPlaceholder": "Company Name (optional)",
     "cancel": "Cancel",
-    "download": "Download Screenshot"
+    "download": "Download Screenshot",
+    "isolateHint": "إظهار موضع هذا المنتج (إخفاء الباقي)",
+    "showAll": "إظهار الكل"
   },
   "truckTypes": {
     "type": {

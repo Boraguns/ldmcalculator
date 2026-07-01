@@ -224,7 +224,9 @@
     "companyName": "Nom de votre société",
     "companyPlaceholder": "Nom de la société (optionnel)",
     "cancel": "Annuler",
-    "download": "Télécharger la capture"
+    "download": "Télécharger la capture",
+    "isolateHint": "Voir où se trouve ce produit (masquer les autres)",
+    "showAll": "Tout afficher"
   },
   "truckTypes": {
     "type": {

@@ -551,17 +551,16 @@ const GLBWheelAssembly = ({ targets = [], glbPath = '/src/rear-wheel.glb' }) => 
         normalized.applyMatrix4(new THREE.Matrix4().makeRotationY(Math.PI / 2));
         normalized.updateMatrixWorld(true);
 
-        // Force wheel materials to be dark rubber-like.
+        // Keep the GLB's OWN materials/textures (rim + tyre detail) — forcing
+        // everything to #111 with the map stripped made the wheels read as
+        // solid black blobs. Only tame extreme glossiness so they sit well in
+        // the warehouse lighting.
         normalized.traverse((obj) => {
             if (!obj.isMesh) return;
             const materials = Array.isArray(obj.material) ? obj.material : [obj.material];
             for (const mat of materials) {
                 if (!mat) continue;
-                if (mat.color) mat.color.set('#111111');
-                if ('map' in mat) mat.map = null;
-                if ('emissive' in mat && mat.emissive) mat.emissive.set('#000000');
-                if ('roughness' in mat) mat.roughness = 0.85;
-                if ('metalness' in mat) mat.metalness = 0.1;
+                if ('roughness' in mat) mat.roughness = Math.max(mat.roughness ?? 0.5, 0.45);
                 mat.needsUpdate = true;
             }
         });
@@ -604,7 +603,13 @@ const GLBWheelAssembly = ({ targets = [], glbPath = '/src/rear-wheel.glb' }) => 
                             isRightSide ? -wheelData.scale : wheelData.scale
                         ]}
                     >
-                        <primitive object={clone} />
+                        {/* Recentre the GLB on its bounding-box centre so the
+                            wheel truly spins/sits around the group origin —
+                            without this the model's arbitrary origin left the
+                            wheels hovering above the ground. */}
+                        <group position={[-wheelData.center.x, -wheelData.center.y, -wheelData.center.z]}>
+                            <primitive object={clone} />
+                        </group>
                     </group>
                 );
             })}
@@ -1055,7 +1060,7 @@ const WarehouseEnvironment = ({ floorY, showFlags = true, onFlagClick, bannerUrl
 };
 
 
-const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck', addStangaMode = false, stangas = [], onAddStanga, onRemoveStanga, addSpanzetMode = false, spanzets = [], onAddSpanzet, onRemoveSpanzet }) => {
+const TruckContent = ({ truckType, packedItems, isolatedId = null, onHover, mode = 'truck', addStangaMode = false, stangas = [], onAddStanga, onRemoveStanga, addSpanzetMode = false, spanzets = [], onAddSpanzet, onRemoveSpanzet }) => {
     const scaleFactor = 0.01;
     const isTrain = mode === 'train';
     const isPlane = mode === 'plane';
@@ -1177,6 +1182,11 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck', addStan
                 calls and tank framerate. The boxes still read clearly thanks
                 to ambient/directional lighting. */}
             {packedItems.map((item, i) => {
+                // Legend isolation: when a product is selected in the legend,
+                // hide every other product so the user sees exactly where the
+                // selected one sits in the stack. (Return null inside the map so
+                // item indexes — used by ştanga/spanzet — stay stable.)
+                if (isolatedId != null && item.id !== isolatedId) return null;
                 const w = item.dimensions.length * scaleFactor;
                 const d = item.dimensions.width * scaleFactor;
                 const h = item.dimensions.height * scaleFactor;
@@ -1393,6 +1403,7 @@ const TruckContent = ({ truckType, packedItems, onHover, mode = 'truck', addStan
 const ModelViewer = ({
     truckType,
     packedItems = [],
+    isolatedId = null,
     viewMode = 'iso',
     onHoverItem,
     onUserInteraction,
@@ -1452,6 +1463,7 @@ const ModelViewer = ({
                     <TruckContent
                         truckType={truckType}
                         packedItems={packedItems}
+                        isolatedId={isolatedId}
                         onHover={onHoverItem}
                         mode={mode}
                         addStangaMode={addStangaMode}
