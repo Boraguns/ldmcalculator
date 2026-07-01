@@ -572,10 +572,11 @@ const GLBWheelAssembly = ({ targets = [], glbPath = '/src/rear-wheel.glb' }) => 
         const center = new THREE.Vector3();
         box.getCenter(center);
 
-        // Target wheel diameter ~1.15m — big enough that the tyre top tucks
+        // Target wheel diameter ~1.1m — big enough that the tyre top tucks
         // under the trailer body instead of leaving a visible air gap between
-        // wheel and chassis (matches the cabin GLB's front wheels).
-        const targetDiameter = 1.15;
+        // wheel and chassis. The cabin's wheels are replaced with the SAME
+        // assembly (same GLB, same diameter) so tractor and trailer match.
+        const targetDiameter = 1.1;
         // The wheel's visual diameter is max of X and Y after rotation
         const currentDiameter = Math.max(size.x, size.y) || 1;
         const scale = targetDiameter / currentDiameter;
@@ -623,17 +624,17 @@ const GLBWheelAssembly = ({ targets = [], glbPath = '/src/rear-wheel.glb' }) => 
     );
 };
 
-const TruckCabinModel = ({ position }) => {
+const TruckCabinModel = ({ position, wheelGroundY = null }) => {
     const { scene } = useGLTF('/src/truck.glb');
-    
+
     // Deep clone and pre-calculate bounding box/scaling exactly once
     const truckData = useMemo(() => {
         const normalized = scene.clone(true);
-        
+
         // Ensure PBR materials map correctly
         normalized.traverse((obj) => {
             if (obj.isMesh && obj.material) {
-                // Remove specular/glossiness limitations if any, 
+                // Remove specular/glossiness limitations if any,
                 // force them into standard material if they got corrupted
                 if (obj.material.type === 'MeshStandardMaterial') {
                     obj.material.needsUpdate = true;
@@ -648,21 +649,77 @@ const TruckCabinModel = ({ position }) => {
         box.getCenter(center);
 
         // Typical truck cabin is about 3.0m tall
-        const targetHeight = 3.0; 
+        const targetHeight = 3.0;
         const currentHeight = size.y || 1;
         const scale = targetHeight / currentHeight;
 
-        return { normalized, center, scale };
+        // ---- Replace the cabin's BAKED-IN wheels with the shared wheel GLB ----
+        // Find wheel-like meshes by hierarchy name (English + Spanish export
+        // tokens), record their axle positions, then HIDE them so the same
+        // GLBWheelAssembly used on the trailer renders in their place — tractor
+        // and trailer wheels become literally identical. If no wheel meshes are
+        // recognised we leave the model untouched (graceful fallback).
+        const hierarchyText = (obj) => {
+            let cur = obj; const parts = [];
+            while (cur) { parts.push((cur.name || '').toLowerCase()); cur = cur.parent; }
+            // Split camel/underscore/digit-joined names into words so the token
+            // test below can use word boundaries ("Llantas_delantera_1" →
+            // "llantas delantera"), avoiding false hits like "rim" in "primary".
+            return parts.join(' ').replace(/[_\-.:0-9]+/g, ' ');
+        };
+        const WHEEL_TOKENS = /\b(wheels?|tires?|tyres?|rims?|llantas?|ruedas?|neumaticos?)\b/;
+        const wheelMeshes = [];
+        normalized.traverse((obj) => {
+            if (obj.isMesh && WHEEL_TOKENS.test(hierarchyText(obj))) {
+                wheelMeshes.push(obj);
+            }
+        });
+        normalized.updateMatrixWorld(true);
+        const tmpBox = new THREE.Box3();
+        const wheelCenters = wheelMeshes.map((m) => {
+            tmpBox.setFromObject(m);
+            const c = new THREE.Vector3();
+            tmpBox.getCenter(c);
+            return c;
+        });
+        if (wheelMeshes.length) wheelMeshes.forEach((m) => { m.visible = false; });
+
+        return { normalized, center, scale, wheelCenters };
     }, [scene]);
 
+    // Project the recorded wheel centres through the SAME transform chain the
+    // JSX below applies (centre-offset → scale → rotate Y·90° → translate), then
+    // cluster them per axle/side so twin tyres collapse to one assembly target.
+    const wheelTargets = useMemo(() => {
+        if (wheelGroundY == null || !truckData.wheelCenters.length) return [];
+        const { center, scale } = truckData;
+        const clusters = new Map();
+        for (const c of truckData.wheelCenters) {
+            const v = { x: (c.x - center.x) * scale, y: (c.y - center.y) * scale, z: (c.z - center.z) * scale };
+            // rotation Y by +90°: (x,z) → (z,-x)
+            const wx = position[0] + v.z;
+            const wz = position[2] - v.x;
+            const key = `${Math.round(wx * 2) / 2}|${wz >= 0 ? 'L' : 'R'}`;
+            const g = clusters.get(key) || { x: 0, z: 0, n: 0 };
+            g.x += wx; g.z += wz; g.n++;
+            clusters.set(key, g);
+        }
+        return [...clusters.values()].map((g) => [g.x / g.n, wheelGroundY, g.z / g.n]);
+    }, [truckData, position, wheelGroundY]);
+
     return (
-        <group position={position} rotation={[0, Math.PI / 2, 0]}>
-            <group scale={[truckData.scale, truckData.scale, truckData.scale]}>
-                <group position={[-truckData.center.x, -truckData.center.y, -truckData.center.z]}>
-                    <primitive object={truckData.normalized} />
+        <>
+            <group position={position} rotation={[0, Math.PI / 2, 0]}>
+                <group scale={[truckData.scale, truckData.scale, truckData.scale]}>
+                    <group position={[-truckData.center.x, -truckData.center.y, -truckData.center.z]}>
+                        <primitive object={truckData.normalized} />
+                    </group>
                 </group>
             </group>
-        </group>
+            {wheelTargets.length > 0 && (
+                <GLBWheelAssembly targets={wheelTargets} glbPath="/src/rear-wheel.glb" />
+            )}
+        </>
     );
 };
 
@@ -1135,7 +1192,12 @@ const TruckContent = ({ truckType, packedItems, isolatedId = null, onHover, mode
                 // Own Suspense boundary (null fallback) so the trailer + cargo
                 // render instantly while the 6 MB cabin GLB streams in behind.
                 <Suspense fallback={null}>
-                    <TruckCabinModel position={[-tLen / 2 - 3.5, -tHei / 2 + 0.55, 0]} />
+                    <TruckCabinModel
+                        position={[-tLen / 2 - 3.5, -tHei / 2 + 0.55, 0]}
+                        /* Same ground line as the trailer's wheel targets so the
+                           replacement (identical) wheels sit on the same floor. */
+                        wheelGroundY={-tHei / 2 - 0.9}
+                    />
                 </Suspense>
             )}
 
