@@ -572,13 +572,15 @@ const GLBWheelAssembly = ({ targets = [], glbPath = '/src/rear-wheel.glb' }) => 
         const center = new THREE.Vector3();
         box.getCenter(center);
 
-        // Target wheel diameter ~0.9m (matching the fallback cylinder wheels)
-        const targetDiameter = 0.9;
+        // Target wheel diameter ~1.15m — big enough that the tyre top tucks
+        // under the trailer body instead of leaving a visible air gap between
+        // wheel and chassis (matches the cabin GLB's front wheels).
+        const targetDiameter = 1.15;
         // The wheel's visual diameter is max of X and Y after rotation
         const currentDiameter = Math.max(size.x, size.y) || 1;
         const scale = targetDiameter / currentDiameter;
 
-        return { normalized, box, size, center, scale };
+        return { normalized, box, size, center, scale, radius: targetDiameter / 2 };
     }, [scene]);
 
     if (!targets || targets.length === 0) return null;
@@ -596,7 +598,11 @@ const GLBWheelAssembly = ({ targets = [], glbPath = '/src/rear-wheel.glb' }) => 
                 return (
                     <group
                         key={idx}
-                        position={[pos[0], pos[1] + 0.45, pos[2]]}
+                        /* Lift by the wheel RADIUS so the tyre bottom stays at the
+                           target's ground level regardless of diameter — growing
+                           the wheel closes the gap upward (into the chassis),
+                           not downward (through the floor). */
+                        position={[pos[0], pos[1] + wheelData.radius, pos[2]]}
                         scale={[
                             wheelData.scale,
                             wheelData.scale,
