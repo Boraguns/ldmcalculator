@@ -60,8 +60,10 @@ export class BinPacking3D {
             const goesOnTop = (mode === 'topper') || item.goesOnTop === true;
             const canBearOther = (mode === 'full' || mode === 'carrier') || item.isCarrier === true; // OTHERS may sit on top
             const canGoOnOther = (mode === 'full' || mode === 'topper') || item.goesOnTop === true;   // this may sit on OTHERS
-            // own kind on own kind (every stackable mode self-stacks; 'none' doesn't)
-            const selfStack = (mode === 'full' || mode === 'self' || mode === 'carrier' || mode === 'topper') || isCarrier;
+            // own kind on own kind. A CARRIER does NOT self-stack: it is the
+            // single-layer base that stays on the floor with other products laid
+            // on top of it — self-stacking would build carrier towers instead.
+            const selfStack = (mode === 'full' || mode === 'self' || mode === 'topper');
             return {
                 id: item.id,
                 length: parseFloat(item.length),
