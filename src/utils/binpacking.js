@@ -301,6 +301,15 @@ export class BinPacking3D {
                 better = ep;
             }
         }
+        // TOP-UP PASS — fill the whole vehicle before giving up on anything.
+        // Whichever strategy won, seed the extreme-point placer with its layout
+        // and try to slot every still-unplaced unit into the remaining gaps
+        // (same hard rules: bounds, no overlap, full support, stacking modes,
+        // weight cap). Only what STILL doesn't fit is reported as left out.
+        {
+            const topped = this._packExtreme(null, better);
+            if (topped && topped.count > better.count) better = topped;
+        }
         this.placedItems = better.placed;
         this.currentWeight = better.weight;
         for (const k of Object.keys(placedPerItem)) placedPerItem[k] = better.perItem[k] || 0;
@@ -500,15 +509,21 @@ export class BinPacking3D {
      * carrier bears others; topper rides others but nothing rests on it; full =
      * both ways). Returns null if nothing could be placed.
      */
-    _packExtreme(secondaryKey) {
+    _packExtreme(secondaryKey, seed = null) {
         const C = this.container;
         // Expand to units; skip products that physically cannot fit at all.
+        // With a SEED (an existing placement, e.g. the block loader's result)
+        // only the still-unplaced remainder is expanded — the pass then TOPS UP
+        // the seed by slotting leftovers into its gaps, so the vehicle is filled
+        // completely before anything is reported as "did not fit".
         const fits = (it) => this.getAllOrientations(it).some(
             (o) => o.length <= C.length && o.width <= C.width && o.height <= C.height);
         const units = [];
         for (const it of this.items) {
-            if (!(it.quantity > 0) || !fits(it)) continue;
-            for (let i = 0; i < it.quantity; i++) units.push(it);
+            if (!fits(it)) continue;
+            const already = seed ? (seed.perItem[it.id] || 0) : 0;
+            const remaining = (it.quantity || 0) - already;
+            for (let i = 0; i < remaining; i++) units.push(it);
         }
         if (!units.length) return null;
         // Guard: this per-unit search is O(units · points · placed); for very
@@ -528,11 +543,34 @@ export class BinPacking3D {
             return String(a.id).localeCompare(String(b.id));
         });
 
-        const placed = [];
+        const placed = seed ? seed.placed.map((p) => ({ ...p })) : [];
         const perItem = {};
-        for (const it of this.items) perItem[it.id] = 0;
-        let weight = 0;
+        for (const it of this.items) perItem[it.id] = seed ? (seed.perItem[it.id] || 0) : 0;
+        let weight = seed ? seed.weight : 0;
         let points = [{ x: 0, y: 0, z: 0 }];
+        // Seed candidate points from every existing box's exposed corners so
+        // leftovers can drop into the gaps between and on top of them.
+        if (seed) {
+            for (const q of placed) {
+                const qx = q.position.x, qy = q.position.y, qz = q.position.z;
+                const ql = q.dimensions.length, qw = q.dimensions.width, qh = q.dimensions.height;
+                points.push({ x: qx + ql, y: qy, z: qz });
+                points.push({ x: qx, y: qy + qw, z: qz });
+                points.push({ x: qx, y: qy, z: qz + qh });
+                points.push({ x: qx + ql, y: qy + qw, z: qz });
+                points.push({ x: qx + ql, y: qy, z: qz + qh });
+                points.push({ x: qx, y: qy + qw, z: qz + qh });
+            }
+            const seen = new Set();
+            points = points.filter((p) => {
+                const k = Math.round(p.x) + '|' + Math.round(p.y) + '|' + Math.round(p.z);
+                if (seen.has(k)) return false; seen.add(k);
+                return !placed.some((b) =>
+                    p.x > b.position.x + 0.01 && p.x < b.position.x + b.dimensions.length - 0.01 &&
+                    p.y > b.position.y + 0.01 && p.y < b.position.y + b.dimensions.width - 0.01 &&
+                    p.z > b.position.z + 0.01 && p.z < b.position.z + b.dimensions.height - 0.01);
+            });
+        }
 
         const collides = (x, y, z, l, w, h) => placed.some((q) =>
             x < q.position.x + q.dimensions.length - 0.01 && x + l > q.position.x + 0.01 &&
