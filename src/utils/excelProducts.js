@@ -348,7 +348,9 @@ export const parseProductsFile = async (file) => {
             weight: weight ? String(weight) : '',
             quantity: String(quantity),
             maxStack: rec.maxStack != null && parseNum(rec.maxStack) ? parseNum(rec.maxStack) : 1,
-            allowRotation: parseBool(rec.allowRotation, false),
+            // Rotation defaults ON (permission, not obligation): matches the UI
+            // default so imports without the column pack as well as manual entry.
+            allowRotation: parseBool(rec.allowRotation, true),
             stackMode: parseStackMode(rec.stackMode),
             color: resolveColor(rec.color),
             useTotalWeight: false,

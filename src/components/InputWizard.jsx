@@ -61,7 +61,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
     const [products, setProducts] = useState(
         (Array.isArray(d0.products) && d0.products.length)
             ? d0.products.map(migrateStackMode)
-            : [{ id: 1, name: '', length: '', width: '', height: '', weight: '', quantity: '', maxStack: 1, allowRotation: false, allowTip: false, color: '', stackMode: 'full', useTotalWeight: false, totalWeight: '' }]
+            : [{ id: 1, name: '', length: '', width: '', height: '', weight: '', quantity: '', maxStack: 1, allowRotation: true, allowTip: false, color: '', stackMode: 'full', useTotalWeight: false, totalWeight: '' }]
     );
 
     // Auto-save the form as the user edits, so it survives a login/register
@@ -78,7 +78,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
         setTotalTons('');
         setTonnageInfo(null);
         setResultData(null);
-        setProducts([{ id: 1, name: '', length: '', width: '', height: '', weight: '', quantity: '', maxStack: 1, allowRotation: false, allowTip: false, color: '', stackMode: 'full', useTotalWeight: false, totalWeight: '' }]);
+        setProducts([{ id: 1, name: '', length: '', width: '', height: '', weight: '', quantity: '', maxStack: 1, allowRotation: true, allowTip: false, color: '', stackMode: 'full', useTotalWeight: false, totalWeight: '' }]);
         if (onFullReset) onFullReset();
     };
 
@@ -139,7 +139,7 @@ const InputWizard = ({ onCalculate, onRebalance, onFullReset, onClearPacked, mod
             id: newId,
             name: '',
             length: '', width: '', height: '', weight: '', quantity: sameSize ? '' : '1',
-            maxStack: 1, allowRotation: false, allowTip: false, color: '', stackMode: 'full',
+            maxStack: 1, allowRotation: true, allowTip: false, color: '', stackMode: 'full',
             useTotalWeight: false, totalWeight: ''
         }]);
     };
