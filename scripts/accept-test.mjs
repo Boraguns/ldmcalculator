@@ -1,4 +1,4 @@
-import { BinPacking3D } from './src/utils/binpacking.js';
+import { BinPacking3D } from '../src/utils/binpacking.js';
 const C = { length: 1360, width: 245, height: 275, maxWeight: 22000 };
 let pass = 0, fail = 0; const failures = [];
 function verify(name, items, expect = {}) {
@@ -36,7 +36,7 @@ verify('client 5-product topup >=580', [
 const LIST69 = [[90, 86, 71], [161, 86, 71], [221, 86, 71], [155, 85, 12], [155, 85, 12], [55, 55, 12], [39, 39, 42], [90, 86, 71], [221, 86, 71], [155, 85, 12], [39, 39, 42], [55, 55, 12], [39, 39, 42], [152, 85.5, 71], [152, 85.5, 71], [90, 90, 71], [80, 85.5, 71], [155, 85, 12], [39, 39, 42], [55, 55, 12], [39, 39, 42], [250, 225, 12], [180, 63, 75], [155, 155, 12], [100, 100, 75], [125, 125, 12], [85, 85, 75], [74, 73, 87], [74, 73, 87], [155, 85, 12], [80, 45, 105], [74, 73, 120], [74, 73, 120], [85, 175, 45], [155, 175, 45], [85, 105, 82], [65, 65, 20], [250, 250, 53], [250, 250, 14], [61, 112, 84], [85, 85, 12], [45, 45, 105], [85, 105, 82], [155, 105, 82], [225, 105, 82], [85, 85, 20], [85, 85, 20], [85, 65, 20], [65, 65, 20], [85, 105, 82], [225, 105, 82], [85, 85, 20], [85, 65, 20], [65, 65, 20], [150, 105, 82], [150, 105, 82], [75, 105, 82], [110, 110, 82], [85, 105, 82], [85, 85, 20], [85, 65, 20], [65, 65, 20], [85, 175, 82], [155, 175, 82], [65, 65, 20], [105, 105, 20], [65, 75, 90], [115, 85, 20], [65, 68, 115]];
 verify('69-piece one-off list all placed', LIST69.map(([l, w, h], i) => ({ id: 'B' + i, length: l, width: w, height: h, weight: 10, quantity: 1, allowTip: true, ...F })), { total: 69, maxMs: 5000 });
 verify('none: single floor row only', [{ id: 'a', length: 120, width: 100, height: 90, weight: 200, quantity: 40, allowRotation: true, stackMode: 'none' }],
-  { total: 22, check: (p) => p.some(x => x.position.z > 0.5) ? 'stacked despite none' : null });
+  { total: 26, check: (p) => p.some(x => x.position.z > 0.5) ? 'stacked despite none' : null });
 verify('self: only own kind above/below', [
   { id: 'a', length: 100, width: 100, height: 60, weight: 50, quantity: 30, maxStack: 99, allowRotation: true, stackMode: 'self' },
   { id: 'b', length: 100, width: 100, height: 60, weight: 50, quantity: 30, maxStack: 99, allowRotation: true, stackMode: 'self' }],

@@ -113,15 +113,14 @@ export class BinPacking3D {
         const planFor = (item) => {
             let orients = this.getAllOrientations(item);
             const fitsDeck = (o) => o.length <= C.length && o.width <= C.width && o.height <= C.height;
-            // "Rotate"/"tip" are PERMISSION, not obligation: keep the box in its
-            // ENTERED (upright) orientation whenever it fits the deck, and only
-            // consider the allowed rotations if upright does not fit at all.
-            const upright = { length: item.length, width: item.width, height: item.height, rotation: 0 };
-            if (fitsDeck(upright)) {
-                orients = [upright];
-            } else if (!orients.some(fitsDeck)) {
-                // Not even upright fits — last resort: force the swapped footprint
-                // so the product can still be loaded rather than dropped.
+            // "Rotate"/"tip" are PERMISSION: the packer may use any allowed
+            // orientation and picks the one that loads the MOST (e.g. 111×95
+            // turned so 14 columns of 95 fit instead of 12 of 111 → 56 vs 48).
+            // Ties prefer the entered (upright) orientation so boxes are never
+            // rotated without a capacity gain.
+            if (!orients.some(fitsDeck)) {
+                // Not even the allowed set fits — last resort: force the swapped
+                // footprint so the product can still be loaded rather than dropped.
                 const swapped = { length: item.width, width: item.length, height: item.height, rotation: 1 };
                 if (fitsDeck(swapped)) orients = [swapped];
             }
@@ -135,16 +134,21 @@ export class BinPacking3D {
                     : Math.max(1, Math.min(item.maxStack || 1, maxByHeight));
                 if (perRow < 1 || layers < 1) continue;
                 const perSlot = perRow * layers;
-                // Tertiary tie-break: among equally dense orientations, prefer the
-                // one that FILLS THE DECK HEIGHT best (tallest full stack), so a
-                // box like 80×120×100 lies down to 3×80 = 240 cm instead of
-                // 2×100 = 200 cm — less wasted airspace above the block, hence
-                // more cargo fits. (Only affects the orientation; whether we
-                // actually stack that high is decided later by the floor-first H.)
+                // CAPACITY metric = boxes per cm of deck LENGTH, not per slot:
+                // two orientations can tie per-slot while one uses a SHORTER slot
+                // and therefore fits more columns (111×95: upright 2/row × 111cm
+                // vs turned 2/row × 95cm → 12 vs 14 columns → 48 vs 56 boxes).
+                const density = perSlot / o.length;
+                // Tie-breaks: prefer the ENTERED (upright) orientation so boxes
+                // are never rotated without a real capacity gain, then the
+                // orientation that fills the deck height best (less wasted air).
                 const usedH = layers * o.height;
-                if (!best || perSlot > best.perSlot ||
-                    (perSlot === best.perSlot && usedH > best.usedH)) {
-                    best = { o, perRow, layers, perSlot, usedH };
+                const upright = o.rotation === 0 ? 1 : 0;
+                const EPS = 1e-9;
+                if (!best || density > best.density + EPS ||
+                    (Math.abs(density - best.density) <= EPS && upright > best.upright) ||
+                    (Math.abs(density - best.density) <= EPS && upright === best.upright && usedH > best.usedH)) {
+                    best = { o, perRow, layers, perSlot, density, usedH, upright };
                 }
             }
             return best;
@@ -621,30 +625,27 @@ export class BinPacking3D {
             // metres). The rich extreme-point set (below) provides candidate
             // spots inside the gaps so they get filled rather than left as holes.
             points.sort((a, b) => a.x - b.x || a.z - b.z || a.y - b.y);
-            // ORIENTATION PERMISSION, not obligation: "rotate"/"tip" mean the
-            // system MAY turn the box only if it does not otherwise fit. So we
-            // first try to place it in its ENTERED (upright) orientation; only if
-            // it fits nowhere upright do we fall back to the allowed rotations.
+            // ORIENTATION PERMISSION, not obligation, applied PER POINT: at the
+            // deepest-bottom-left feasible spot the ENTERED (upright) orientation
+            // is preferred; the allowed rotations/tips are used when upright does
+            // not fit THERE (tight gap) — so rotation serves fitting, and a box
+            // is never turned when upright works at the same spot. (Grid-level
+            // capacity gains from rotation are handled by the block loader's
+            // density-driven planFor, and the best overall result wins.)
             const enteredFits = it.length <= C.length && it.width <= C.width && it.height <= C.height;
             const upright = enteredFits ? { length: it.length, width: it.width, height: it.height, rotation: 0 } : null;
             let best = null;
-            if (upright) {
-                for (const p of points) {
-                    if (feasible(it, p.x, p.y, p.z, upright)) { best = { x: p.x, y: p.y, z: p.z, o: upright }; break; }
+            for (const p of points) {
+                if (upright && feasible(it, p.x, p.y, p.z, upright)) { best = { x: p.x, y: p.y, z: p.z, o: upright }; break; }
+                let bo = null;
+                for (const o of orients) {
+                    if (o.rotation === 0) continue; // upright already tried
+                    if (!feasible(it, p.x, p.y, p.z, o)) continue;
+                    const base = o.length * o.width;
+                    if (!bo || base > bo.length * bo.width ||
+                        (base === bo.length * bo.width && o.height < bo.height)) bo = o;
                 }
-            }
-            if (!best) {
-                // Could not fit upright anywhere — now the rotations are allowed.
-                for (const p of points) {
-                    let bo = null;
-                    for (const o of orients) {
-                        if (!feasible(it, p.x, p.y, p.z, o)) continue;
-                        const base = o.length * o.width;
-                        if (!bo || base > bo.length * bo.width ||
-                            (base === bo.length * bo.width && o.height < bo.height)) bo = o;
-                    }
-                    if (bo) { best = { x: p.x, y: p.y, z: p.z, o: bo }; break; }
-                }
+                if (bo) { best = { x: p.x, y: p.y, z: p.z, o: bo }; break; }
             }
             if (!best) continue; // this unit does not fit anywhere
             placed.push({
