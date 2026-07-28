@@ -294,25 +294,44 @@ export class BinPacking3D {
                 (it) => it.height,                               // tallest first
                 (it) => Math.max(it.length, it.width, it.height),// longest side
                 (it) => it.length,                               // longest along deck
+                // Deterministic "shuffled" product orders: hashing the product id
+                // with a fixed seed gives arbitrary-but-reproducible orderings.
+                // Different interleavings escape local optima the size-driven
+                // keys share, at the cost of one extra pass each.
+                (it) => this._orderHash(it.id, 7),
+                (it) => this._orderHash(it.id, 13),
+                (it) => this._orderHash(it.id, 29),
             ]
             : [(it) => it.length * it.width * it.height];
+        // Candidate selection maximises PLACED VOLUME ("fill the truck"), with
+        // box count then shorter used length as tie-breaks. Count alone is a bad
+        // objective on mixed loads: an ordering that squeezes in many small
+        // boxes while dropping a few big ones wins on count yet leaves the
+        // vehicle emptier.
+        const volOf = (r) => r.placed.reduce((s, p) => s + p.dimensions.length * p.dimensions.width * p.dimensions.height, 0);
+        const beats = (a, b, av, bv) => av > bv + 0.5 ||
+            (Math.abs(av - bv) <= 0.5 && (a.count > b.count ||
+                (a.count === b.count && a.usedLen < b.usedLen - 0.5)));
         let better = blockResult;
+        let betterVol = volOf(better);
         for (const k of keys) {
             const ep = this._packExtreme(k);
             if (!ep) continue;
-            if (ep.count > better.count ||
-                (ep.count === better.count && ep.usedLen < better.usedLen - 0.5)) {
-                better = ep;
-            }
+            const v = volOf(ep);
+            if (beats(ep, better, v, betterVol)) { better = ep; betterVol = v; }
         }
-        // TOP-UP PASS — fill the whole vehicle before giving up on anything.
+        // TOP-UP PASSES — fill the whole vehicle before giving up on anything.
         // Whichever strategy won, seed the extreme-point placer with its layout
         // and try to slot every still-unplaced unit into the remaining gaps
         // (same hard rules: bounds, no overlap, full support, stacking modes,
-        // weight cap). Only what STILL doesn't fit is reported as left out.
+        // weight cap). Two orders are tried — biggest-first, then a second pass
+        // smallest-first (small leftovers often fit pockets the big ones opened).
+        // Only what STILL doesn't fit is reported as left out.
         {
             const topped = this._packExtreme(null, better);
-            if (topped && topped.count > better.count) better = topped;
+            if (topped) { const v = volOf(topped); if (beats(topped, better, v, betterVol)) { better = topped; betterVol = v; } }
+            const topped2 = this._packExtreme((it) => -(it.length * it.width * it.height), better);
+            if (topped2) { const v = volOf(topped2); if (beats(topped2, better, v, betterVol)) { better = topped2; betterVol = v; } }
         }
         this.placedItems = better.placed;
         this.currentWeight = better.weight;
@@ -513,6 +532,19 @@ export class BinPacking3D {
      * carrier bears others; topper rides others but nothing rests on it; full =
      * both ways). Returns null if nothing could be placed.
      */
+    /**
+     * Deterministic pseudo-random rank for a product id under a fixed seed.
+     * Used to generate reproducible "shuffled" multi-start orderings — no
+     * Math.random so identical inputs always pack identically.
+     */
+    _orderHash(id, seedVal) {
+        let h = seedVal | 0;
+        const s = String(id);
+        for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+        h ^= h >>> 16; h = Math.imul(h, 0x45d9f3b); h ^= h >>> 16;
+        return (h >>> 0) / 4294967296;
+    }
+
     _packExtreme(secondaryKey, seed = null) {
         const C = this.container;
         // Expand to units; skip products that physically cannot fit at all.
@@ -531,8 +563,10 @@ export class BinPacking3D {
         }
         if (!units.length) return null;
         // Guard: this per-unit search is O(units · points · placed); for very
-        // large counts fall back to the block loader (return null).
-        if (units.length > 2200) return null;
+        // large counts fall back to the block loader (return null). Uniform
+        // mega-loads are exactly where the block grid is already optimal, so
+        // skipping EP there costs nothing and keeps calculations snappy.
+        if (units.length > 1200) return null;
 
         // Order: carriers (base) first, toppers last; within that, by the given
         // secondary key (descending) so the chosen "big first" criterion anchors

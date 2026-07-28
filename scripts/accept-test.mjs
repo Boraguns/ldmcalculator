@@ -27,12 +27,22 @@ verify('433 mixed fits fully', [
   { id: '1', length: 80, width: 120, height: 100, weight: 100, quantity: 33, ...F },
   { id: '2', length: 60, width: 40, height: 40, weight: 10, quantity: 200, ...F },
   { id: '3', length: 50, width: 50, height: 40, weight: 20, quantity: 200, ...F }], { total: 433, maxMs: 5000 });
-verify('client 5-product topup >=580', [
+verify('client 5-product fills >=95% volume', [
   { id: '1', length: 80, width: 120, height: 100, weight: 100, quantity: 33, ...F },
   { id: '2', length: 60, width: 40, height: 40, weight: 10, quantity: 200, ...F },
   { id: '3', length: 80, width: 60, height: 40, weight: 10, quantity: 70, ...F },
   { id: '4', length: 30, width: 30, height: 30, weight: 5, quantity: 300, ...F },
-  { id: '5', length: 120, width: 120, height: 50, weight: 30, quantity: 20, ...F }], { minTotal: 580, maxMs: 5000 });
+  { id: '5', length: 120, width: 120, height: 50, weight: 30, quantity: 20, ...F }], {
+  maxMs: 5000,
+  // Objective is VOLUME ("fill the truck"), not raw box count: the packer may
+  // trade a few small cubes for big pieces. Assert >=95% of the theoretical
+  // volume bound is placed.
+  check: (p) => {
+    const vol = p.reduce((s, x) => s + x.dimensions.length * x.dimensions.width * x.dimensions.height, 0);
+    const bound = Math.min(1360 * 245 * 275, 33 * 80 * 120 * 100 + 200 * 60 * 40 * 40 + 70 * 80 * 60 * 40 + 300 * 30 * 30 * 30 + 20 * 120 * 120 * 50);
+    return vol / bound >= 0.95 ? null : 'volume fill ' + (vol / bound * 100).toFixed(1) + '% < 95%';
+  }
+});
 const LIST69 = [[90, 86, 71], [161, 86, 71], [221, 86, 71], [155, 85, 12], [155, 85, 12], [55, 55, 12], [39, 39, 42], [90, 86, 71], [221, 86, 71], [155, 85, 12], [39, 39, 42], [55, 55, 12], [39, 39, 42], [152, 85.5, 71], [152, 85.5, 71], [90, 90, 71], [80, 85.5, 71], [155, 85, 12], [39, 39, 42], [55, 55, 12], [39, 39, 42], [250, 225, 12], [180, 63, 75], [155, 155, 12], [100, 100, 75], [125, 125, 12], [85, 85, 75], [74, 73, 87], [74, 73, 87], [155, 85, 12], [80, 45, 105], [74, 73, 120], [74, 73, 120], [85, 175, 45], [155, 175, 45], [85, 105, 82], [65, 65, 20], [250, 250, 53], [250, 250, 14], [61, 112, 84], [85, 85, 12], [45, 45, 105], [85, 105, 82], [155, 105, 82], [225, 105, 82], [85, 85, 20], [85, 85, 20], [85, 65, 20], [65, 65, 20], [85, 105, 82], [225, 105, 82], [85, 85, 20], [85, 65, 20], [65, 65, 20], [150, 105, 82], [150, 105, 82], [75, 105, 82], [110, 110, 82], [85, 105, 82], [85, 85, 20], [85, 65, 20], [65, 65, 20], [85, 175, 82], [155, 175, 82], [65, 65, 20], [105, 105, 20], [65, 75, 90], [115, 85, 20], [65, 68, 115]];
 verify('69-piece one-off list all placed', LIST69.map(([l, w, h], i) => ({ id: 'B' + i, length: l, width: w, height: h, weight: 10, quantity: 1, allowTip: true, ...F })), { total: 69, maxMs: 5000 });
 verify('none: single floor row only', [{ id: 'a', length: 120, width: 100, height: 90, weight: 200, quantity: 40, allowRotation: true, stackMode: 'none' }],
