@@ -198,6 +198,23 @@ const CameraController = ({ viewMode, onUserInteraction }) => {
 
         if (controlsRef.current) {
             controlsRef.current.update();
+
+            // ROOM COLLISION — the camera must never pass through the warehouse
+            // walls: orbiting into a wall slides along it and stops instead of
+            // clipping through (flag wall at z=-20, end walls at x=±60, roof
+            // ~30). OrbitControls re-derives its spherical state from the
+            // camera position every update, so hard-clamping here integrates
+            // cleanly with damping. The pan target is boxed to the room too so
+            // panning can't drag the view outside.
+            const p = camera.position;
+            if (p.z < -17) p.z = -17;
+            if (p.x < -57) p.x = -57;
+            if (p.x > 57) p.x = 57;
+            if (p.y > 27) p.y = 27;
+            const t = controlsRef.current.target;
+            t.x = Math.max(-45, Math.min(45, t.x));
+            t.z = Math.max(-16, Math.min(20, t.z));
+            t.y = Math.max(-2, Math.min(14, t.y));
         }
     });
 
