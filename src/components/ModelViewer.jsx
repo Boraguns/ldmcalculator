@@ -780,7 +780,13 @@ const VolvoTractor = ({ tLen, tHei }) => {
             // per-primitive dump) - they read as floating black squares at our
             // scale, so they are hidden entirely.
             const mats = Array.isArray(o.material) ? o.material : [o.material];
-            if (mats.some((m) => /^_black[2-5]$/.test(m?.name || ''))) { o.visible = false; return; }
+            // Hide the fake-2D helper planes this game-era model ships with:
+            // the mudflap slabs (_black2.._black5) AND the square "quarter"
+            // sprites behind each wheel (material wheelQUARTER - an RGB
+            // texture with no alpha channel, so its black-keyed corners can
+            // never be cut and it renders as a black square). The round tyre,
+            // rim and hubcap are separate primitives and remain.
+            if (mats.some((m) => /^_black[2-5]$/.test(m?.name || '') || /wheelQUARTER/i.test(m?.name || ''))) { o.visible = false; return; }
             // Clamp anything else hanging below the tyre contact line so the
             // grounded truck never pokes through the concrete.
             if (seen.has(o.geometry.uuid)) return;
@@ -805,7 +811,7 @@ const VolvoTractor = ({ tLen, tHei }) => {
     // about 25 cm below the platform underside) clears the deck, so nothing
     // intersects.
     const volvoY = floorY - VOLVO_M.wheelBottom + 0.02;
-    const volvoX = (-tLen / 2 - 0.05) - 1.58;
+    const volvoX = (-tLen / 2 + 0.55) - 1.58; // rear wheels tuck ~0.5 m under the deck
     return (
         <group position={[volvoX, volvoY, 0]} rotation={[0, -Math.PI / 2, 0]}>
             <primitive object={model} />
