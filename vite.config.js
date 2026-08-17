@@ -9,6 +9,14 @@ export default defineConfig({
         VitePWA({
             registerType: 'autoUpdate',
             includeAssets: ['favicon.ico', 'favicon.png', 'apple-touch-icon.png'],
+            workbox: {
+                // Take over immediately on every deploy and drop stale caches —
+                // paired with the reload in main.jsx this ends the "old version
+                // after deploy" loop for good.
+                skipWaiting: true,
+                clientsClaim: true,
+                cleanupOutdatedCaches: true,
+            },
             manifest: {
                 name: 'LDM Calculator',
                 short_name: 'LDM Calc',
