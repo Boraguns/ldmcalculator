@@ -757,86 +757,47 @@ const TruckBaseSTL = ({ tLen, tWid, deckTopY }) => {
        is scaled so the cargo area exactly fills it and the wheels
        land on the warehouse floor.
    ============================================================ */
-const TRAILER_M = {
-    // Measured from STrailerT.glb (scripts/glb-info.mjs): body bbox x ±1.24,
-    // y -0.61..3.32, z ±6.30; wheel bottoms -1.11; inner load floor ≈ +0.05;
-    // wheels/bumper on the -z end ⇒ rear = -z. Vertical scale stays 1: with the
-    // wheels on the warehouse floor the inner floor lands on the cargo plane
-    // within ~1 cm by construction.
-    len: 12.6, widBody: 2.48, wheelBottom: -1.11,
-};
 const VOLVO_M = {
-    // Measured from Volvo.glb: front wheels at +z ⇒ nose = +z; wheel bottoms
-    // -1.02; rear extreme z = -2.99.
-    wheelBottom: -1.02, rearZ: -2.99,
+    // Measured from Volvo.glb (scripts/glb-info.mjs + per-primitive dump):
+    // front wheels at +z (nose = +z), wheel bottoms at y=-1.02, rear extreme
+    // z=-2.99. The mudflaps hang to y=-1.13 - 11 cm BELOW the tyre contact -
+    // so with the wheels grounded they punched through the floor as black
+    // slabs; their vertices are clamped up to the tyre line instead.
+    wheelBottom: -1.02, rearZ: -2.99, flapClampY: -1.03,
 };
 
-const VolvoRig = ({ tLen, tWid, tHei }) => {
-    const trailerGltf = useGLTF('/src/strailer.glb');
+const VolvoTractor = ({ tLen, tHei }) => {
     const volvoGltf = useGLTF('/src/volvo.glb');
     const floorY = -tHei / 2 - 0.85;
 
-    const rig = useMemo(() => {
-        const t = trailerGltf.scene.clone(true);
+    const model = useMemo(() => {
         const v = volvoGltf.scene.clone(true);
-        const sLen = (tLen + 0.25) / TRAILER_M.len;
-        const sWid = (tWid + 0.30) / TRAILER_M.widBody;
-        const edgeMat = new THREE.LineBasicMaterial({ color: 0x1f2937 });
-        const tmp = new THREE.Box3();
-        const edgeAdds = [];
-        t.traverse((o) => {
-            if (!o.isMesh) return;
-            if (/^body/i.test(o.name)) {
-                // The box body stretches to the cargo size. Its side/roof panels
-                // (STrailerModule materials) become see-through; the frame rail
-                // and black trim primitives stay opaque so the EDGES read
-                // clearly, plus an explicit dark edge outline for crispness.
-                o.scale.set(sWid, 1, sLen);
-                const mats = (Array.isArray(o.material) ? o.material : [o.material]).map((m) => m.clone());
-                let sheer = false;
-                mats.forEach((m) => {
-                    if (/STrailerModule/i.test(m.name || '')) {
-                        m.transparent = true;
-                        m.opacity = 0.12;
-                        m.depthWrite = false;
-                        m.side = THREE.DoubleSide;
-                        sheer = true;
-                    }
-                });
-                o.material = Array.isArray(o.material) ? mats : mats[0];
-                if (sheer) {
-                    const lines = new THREE.LineSegments(new THREE.EdgesGeometry(o.geometry, 30), edgeMat);
-                    lines.scale.copy(o.scale);
-                    edgeAdds.push([o.parent, lines]);
-                }
-            } else {
-                // Wheels, bumper, support stand: keep their TRUE shape (no
-                // stretching) and only slide them to the stretched position.
-                tmp.setFromObject(o);
-                const c = tmp.getCenter(new THREE.Vector3());
-                o.position.x += c.x * (sWid - 1);
-                o.position.z += c.z * (sLen - 1);
+        // Clamp anything hanging below the tyre contact line (mudflaps) so the
+        // grounded truck never pokes through the concrete.
+        const seen = new Set();
+        v.traverse((o) => {
+            if (!o.isMesh || !o.geometry) return;
+            if (seen.has(o.geometry.uuid)) return;
+            seen.add(o.geometry.uuid);
+            o.geometry = o.geometry.clone();
+            const pos = o.geometry.attributes.position;
+            let touched = false;
+            for (let i = 0; i < pos.count; i++) {
+                if (pos.getY(i) < VOLVO_M.flapClampY) { pos.setY(i, VOLVO_M.flapClampY); touched = true; }
             }
+            if (touched) { pos.needsUpdate = true; o.geometry.computeVertexNormals(); }
         });
-        edgeAdds.forEach(([p, l]) => p.add(l));
-        return { t, v };
-    }, [trailerGltf, volvoGltf, tLen, tWid]);
+        return v;
+    }, [volvoGltf]);
 
-    // Rear of the trailer (-z in the model) points to +X in the scene, so the
-    // whole rig uses rotY = -90° (x' = -z). Wheels sit on the warehouse floor;
-    // the Volvo gets a 2 cm lift so the tyre contact doesn't z-fight the
-    // concrete into dark blotches.
-    const trailerY = floorY - TRAILER_M.wheelBottom;
+    // Nose (+z in the model) points to -X: rotY = -90deg (x' = -z). Wheels on
+    // the warehouse floor with a 2 cm lift against z-fighting; the tractor
+    // parks just ahead of the trailer front.
     const volvoY = floorY - VOLVO_M.wheelBottom + 0.02;
-    const volvoX = (-tLen / 2 + 1.15) - (-VOLVO_M.rearZ);
+    const volvoX = (-tLen / 2 - 0.2) - (-VOLVO_M.rearZ);
     return (
-        <group>
-            <group position={[0, trailerY, 0]} rotation={[0, -Math.PI / 2, 0]}>
-                <primitive object={rig.t} />
-            </group>
-            <group position={[volvoX, volvoY, 0]} rotation={[0, -Math.PI / 2, 0]}>
-                <primitive object={rig.v} />
-            </group>
+        <group position={[volvoX, volvoY, 0]} rotation={[0, -Math.PI / 2, 0]}>
+            <primitive object={model} />
         </group>
     );
 };
@@ -1361,34 +1322,29 @@ const TruckContent = ({ truckType, packedItems, isolatedId = null, onHover, mode
                 /* Own Suspense so the vehicle GLBs stream in without blocking
                    the cargo and environment from rendering first. */
                 <Suspense fallback={null}>
-                    <VolvoRig tLen={tLen} tWid={tWid} tHei={tHei} />
+                    <VolvoTractor tLen={tLen} tHei={tHei} />
                 </Suspense>
             )}
 
             {/* Main Chassis Frame / ULD Platform */}
             {/* Raised Y by +0.3 to lift trailer higher */}
-            {!isTruck && (
             <mesh position={[0, -tHei / 2 + 0.15, 0]}>
                 <boxGeometry args={[tLen + (isPlane ? 0.1 : 0), isPlane ? 0.1 : 0.3, isPlane ? tWid + 0.1 : tWid * 0.7]} />
                 <meshStandardMaterial color={(isPlane || isShip) ? "#cbd5e1" : "#0f172a"} metalness={(isPlane || isShip) ? 1 : 0.8} roughness={0.2} />
             </mesh>
-            )}
 
             {/* Truck Bed / ULD Surface */}
-            {!isTruck && (
             <mesh position={[0, -tHei / 2 + 0.36, 0]} receiveShadow>
                 <boxGeometry args={[tLen - 0.02, 0.1, tWid - 0.02]} />
                 <meshStandardMaterial color={isPlane ? "#94a3b8" : "#1e293b"} />
             </mesh>
-            )}
 
             {/* Solid trailer frame (kept for the non-truck modes). In truck
                 mode the real semi-transparent trailer body from the GLB is the
-                boundary, so the cage would just double the lines.
+                boundary in GLB-trailer experiments; the owner prefers the cage.
                 Lifted by the same +0.3 the cargo gets, so the cage floor/ceiling
                 line up with the boxes — otherwise a load stacked to the full deck
                 height appears to poke out the top of the frame. */}
-            {!isTruck && (
             <group position={[0, 0.3, 0]}>
             {(() => {
                 const t = 0.06; // strut thickness
@@ -1420,12 +1376,11 @@ const TruckContent = ({ truckType, packedItems, isolatedId = null, onHover, mode
                 ));
             })()}
             </group>
-            )}
 
             {/* Old GLB cabin + wheels are fully replaced by the STL base in
                 truck mode; the cylinder wheels below remain for train mode. */}
             {/* Professional Wheel Assemblies */}
-            {!isPlane && !isShip && !isTruck && (
+            {!isPlane && !isShip && (
                 isTrain ? (
                     [
                         [tLen / 2 - 1.5, -tHei / 2 - 0.55, tWid / 2],
