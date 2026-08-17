@@ -686,10 +686,15 @@ const TruckBaseSTL = ({ tLen, tWid, deckTopY }) => {
             const cx = (src[o] + src[o + 3] + src[o + 6]) / 3;
             const cy = (src[o + 1] + src[o + 4] + src[o + 7]) / 3;
             const cz = (src[o + 2] + src[o + 5] + src[o + 8]) / 3;
+            // Precedence matters: tyres FIRST (the front wheels live at
+            // x 40..75, i.e. beyond the cab line — checking the cab first
+            // painted them blue), then the cab but only ABOVE the chassis
+            // rail line (cy > 6) so the frame under the cab stays anthracite
+            // and the colour doesn't hard-switch at the cab/trailer joint.
             let b = 0;
-            if (cx > M.cabX) b = 1;
-            else if (cy < 6 && Math.abs(cz) > 12 && (cx <= M.axleRearMax || cx >= M.axleFrontMin)) b = 2;
-            else if (cy > 13 && cy < 16.5) b = 3;
+            if (cy < 6 && Math.abs(cz) > 12 && (cx <= M.axleRearMax || cx >= M.axleFrontMin)) b = 2;
+            else if (cx > M.cabX && cy > 6) b = 1;
+            else if (cy > 13 && cy < 16.5 && cx <= M.cabX) b = 3;
             const dst = buckets[b];
             for (let v = 0; v < 3; v++) {
                 let x = src[o + v * 3];
