@@ -653,8 +653,13 @@ const GLBWheelAssembly = ({ targets = [], glbPath = '/src/rear-wheel.glb' }) => 
        the cab and the chassis/deck get their own colours.
    ============================================================ */
 const STL_TRUCK = {
-    minX: -83.7, maxX: 100.5, minY: -14.0, deckY: 15, cabX: 58,
-    stretchA: -45, stretchB: 45, halfW: 30,
+    minX: -83.7, maxX: 100.5, minY: -14.0, deckY: 15, cabX: 58, halfW: 30,
+    // Measured wheel-height x-clusters: rear axle group -72..-18, front
+    // wheels 40..75. The ONLY safe strip to stretch (plain side skirts) is
+    // between them — stretching into an axle smears the tyres.
+    stretchA: -14, stretchB: 36,
+    axleRearMax: -16,   // wheels live at x <= this ...
+    axleFrontMin: 38,   // ... or x >= this (below deck height)
 };
 
 const TruckBaseSTL = ({ tLen, tWid, deckTopY }) => {
@@ -671,11 +676,21 @@ const TruckBaseSTL = ({ tLen, tWid, deckTopY }) => {
 
         const src = geo.attributes.position.array;
         const triCount = src.length / 9;
-        const cab = [], body = [];
+        // Realistic four-tone split, classified on the ORIGINAL centroid
+        // (before stretching): tyres near the ground on the sides within the
+        // axle clusters; the load-deck top plate; the cab; everything else is
+        // chassis. Buckets: 0 chassis, 1 cab, 2 wheels, 3 deck plate.
+        const buckets = [[], [], [], []];
         for (let t = 0; t < triCount; t++) {
             const o = t * 9;
             const cx = (src[o] + src[o + 3] + src[o + 6]) / 3;
-            const dst = cx > M.cabX ? cab : body;
+            const cy = (src[o + 1] + src[o + 4] + src[o + 7]) / 3;
+            const cz = (src[o + 2] + src[o + 5] + src[o + 8]) / 3;
+            let b = 0;
+            if (cx > M.cabX) b = 1;
+            else if (cy < 6 && Math.abs(cz) > 12 && (cx <= M.axleRearMax || cx >= M.axleFrontMin)) b = 2;
+            else if (cy > 13 && cy < 16.5) b = 3;
+            const dst = buckets[b];
             for (let v = 0; v < 3; v++) {
                 let x = src[o + v * 3];
                 const y = src[o + v * 3 + 1], z = src[o + v * 3 + 2];
@@ -690,7 +705,7 @@ const TruckBaseSTL = ({ tLen, tWid, deckTopY }) => {
             g.computeVertexNormals();
             return g;
         };
-        return { cabGeo: mk(cab), bodyGeo: mk(body), s };
+        return { chassisGeo: mk(buckets[0]), cabGeo: mk(buckets[1]), wheelGeo: mk(buckets[2]), deckGeo: mk(buckets[3]), s };
     }, [geo, tLen, tWid]);
 
     // Placement: the truck faces -X (cab past the trailer front, like before).
@@ -704,11 +719,21 @@ const TruckBaseSTL = ({ tLen, tWid, deckTopY }) => {
     const groupY = deckTopY - STL_TRUCK.deckY * s;
     return (
         <group position={[groupX, groupY, 0]} rotation={[0, Math.PI, 0]}>
-            <mesh geometry={parts.bodyGeo} scale={[s, s, s]} castShadow receiveShadow>
-                <meshStandardMaterial color="#334155" roughness={0.6} metalness={0.35} />
+            {/* Chassis / frame — anthracite steel */}
+            <mesh geometry={parts.chassisGeo} scale={[s, s, s]} castShadow receiveShadow>
+                <meshStandardMaterial color="#2b3038" roughness={0.55} metalness={0.45} />
             </mesh>
+            {/* Cab — glossy truck blue */}
             <mesh geometry={parts.cabGeo} scale={[s, s, s]} castShadow>
-                <meshStandardMaterial color="#2563eb" roughness={0.35} metalness={0.25} />
+                <meshStandardMaterial color="#1e56c8" roughness={0.3} metalness={0.2} />
+            </mesh>
+            {/* Tyres — matte rubber black */}
+            <mesh geometry={parts.wheelGeo} scale={[s, s, s]} castShadow>
+                <meshStandardMaterial color="#17181a" roughness={0.95} metalness={0.05} />
+            </mesh>
+            {/* Load-deck top plate — worn grey steel */}
+            <mesh geometry={parts.deckGeo} scale={[s, s, s]} receiveShadow>
+                <meshStandardMaterial color="#6b7076" roughness={0.65} metalness={0.3} />
             </mesh>
         </group>
     );
