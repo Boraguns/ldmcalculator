@@ -772,11 +772,17 @@ const VolvoTractor = ({ tLen, tHei }) => {
 
     const model = useMemo(() => {
         const v = volvoGltf.scene.clone(true);
-        // Clamp anything hanging below the tyre contact line (mudflaps) so the
-        // grounded truck never pokes through the concrete.
         const seen = new Set();
         v.traverse((o) => {
             if (!o.isMesh || !o.geometry) return;
+            // The solid-black slab primitives around the wheels are the model's
+            // mudflap planes (materials _black2.._black5, y -1.13..-0.22 in the
+            // per-primitive dump) - they read as floating black squares at our
+            // scale, so they are hidden entirely.
+            const mats = Array.isArray(o.material) ? o.material : [o.material];
+            if (mats.some((m) => /^_black[2-5]$/.test(m?.name || ''))) { o.visible = false; return; }
+            // Clamp anything else hanging below the tyre contact line so the
+            // grounded truck never pokes through the concrete.
             if (seen.has(o.geometry.uuid)) return;
             seen.add(o.geometry.uuid);
             o.geometry = o.geometry.clone();
@@ -791,10 +797,15 @@ const VolvoTractor = ({ tLen, tHei }) => {
     }, [volvoGltf]);
 
     // Nose (+z in the model) points to -X: rotY = -90deg (x' = -z). Wheels on
-    // the warehouse floor with a 2 cm lift against z-fighting; the tractor
-    // parks just ahead of the trailer front.
+    // the warehouse floor with a 2 cm lift against z-fighting. COUPLING: the
+    // trailer nose rides over the tractor's bare rear frame like a real semi -
+    // the rear wheels stay just AHEAD of the platform's front edge (their
+    // front edge, model z=-1.58, lands 5 cm before -tLen/2) while the frame
+    // tail slides ~1.4 m underneath it. The frame top (y=-0.42 model, world
+    // about 25 cm below the platform underside) clears the deck, so nothing
+    // intersects.
     const volvoY = floorY - VOLVO_M.wheelBottom + 0.02;
-    const volvoX = (-tLen / 2 - 0.2) - (-VOLVO_M.rearZ);
+    const volvoX = (-tLen / 2 - 0.05) - 1.58;
     return (
         <group position={[volvoX, volvoY, 0]} rotation={[0, -Math.PI / 2, 0]}>
             <primitive object={model} />
