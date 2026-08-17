@@ -1,1 +1,5 @@
 node_modules
+
+# local-only backups & large scratch assets
+*.glb.bak
+bg-map.jpg
