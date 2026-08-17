@@ -757,86 +757,84 @@ const TruckBaseSTL = ({ tLen, tWid, deckTopY }) => {
        is scaled so the cargo area exactly fills it and the wheels
        land on the warehouse floor.
    ============================================================ */
+const TRAILER_M = {
+    // Measured from STrailerT.glb (scripts/glb-info.mjs): body bbox x ±1.24,
+    // y -0.61..3.32, z ±6.30; wheel bottoms -1.11; inner load floor ≈ +0.05;
+    // wheels/bumper on the -z end ⇒ rear = -z. Vertical scale stays 1: with the
+    // wheels on the warehouse floor the inner floor lands on the cargo plane
+    // within ~1 cm by construction.
+    len: 12.6, widBody: 2.48, wheelBottom: -1.11,
+};
+const VOLVO_M = {
+    // Measured from Volvo.glb: front wheels at +z ⇒ nose = +z; wheel bottoms
+    // -1.02; rear extreme z = -2.99.
+    wheelBottom: -1.02, rearZ: -2.99,
+};
+
 const VolvoRig = ({ tLen, tWid, tHei }) => {
     const trailerGltf = useGLTF('/src/strailer.glb');
     const volvoGltf = useGLTF('/src/volvo.glb');
-    const cargoFloor = -tHei / 2 + 0.3;
     const floorY = -tHei / 2 - 0.85;
 
     const rig = useMemo(() => {
         const t = trailerGltf.scene.clone(true);
         const v = volvoGltf.scene.clone(true);
-        t.updateMatrixWorld(true); v.updateMatrixWorld(true);
-
-        // --- trailer: make the box body see-through, measure key planes ---
-        let bodyMinY = Infinity;
-        const wheelZ = [];
+        const sLen = (tLen + 0.25) / TRAILER_M.len;
+        const sWid = (tWid + 0.30) / TRAILER_M.widBody;
+        const edgeMat = new THREE.LineBasicMaterial({ color: 0x1f2937 });
+        const tmp = new THREE.Box3();
+        const edgeAdds = [];
         t.traverse((o) => {
             if (!o.isMesh) return;
-            const mats = (Array.isArray(o.material) ? o.material : [o.material]).map((m) => m.clone());
-            mats.forEach((m) => {
-                if (/STrailerModule/i.test(m.name || '')) {
-                    m.transparent = true;
-                    m.opacity = 0.15;
-                    m.depthWrite = false;
-                    m.side = THREE.DoubleSide;
-                }
-            });
-            o.material = Array.isArray(o.material) ? mats : mats[0];
             if (/^body/i.test(o.name)) {
-                const b = new THREE.Box3().setFromObject(o);
-                bodyMinY = Math.min(bodyMinY, b.min.y);
-            }
-            if (/wheel/i.test(o.name)) {
-                const p = new THREE.Vector3();
-                o.getWorldPosition(p);
-                wheelZ.push(p.z);
+                // The box body stretches to the cargo size. Its side/roof panels
+                // (STrailerModule materials) become see-through; the frame rail
+                // and black trim primitives stay opaque so the EDGES read
+                // clearly, plus an explicit dark edge outline for crispness.
+                o.scale.set(sWid, 1, sLen);
+                const mats = (Array.isArray(o.material) ? o.material : [o.material]).map((m) => m.clone());
+                let sheer = false;
+                mats.forEach((m) => {
+                    if (/STrailerModule/i.test(m.name || '')) {
+                        m.transparent = true;
+                        m.opacity = 0.12;
+                        m.depthWrite = false;
+                        m.side = THREE.DoubleSide;
+                        sheer = true;
+                    }
+                });
+                o.material = Array.isArray(o.material) ? mats : mats[0];
+                if (sheer) {
+                    const lines = new THREE.LineSegments(new THREE.EdgesGeometry(o.geometry, 30), edgeMat);
+                    lines.scale.copy(o.scale);
+                    edgeAdds.push([o.parent, lines]);
+                }
+            } else {
+                // Wheels, bumper, support stand: keep their TRUE shape (no
+                // stretching) and only slide them to the stretched position.
+                tmp.setFromObject(o);
+                const c = tmp.getCenter(new THREE.Vector3());
+                o.position.x += c.x * (sWid - 1);
+                o.position.z += c.z * (sLen - 1);
             }
         });
-        const tBox = new THREE.Box3().setFromObject(t);
-        if (!isFinite(bodyMinY)) bodyMinY = tBox.min.y + 1.1;
-        const rearSide = wheelZ.length && (wheelZ.reduce((a, b) => a + b, 0) / wheelZ.length) < 0 ? -1 : 1;
+        edgeAdds.forEach(([p, l]) => p.add(l));
+        return { t, v };
+    }, [trailerGltf, volvoGltf, tLen, tWid]);
 
-        // --- volvo: find which way it faces (front wheels' side) ---
-        const fz = [], bz = [];
-        v.traverse((o) => {
-            if (!o.isMesh) return;
-            const p = new THREE.Vector3();
-            o.getWorldPosition(p);
-            if (/wheel_F/i.test(o.name)) fz.push(p.z);
-            if (/wheel_B/i.test(o.name)) bz.push(p.z);
-        });
-        const vBox = new THREE.Box3().setFromObject(v);
-        const avg = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0);
-        const frontSide = avg(fz) >= avg(bz) ? 1 : -1;
-        return { t, v, tBox, vBox, bodyMinY, rearSide, frontSide };
-    }, [trailerGltf, volvoGltf]);
-
-    // --- trailer transform: length along scene X, rear toward +X ---
-    const tLenModel = rig.tBox.max.z - rig.tBox.min.z;
-    const tWidModel = rig.tBox.max.x - rig.tBox.min.x;
-    const sLen = (tLen + 0.25) / tLenModel;               // walls just past the cargo ends
-    const sWid = (tWid + 0.35) / tWidModel;               // walls just outside the cargo
-    const sHei = (cargoFloor - floorY) / (rig.bodyMinY - rig.tBox.min.y); // floor↔deck drop
-    // rotation about Y mapping model z → scene x; sign picked so wheels (rear) → +X
-    const rotT = rig.rearSide > 0 ? Math.PI / 2 : -Math.PI / 2;
-    const centerZ = (rig.tBox.max.z + rig.tBox.min.z) / 2;
-    const trailerX = -(rig.rearSide > 0 ? 1 : -1) * centerZ * sLen; // centre the body on the cargo
-    const trailerY = cargoFloor - rig.bodyMinY * sHei;
-
-    // --- volvo transform: true size, nose toward -X, tucked under the trailer nose ---
-    const rotV = rig.frontSide > 0 ? -Math.PI / 2 : Math.PI / 2;
-    const rearZExtreme = rig.frontSide > 0 ? rig.vBox.min.z : rig.vBox.max.z;
-    const rearXAfter = (rig.frontSide > 0 ? -1 : 1) * rearZExtreme; // x' = sin(rot)·z
-    const volvoX = (-tLen / 2 + 1.15) - rearXAfter;       // ~1.15 m fifth-wheel overlap
-    const volvoY = floorY - rig.vBox.min.y;
-
+    // Rear of the trailer (-z in the model) points to +X in the scene, so the
+    // whole rig uses rotY = -90° (x' = -z). Wheels sit on the warehouse floor;
+    // the Volvo gets a 2 cm lift so the tyre contact doesn't z-fight the
+    // concrete into dark blotches.
+    const trailerY = floorY - TRAILER_M.wheelBottom;
+    const volvoY = floorY - VOLVO_M.wheelBottom + 0.02;
+    const volvoX = (-tLen / 2 + 1.15) - (-VOLVO_M.rearZ);
     return (
         <group>
-            <group position={[trailerX, trailerY, 0]} rotation={[0, rotT, 0]} scale={[sWid, sHei, sLen]}>
+            <group position={[0, trailerY, 0]} rotation={[0, -Math.PI / 2, 0]}>
                 <primitive object={rig.t} />
             </group>
-            <group position={[volvoX, volvoY, 0]} rotation={[0, rotV, 0]}>
+            <group position={[volvoX, volvoY, 0]} rotation={[0, -Math.PI / 2, 0]}>
                 <primitive object={rig.v} />
             </group>
         </group>
