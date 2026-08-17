@@ -744,6 +744,105 @@ const TruckBaseSTL = ({ tLen, tWid, deckTopY }) => {
     );
 };
 
+/* ============================================================
+   Volvo tractor + curtain-side trailer rig (client-supplied GLBs,
+   Draco-compressed). Both are real part/material exports, so no
+   geometry heuristics are needed:
+     • the TRAILER BODY materials (STrailerModule_all*) are made
+       semi-transparent so the load inside stays visible; wheels,
+       chassis rail and bumper stay opaque;
+     • orientation and alignment are MEASURED at runtime from the
+       models themselves (wheel node positions give front/rear, the
+       body mesh's lowest point gives the load floor), then the body
+       is scaled so the cargo area exactly fills it and the wheels
+       land on the warehouse floor.
+   ============================================================ */
+const VolvoRig = ({ tLen, tWid, tHei }) => {
+    const trailerGltf = useGLTF('/src/strailer.glb');
+    const volvoGltf = useGLTF('/src/volvo.glb');
+    const cargoFloor = -tHei / 2 + 0.3;
+    const floorY = -tHei / 2 - 0.85;
+
+    const rig = useMemo(() => {
+        const t = trailerGltf.scene.clone(true);
+        const v = volvoGltf.scene.clone(true);
+        t.updateMatrixWorld(true); v.updateMatrixWorld(true);
+
+        // --- trailer: make the box body see-through, measure key planes ---
+        let bodyMinY = Infinity;
+        const wheelZ = [];
+        t.traverse((o) => {
+            if (!o.isMesh) return;
+            const mats = (Array.isArray(o.material) ? o.material : [o.material]).map((m) => m.clone());
+            mats.forEach((m) => {
+                if (/STrailerModule/i.test(m.name || '')) {
+                    m.transparent = true;
+                    m.opacity = 0.15;
+                    m.depthWrite = false;
+                    m.side = THREE.DoubleSide;
+                }
+            });
+            o.material = Array.isArray(o.material) ? mats : mats[0];
+            if (/^body/i.test(o.name)) {
+                const b = new THREE.Box3().setFromObject(o);
+                bodyMinY = Math.min(bodyMinY, b.min.y);
+            }
+            if (/wheel/i.test(o.name)) {
+                const p = new THREE.Vector3();
+                o.getWorldPosition(p);
+                wheelZ.push(p.z);
+            }
+        });
+        const tBox = new THREE.Box3().setFromObject(t);
+        if (!isFinite(bodyMinY)) bodyMinY = tBox.min.y + 1.1;
+        const rearSide = wheelZ.length && (wheelZ.reduce((a, b) => a + b, 0) / wheelZ.length) < 0 ? -1 : 1;
+
+        // --- volvo: find which way it faces (front wheels' side) ---
+        const fz = [], bz = [];
+        v.traverse((o) => {
+            if (!o.isMesh) return;
+            const p = new THREE.Vector3();
+            o.getWorldPosition(p);
+            if (/wheel_F/i.test(o.name)) fz.push(p.z);
+            if (/wheel_B/i.test(o.name)) bz.push(p.z);
+        });
+        const vBox = new THREE.Box3().setFromObject(v);
+        const avg = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : 0);
+        const frontSide = avg(fz) >= avg(bz) ? 1 : -1;
+        return { t, v, tBox, vBox, bodyMinY, rearSide, frontSide };
+    }, [trailerGltf, volvoGltf]);
+
+    // --- trailer transform: length along scene X, rear toward +X ---
+    const tLenModel = rig.tBox.max.z - rig.tBox.min.z;
+    const tWidModel = rig.tBox.max.x - rig.tBox.min.x;
+    const sLen = (tLen + 0.25) / tLenModel;               // walls just past the cargo ends
+    const sWid = (tWid + 0.35) / tWidModel;               // walls just outside the cargo
+    const sHei = (cargoFloor - floorY) / (rig.bodyMinY - rig.tBox.min.y); // floor↔deck drop
+    // rotation about Y mapping model z → scene x; sign picked so wheels (rear) → +X
+    const rotT = rig.rearSide > 0 ? Math.PI / 2 : -Math.PI / 2;
+    const centerZ = (rig.tBox.max.z + rig.tBox.min.z) / 2;
+    const trailerX = -(rig.rearSide > 0 ? 1 : -1) * centerZ * sLen; // centre the body on the cargo
+    const trailerY = cargoFloor - rig.bodyMinY * sHei;
+
+    // --- volvo transform: true size, nose toward -X, tucked under the trailer nose ---
+    const rotV = rig.frontSide > 0 ? -Math.PI / 2 : Math.PI / 2;
+    const rearZExtreme = rig.frontSide > 0 ? rig.vBox.min.z : rig.vBox.max.z;
+    const rearXAfter = (rig.frontSide > 0 ? -1 : 1) * rearZExtreme; // x' = sin(rot)·z
+    const volvoX = (-tLen / 2 + 1.15) - rearXAfter;       // ~1.15 m fifth-wheel overlap
+    const volvoY = floorY - rig.vBox.min.y;
+
+    return (
+        <group>
+            <group position={[trailerX, trailerY, 0]} rotation={[0, rotT, 0]} scale={[sWid, sHei, sLen]}>
+                <primitive object={rig.t} />
+            </group>
+            <group position={[volvoX, volvoY, 0]} rotation={[0, rotV, 0]}>
+                <primitive object={rig.v} />
+            </group>
+        </group>
+    );
+};
+
 const TruckCabinModel = ({ position, wheelGroundY = null }) => {
     const { scene } = useGLTF('/src/truck.glb');
 
@@ -1261,10 +1360,10 @@ const TruckContent = ({ truckType, packedItems, isolatedId = null, onHover, mode
                 from the client-supplied STL base model, coloured in two tones.
                 The generic chassis/bed boxes below stay for the other modes. */}
             {isTruck && (
-                /* Own Suspense so the 6.5 MB STL streams in without blocking
-                   the cage, cargo and environment from rendering first. */
+                /* Own Suspense so the vehicle GLBs stream in without blocking
+                   the cargo and environment from rendering first. */
                 <Suspense fallback={null}>
-                    <TruckBaseSTL tLen={tLen} tWid={tWid} deckTopY={-tHei / 2 + 0.3} />
+                    <VolvoRig tLen={tLen} tWid={tWid} tHei={tHei} />
                 </Suspense>
             )}
 
@@ -1285,12 +1384,13 @@ const TruckContent = ({ truckType, packedItems, isolatedId = null, onHover, mode
             </mesh>
             )}
 
-            {/* Solid trailer frame (replaces the ghostly wireframe). Slim metallic
-                corner posts + bottom side rails so boxes inside stay visible while
-                the trailer itself reads as a real structure, not a hologram.
+            {/* Solid trailer frame (kept for the non-truck modes). In truck
+                mode the real semi-transparent trailer body from the GLB is the
+                boundary, so the cage would just double the lines.
                 Lifted by the same +0.3 the cargo gets, so the cage floor/ceiling
                 line up with the boxes — otherwise a load stacked to the full deck
                 height appears to poke out the top of the frame. */}
+            {!isTruck && (
             <group position={[0, 0.3, 0]}>
             {(() => {
                 const t = 0.06; // strut thickness
@@ -1322,6 +1422,7 @@ const TruckContent = ({ truckType, packedItems, isolatedId = null, onHover, mode
                 ));
             })()}
             </group>
+            )}
 
             {/* Old GLB cabin + wheels are fully replaced by the STL base in
                 truck mode; the cylinder wheels below remain for train mode. */}
