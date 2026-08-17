@@ -1,9 +1,10 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 /* eslint-disable react/no-unknown-property */
 import { Suspense, useRef, useEffect, useState, useMemo } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Canvas, useFrame, useThree, useLoader } from '@react-three/fiber';
 import { OrbitControls, useProgress, Html } from '@react-three/drei';
 import * as THREE from 'three';
+import { STLLoader } from 'three/examples/jsm/loaders/STLLoader';
 import { useT } from '../i18n/LanguageContext';
 
 /* ============================================================
@@ -246,12 +247,9 @@ const CameraController = ({ viewMode, onUserInteraction }) => {
 
 import { useGLTF, useTexture } from '@react-three/drei';
 
-// Kick off fetching the heavy truck + wheel meshes as soon as this module is
-// evaluated (ModelViewer is part of the main bundle). The downloads then
-// overlap with the time the user spends entering products in the wizard, so by
-// the time results are shown the GLBs are usually already cached.
-useGLTF.preload('/src/truck.glb');
-useGLTF.preload('/src/rear-wheel.glb');
+// NOTE: the old GLB cabin/wheel preloads were removed — truck mode now uses
+// the client-supplied STL base (TruckBaseSTL); the GLB components remain only
+// as dormant fallbacks and load on demand if ever mounted.
 
 /**
  * Decorative banner (branda) hanging on the back wall around the flag grid.
@@ -637,6 +635,81 @@ const GLBWheelAssembly = ({ targets = [], glbPath = '/src/rear-wheel.glb' }) => 
                     </group>
                 );
             })}
+        </group>
+    );
+};
+
+/* ============================================================
+   Client-supplied STL truck base (Truck_Base.stl).
+   Measured geometry (scripts/stl-info.mjs): X = length (cab toward +X,
+   bbox -83.7..100.5), Y = up (deck top at y≈15, wheels down to -14,
+   cab roof 63.5), Z = width (±30). The model is toy-proportioned
+   (deck 141.7 long vs 60 wide), so instead of one uniform scale we:
+     • scale uniformly from WIDTH (so track width matches the trailer),
+     • stretch ONLY the plain mid-chassis strip (x -45..45, clear of the
+       axle groups and cab) along X until the deck spans the full trailer
+       length,
+     • split triangles at the cab bulkhead (x≈58) into two geometries so
+       the cab and the chassis/deck get their own colours.
+   ============================================================ */
+const STL_TRUCK = {
+    minX: -83.7, maxX: 100.5, minY: -14.0, deckY: 15, cabX: 58,
+    stretchA: -45, stretchB: 45, halfW: 30,
+};
+
+const TruckBaseSTL = ({ tLen, tWid, deckTopY }) => {
+    const geo = useLoader(STLLoader, '/src/truck-base.stl');
+
+    const parts = useMemo(() => {
+        const M = STL_TRUCK;
+        const s = tWid / (M.halfW * 2);                       // uniform scale from width
+        // Solve the mid-strip stretch factor so the deck (minX..cabX) spans tLen.
+        const fixedDeck = (M.stretchA - M.minX) + (M.cabX - M.stretchB);
+        const stretchLen = M.stretchB - M.stretchA;
+        const k = Math.max(1, ((tLen / s) - fixedDeck) / stretchLen);
+        const shift = stretchLen * (k - 1);
+
+        const src = geo.attributes.position.array;
+        const triCount = src.length / 9;
+        const cab = [], body = [];
+        for (let t = 0; t < triCount; t++) {
+            const o = t * 9;
+            const cx = (src[o] + src[o + 3] + src[o + 6]) / 3;
+            const dst = cx > M.cabX ? cab : body;
+            for (let v = 0; v < 3; v++) {
+                let x = src[o + v * 3];
+                const y = src[o + v * 3 + 1], z = src[o + v * 3 + 2];
+                if (x > M.stretchB) x += shift;
+                else if (x > M.stretchA) x = M.stretchA + (x - M.stretchA) * k;
+                dst.push(x, y, z);
+            }
+        }
+        const mk = (arr) => {
+            const g = new THREE.BufferGeometry();
+            g.setAttribute('position', new THREE.Float32BufferAttribute(arr, 3));
+            g.computeVertexNormals();
+            return g;
+        };
+        return { cabGeo: mk(cab), bodyGeo: mk(body), s };
+    }, [geo, tLen, tWid]);
+
+    // Placement: the truck faces -X (cab past the trailer front, like before).
+    // Model +X is the cab side, so rotate 180° about Y; the deck's rear edge
+    // (model minX) then lands exactly on the trailer rear (+tLen/2) and the
+    // deck top on the cargo floor plane. With the width-driven scale the
+    // deck-to-wheel-bottom drop (29 units) lands within ~3 cm of the warehouse
+    // floor, so the tyres sit on the ground.
+    const s = parts.s;
+    const groupX = tLen / 2 + STL_TRUCK.minX * s;
+    const groupY = deckTopY - STL_TRUCK.deckY * s;
+    return (
+        <group position={[groupX, groupY, 0]} rotation={[0, Math.PI, 0]}>
+            <mesh geometry={parts.bodyGeo} scale={[s, s, s]} castShadow receiveShadow>
+                <meshStandardMaterial color="#334155" roughness={0.6} metalness={0.35} />
+            </mesh>
+            <mesh geometry={parts.cabGeo} scale={[s, s, s]} castShadow>
+                <meshStandardMaterial color="#2563eb" roughness={0.35} metalness={0.25} />
+            </mesh>
         </group>
     );
 };
@@ -1150,20 +1223,37 @@ const TruckContent = ({ truckType, packedItems, isolatedId = null, onHover, mode
     const tWid = (truckType?.width || 245) * scaleFactor;
     const tHei = (truckType?.height || 275) * scaleFactor;
 
+    const isTruck = !isTrain && !isPlane && !isShip;
+
     return (
         <group>
+            {/* TRUCK mode: the whole vehicle (chassis, deck, wheels, cab) comes
+                from the client-supplied STL base model, coloured in two tones.
+                The generic chassis/bed boxes below stay for the other modes. */}
+            {isTruck && (
+                /* Own Suspense so the 6.5 MB STL streams in without blocking
+                   the cage, cargo and environment from rendering first. */
+                <Suspense fallback={null}>
+                    <TruckBaseSTL tLen={tLen} tWid={tWid} deckTopY={-tHei / 2 + 0.3} />
+                </Suspense>
+            )}
+
             {/* Main Chassis Frame / ULD Platform */}
             {/* Raised Y by +0.3 to lift trailer higher */}
+            {!isTruck && (
             <mesh position={[0, -tHei / 2 + 0.15, 0]}>
                 <boxGeometry args={[tLen + (isPlane ? 0.1 : 0), isPlane ? 0.1 : 0.3, isPlane ? tWid + 0.1 : tWid * 0.7]} />
                 <meshStandardMaterial color={(isPlane || isShip) ? "#cbd5e1" : "#0f172a"} metalness={(isPlane || isShip) ? 1 : 0.8} roughness={0.2} />
             </mesh>
+            )}
 
             {/* Truck Bed / ULD Surface */}
+            {!isTruck && (
             <mesh position={[0, -tHei / 2 + 0.36, 0]} receiveShadow>
                 <boxGeometry args={[tLen - 0.02, 0.1, tWid - 0.02]} />
                 <meshStandardMaterial color={isPlane ? "#94a3b8" : "#1e293b"} />
             </mesh>
+            )}
 
             {/* Solid trailer frame (replaces the ghostly wireframe). Slim metallic
                 corner posts + bottom side rails so boxes inside stay visible while
@@ -1203,23 +1293,10 @@ const TruckContent = ({ truckType, packedItems, isolatedId = null, onHover, mode
             })()}
             </group>
 
-            {/* 3D GLB Truck Model (Cabin) - Only for Truck mode */}
-            {!isTrain && !isPlane && !isShip && (
-                // Position Adjusted: Moved FURTHER forward (-3.5) and slightly UP (0.5) to align with trailer and avoid clipping/floor issues
-                // Own Suspense boundary (null fallback) so the trailer + cargo
-                // render instantly while the 6 MB cabin GLB streams in behind.
-                <Suspense fallback={null}>
-                    <TruckCabinModel
-                        position={[-tLen / 2 - 3.5, -tHei / 2 + 0.55, 0]}
-                        /* Same ground line as the trailer's wheel targets so the
-                           replacement (identical) wheels sit on the same floor. */
-                        wheelGroundY={-tHei / 2 - 0.9}
-                    />
-                </Suspense>
-            )}
-
+            {/* Old GLB cabin + wheels are fully replaced by the STL base in
+                truck mode; the cylinder wheels below remain for train mode. */}
             {/* Professional Wheel Assemblies */}
-            {!isPlane && !isShip && (
+            {!isPlane && !isShip && !isTruck && (
                 isTrain ? (
                     [
                         [tLen / 2 - 1.5, -tHei / 2 - 0.55, tWid / 2],
