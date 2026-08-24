@@ -37,6 +37,34 @@ const CmrDocument = () => {
     // restored when the user returns to this page.
     useEffect(() => { saveDraft('cmr', f); }, [f]);
 
+    // ----- Per-field shrink-to-fit -----
+    // The sheet is a fixed A4 grid (must stay one printed page), so cells
+    // cannot grow. Instead, whenever a field's text overflows its box the
+    // font shrinks in 0.5px steps (down to a 6px floor) until it fits, and
+    // recovers up to the stylesheet size when the text gets shorter again.
+    // Runs on every keystroke via one delegated listener, and once per state
+    // change so restored drafts fit too.
+    const fitField = useCallback((el) => {
+        if (!el || !el.matches?.('.cmr-input, .cmr-textarea, .cmr-goods .cell-input, .cmr-pay .pay-input')) return;
+        if (!el.dataset.maxFs) el.dataset.maxFs = String(parseFloat(getComputedStyle(el).fontSize) || 10);
+        let fs = parseFloat(el.dataset.maxFs);
+        el.style.fontSize = fs + 'px';
+        const overflows = () => el.scrollWidth > el.clientWidth + 0.5 || el.scrollHeight > el.clientHeight + 0.5;
+        while (overflows() && fs > 6) {
+            fs -= 0.5;
+            el.style.fontSize = fs + 'px';
+        }
+    }, []);
+    useEffect(() => {
+        const root = sheetRef.current;
+        if (!root) return;
+        root.querySelectorAll('.cmr-input, .cmr-textarea, .cmr-goods .cell-input, .cmr-pay .pay-input')
+            .forEach(fitField);
+        const onInput = (e) => fitField(e.target);
+        root.addEventListener('input', onInput);
+        return () => root.removeEventListener('input', onInput);
+    }, [f, fitField]);
+
     // ----- Zoom / fit-to-width (mobile-friendly viewing) -----
     const stageRef = useRef(null);
     const sheetRef = useRef(null);

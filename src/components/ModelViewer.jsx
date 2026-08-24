@@ -198,24 +198,36 @@ const CameraController = ({ viewMode, onUserInteraction }) => {
         }
 
         if (controlsRef.current) {
-            controlsRef.current.update();
+            const controls = controlsRef.current;
 
-            // ROOM COLLISION — the camera must never pass through the warehouse
-            // walls: orbiting into a wall slides along it and stops instead of
-            // clipping through (flag wall at z=-20, end walls at x=±60, roof
-            // ~30). OrbitControls re-derives its spherical state from the
-            // camera position every update, so hard-clamping here integrates
-            // cleanly with damping. The pan target is boxed to the room too so
-            // panning can't drag the view outside.
-            const p = camera.position;
-            if (p.z < -17) p.z = -17;
-            if (p.x < -57) p.x = -57;
-            if (p.x > 57) p.x = 57;
-            if (p.y > 27) p.y = 27;
-            const t = controlsRef.current.target;
+            // ROOM COLLISION. A plain position clamp fights OrbitControls'
+            // damping: with damping on, the controls keep an INTERNAL spherical
+            // state and rewrite camera.position from it every update, so a
+            // clamped camera teleported back behind the wall each frame — at
+            // far zoom the camera ended up "inside the wall" while rotating.
+            // Instead the allowed ORBIT RADIUS is limited every frame: cast a
+            // ray from the target along the current camera direction, find the
+            // distance to the nearest wall plane (flag wall z=-20 → -17.5,
+            // end walls x=±60 → ±57, roofline y≈29), and feed it to
+            // controls.maxDistance. OrbitControls clamps its own radius from
+            // that, so hitting a wall smoothly slides the camera along it —
+            // near the truck the full 360° stays free, exactly as before.
+            const t = controls.target;
             t.x = Math.max(-45, Math.min(45, t.x));
             t.z = Math.max(-16, Math.min(20, t.z));
             t.y = Math.max(-2, Math.min(14, t.y));
+
+            const dir = camera.position.clone().sub(t);
+            const len = dir.length() || 1;
+            dir.divideScalar(len);
+            let allowed = 70;
+            if (dir.z < -1e-6) allowed = Math.min(allowed, (-17.5 - t.z) / dir.z);
+            if (dir.x < -1e-6) allowed = Math.min(allowed, (-57 - t.x) / dir.x);
+            if (dir.x > 1e-6) allowed = Math.min(allowed, (57 - t.x) / dir.x);
+            if (dir.y > 1e-6) allowed = Math.min(allowed, (29 - t.y) / dir.y);
+            controls.maxDistance = Math.max(4, allowed);
+
+            controls.update();
         }
     });
 
@@ -768,7 +780,21 @@ const VOLVO_M = {
 
 const VolvoTractor = ({ tLen, tHei }) => {
     const volvoGltf = useGLTF('/src/volvo.glb');
+    const tireGltf = useGLTF('/src/truck-tire.glb');
     const floorY = -tHei / 2 - 0.85;
+
+    // Replacement wheel (client-supplied truck_tire_with_wheel.glb, Draco'd
+    // 17.1->1.9 MB). Measured: one front wheel, axle along X with the rim's
+    // outer face toward +X, ~0.95 m diameter, hub off-origin - so it is
+    // recentred at runtime and scaled to the Volvo's 1.06 m wheel diameter.
+    const tire = useMemo(() => {
+        const w = tireGltf.scene.clone(true);
+        const b = new THREE.Box3().setFromObject(w);
+        const c = b.getCenter(new THREE.Vector3());
+        const size = b.getSize(new THREE.Vector3());
+        const s = 1.06 / Math.max(size.y, size.z);
+        return { w, c, s };
+    }, [tireGltf]);
 
     const model = useMemo(() => {
         const v = volvoGltf.scene.clone(true);
@@ -787,6 +813,9 @@ const VolvoTractor = ({ tLen, tHei }) => {
             // never be cut and it renders as a black square). The round tyre,
             // rim and hubcap are separate primitives and remain.
             if (mats.some((m) => /^_black[2-5]$/.test(m?.name || '') || /wheelQUARTER/i.test(m?.name || ''))) { o.visible = false; return; }
+            // Original low-poly wheels are fully replaced by the supplied
+            // tire GLB instances below.
+            if (/^wheel_[FB]/i.test(o.name)) { o.visible = false; return; }
             // Clamp anything else hanging below the tyre contact line so the
             // grounded truck never pokes through the concrete.
             if (seen.has(o.geometry.uuid)) return;
@@ -812,9 +841,27 @@ const VolvoTractor = ({ tLen, tHei }) => {
     // intersects.
     const volvoY = floorY - VOLVO_M.wheelBottom + 0.02;
     const volvoX = (-tLen / 2 + 0.55) - 1.58; // rear wheels tuck ~0.5 m under the deck
+    // Hub positions measured from the hidden original wheels (model space):
+    // front axle z=1.69 singles at x=±1.01, rear axle z=-2.11 DUALS centred at
+    // x=±0.885 (twin offset ±0.147). Axle height y=-0.49, so the 0.53 m radius
+    // puts the tread exactly on the ground line the chassis was aligned to.
+    // Right-side wheels are turned 180° about Y (not mirrored via negative
+    // scale) so the rim's outer face points outboard with valid winding.
+    const WHEEL_HUBS = [
+        [1.01, -0.49, 1.69, 1], [-1.01, -0.49, 1.69, -1],
+        [1.032, -0.49, -2.11, 1], [0.738, -0.49, -2.11, 1],
+        [-1.032, -0.49, -2.11, -1], [-0.738, -0.49, -2.11, -1],
+    ];
     return (
         <group position={[volvoX, volvoY, 0]} rotation={[0, -Math.PI / 2, 0]}>
             <primitive object={model} />
+            {WHEEL_HUBS.map(([x, y, z, side], i) => (
+                <group key={i} position={[x, y, z]} rotation={[0, side < 0 ? Math.PI : 0, 0]} scale={[tire.s, tire.s, tire.s]}>
+                    <group position={[-tire.c.x, -tire.c.y, -tire.c.z]}>
+                        <primitive object={i === 0 ? tire.w : tire.w.clone(true)} />
+                    </group>
+                </group>
+            ))}
         </group>
     );
 };
