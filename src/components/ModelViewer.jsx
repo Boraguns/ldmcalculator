@@ -816,6 +816,38 @@ const VolvoTractor = ({ tLen, tHei }) => {
             // Original low-poly wheels are fully replaced by the supplied
             // tire GLB instances below.
             if (/^wheel_[FB]/i.test(o.name)) { o.visible = false; return; }
+            // DEBRAND: the front-grille texture (materials Volvo_kapot*) has the
+            // VOLVO wordmark, the diagonal grille emblem and the "FH12" badge
+            // baked in. The owner wants brand-free renders, so those areas are
+            // painted over on a canvas copy of the 128x128 texture using clean
+            // neighbouring pixels (body blue for the wordmark, plain slats for
+            // the grille band). Same idea as a retouch - geometry untouched.
+            mats.forEach((m) => {
+                if (!/Volvo_kapot/i.test(m?.name || '')) return;
+                const tex = m.map;
+                const src = tex?.image;
+                if (!src || m.userData.__debranded) return;
+                const W = src.width || 128, H = src.height || 128;
+                const cv = document.createElement('canvas');
+                cv.width = W; cv.height = H;
+                const cx = cv.getContext('2d');
+                cx.drawImage(src, 0, 0, W, H);
+                const S = W / 128; // texture-space scale (source measured at 128px)
+                const copy = (dx0, dy0, dx1, dy1, sx0, sy0, sx1, sy1) => {
+                    cx.drawImage(cv, sx0 * S, sy0 * S, (sx1 - sx0) * S, (sy1 - sy0) * S,
+                                 dx0 * S, dy0 * S, (dx1 - dx0) * S, (dy1 - dy0) * S);
+                };
+                copy(5, 16, 44, 32, 48, 16, 87, 32);   // VOLVO wordmark -> body blue
+                copy(40, 34, 126, 58, 8, 34, 38, 58);  // emblem + FH12 -> plain slats
+                const clean = new THREE.CanvasTexture(cv);
+                clean.flipY = tex.flipY;
+                clean.wrapS = tex.wrapS; clean.wrapT = tex.wrapT;
+                clean.colorSpace = tex.colorSpace;
+                clean.needsUpdate = true;
+                m.map = clean;
+                m.userData.__debranded = true;
+                m.needsUpdate = true;
+            });
             // Clamp anything else hanging below the tyre contact line so the
             // grounded truck never pokes through the concrete.
             if (seen.has(o.geometry.uuid)) return;

@@ -438,23 +438,10 @@ const GeneralCalculator = ({ mode = 'truck' }) => {
                 });
             }
 
-            if (withLogo) {
-                const padding = 30;
-                const logoWidth = 180;
-                const logoHeight = (logo.height / logo.width) * logoWidth;
-
-                // Draw "downloaded" text
-                ctx.font = '500 14px Inter, system-ui, sans-serif';
-                ctx.fillStyle = 'rgba(15, 23, 42, 0.5)';
-                ctx.textAlign = 'right';
-
-                const logoX = tempCanvas.width - padding - logoWidth;
-                const logoY = tempCanvas.height - padding - logoHeight;
-                const textY = logoY - 10;
-
-                ctx.fillText('downloaded', tempCanvas.width - padding, textY);
-                ctx.drawImage(logo, logoX, logoY, logoWidth, logoHeight);
-            }
+            // NOTE: the LDMCalculator watermark used to be stamped into the
+            // bottom-right of every downloaded screenshot. The site owner asked
+            // for clean exports, so no logo/"downloaded" text is drawn any more.
+            void withLogo;
 
             const link = document.createElement('a');
             const timestamp = new Date().getTime();
