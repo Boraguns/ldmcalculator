@@ -228,6 +228,19 @@ const CameraController = ({ viewMode, onUserInteraction }) => {
             controls.maxDistance = Math.max(4, allowed);
 
             controls.update();
+
+            // The radius limit above is computed from the direction BEFORE
+            // update() applies the pending drag, so a fast rotation toward a
+            // wall can overshoot it for a frame and the camera visibly ends up
+            // inside the wall while turning. Hard-clamp the position into the
+            // room afterwards as well: OrbitControls rebuilds its spherical
+            // state from camera.position at the start of the next update, so
+            // the clamp sticks and the camera simply slides along the wall.
+            const p = camera.position;
+            if (p.z < -17.5) p.z = -17.5;
+            if (p.x < -57) p.x = -57;
+            if (p.x > 57) p.x = 57;
+            if (p.y > 29) p.y = 29;
         }
     });
 
@@ -757,143 +770,42 @@ const TruckBaseSTL = ({ tLen, tWid, deckTopY }) => {
 };
 
 /* ============================================================
-   Volvo tractor + curtain-side trailer rig (client-supplied GLBs,
-   Draco-compressed). Both are real part/material exports, so no
-   geometry heuristics are needed:
-     • the TRAILER BODY materials (STrailerModule_all*) are made
-       semi-transparent so the load inside stays visible; wheels,
-       chassis rail and bumper stay opaque;
-     • orientation and alignment are MEASURED at runtime from the
-       models themselves (wheel node positions give front/rear, the
-       body mesh's lowest point gives the load floor), then the body
-       is scaled so the cargo area exactly fills it and the wheels
-       land on the warehouse floor.
+   MAN TGX tractor (client-supplied GLB, CC-BY DevPoly3D).
+   Every constant below is MEASURED from the model with
+   scripts/glb-info.mjs + a per-vertex pass, so the rig is placed by
+   physics rather than by eye:
+     • model axes: Y up, +Z = nose (the tall cab sits at z 4.4..18.3),
+       so the whole tractor is rotated -90° about Y to face scene -X;
+     • wheels: front axle z≈+11 (x=±7.95), rear axle z≈-12 (x=±6.8),
+       tyre diameter 7.83 model units, tread bottom y=-0.42;
+     • SCALE comes from the tyre: 1.05 m / 7.83 u = 0.1341, which also
+       lands the cab at 3.5 m and the wheel track at ~2.1 m — i.e. real
+       truck proportions next to a 2.45 m trailer;
+     • the tread bottom is then dropped exactly onto the warehouse
+       floor, and the chassis tail is slid 0.55 m under the trailer
+       deck so the fifth wheel sits where a real coupling would be.
    ============================================================ */
-const VOLVO_M = {
-    // Measured from Volvo.glb (scripts/glb-info.mjs + per-primitive dump):
-    // front wheels at +z (nose = +z), wheel bottoms at y=-1.02, rear extreme
-    // z=-2.99. The mudflaps hang to y=-1.13 - 11 cm BELOW the tyre contact -
-    // so with the wheels grounded they punched through the floor as black
-    // slabs; their vertices are clamped up to the tyre line instead.
-    wheelBottom: -1.02, rearZ: -2.99, flapClampY: -1.03,
+const MAN_M = {
+    tyreDia: 7.83,      // model units, measured across the rear tyre
+    wheelBottom: -0.42, // lowest tread point
+    rearZ: -16.85,      // chassis tail (couples under the trailer)
+    realTyre: 1.05,     // metres — sets the model scale
 };
 
-const VolvoTractor = ({ tLen, tHei }) => {
-    const volvoGltf = useGLTF('/src/volvo.glb');
-    const tireGltf = useGLTF('/src/truck-tire.glb');
-    const floorY = -tHei / 2 - 0.85;
+const ManTgxTractor = ({ tLen, tHei }) => {
+    const gltf = useGLTF('/src/man-tgx.glb');
+    const model = useMemo(() => gltf.scene.clone(true), [gltf]);
 
-    // Replacement wheel (client-supplied truck_tire_with_wheel.glb, Draco'd
-    // 17.1->1.9 MB). Measured: one front wheel, axle along X with the rim's
-    // outer face toward +X, ~0.95 m diameter, hub off-origin - so it is
-    // recentred at runtime and scaled to the Volvo's 1.06 m wheel diameter.
-    const tire = useMemo(() => {
-        const w = tireGltf.scene.clone(true);
-        const b = new THREE.Box3().setFromObject(w);
-        const c = b.getCenter(new THREE.Vector3());
-        const size = b.getSize(new THREE.Vector3());
-        const s = 1.06 / Math.max(size.y, size.z);
-        return { w, c, s };
-    }, [tireGltf]);
-
-    const model = useMemo(() => {
-        const v = volvoGltf.scene.clone(true);
-        const seen = new Set();
-        v.traverse((o) => {
-            if (!o.isMesh || !o.geometry) return;
-            // The solid-black slab primitives around the wheels are the model's
-            // mudflap planes (materials _black2.._black5, y -1.13..-0.22 in the
-            // per-primitive dump) - they read as floating black squares at our
-            // scale, so they are hidden entirely.
-            const mats = Array.isArray(o.material) ? o.material : [o.material];
-            // Hide the fake-2D helper planes this game-era model ships with:
-            // the mudflap slabs (_black2.._black5) AND the square "quarter"
-            // sprites behind each wheel (material wheelQUARTER - an RGB
-            // texture with no alpha channel, so its black-keyed corners can
-            // never be cut and it renders as a black square). The round tyre,
-            // rim and hubcap are separate primitives and remain.
-            if (mats.some((m) => /^_black[2-5]$/.test(m?.name || '') || /wheelQUARTER/i.test(m?.name || ''))) { o.visible = false; return; }
-            // Original low-poly wheels are fully replaced by the supplied
-            // tire GLB instances below.
-            if (/^wheel_[FB]/i.test(o.name)) { o.visible = false; return; }
-            // DEBRAND: the front-grille texture (materials Volvo_kapot*) has the
-            // VOLVO wordmark, the diagonal grille emblem and the "FH12" badge
-            // baked in. The owner wants brand-free renders, so those areas are
-            // painted over on a canvas copy of the 128x128 texture using clean
-            // neighbouring pixels (body blue for the wordmark, plain slats for
-            // the grille band). Same idea as a retouch - geometry untouched.
-            mats.forEach((m) => {
-                if (!/Volvo_kapot/i.test(m?.name || '')) return;
-                const tex = m.map;
-                const src = tex?.image;
-                if (!src || m.userData.__debranded) return;
-                const W = src.width || 128, H = src.height || 128;
-                const cv = document.createElement('canvas');
-                cv.width = W; cv.height = H;
-                const cx = cv.getContext('2d');
-                cx.drawImage(src, 0, 0, W, H);
-                const S = W / 128; // texture-space scale (source measured at 128px)
-                const copy = (dx0, dy0, dx1, dy1, sx0, sy0, sx1, sy1) => {
-                    cx.drawImage(cv, sx0 * S, sy0 * S, (sx1 - sx0) * S, (sy1 - sy0) * S,
-                                 dx0 * S, dy0 * S, (dx1 - dx0) * S, (dy1 - dy0) * S);
-                };
-                copy(5, 16, 44, 32, 48, 16, 87, 32);   // VOLVO wordmark -> body blue
-                copy(40, 34, 126, 58, 8, 34, 38, 58);  // emblem + FH12 -> plain slats
-                const clean = new THREE.CanvasTexture(cv);
-                clean.flipY = tex.flipY;
-                clean.wrapS = tex.wrapS; clean.wrapT = tex.wrapT;
-                clean.colorSpace = tex.colorSpace;
-                clean.needsUpdate = true;
-                m.map = clean;
-                m.userData.__debranded = true;
-                m.needsUpdate = true;
-            });
-            // Clamp anything else hanging below the tyre contact line so the
-            // grounded truck never pokes through the concrete.
-            if (seen.has(o.geometry.uuid)) return;
-            seen.add(o.geometry.uuid);
-            o.geometry = o.geometry.clone();
-            const pos = o.geometry.attributes.position;
-            let touched = false;
-            for (let i = 0; i < pos.count; i++) {
-                if (pos.getY(i) < VOLVO_M.flapClampY) { pos.setY(i, VOLVO_M.flapClampY); touched = true; }
-            }
-            if (touched) { pos.needsUpdate = true; o.geometry.computeVertexNormals(); }
-        });
-        return v;
-    }, [volvoGltf]);
-
-    // Nose (+z in the model) points to -X: rotY = -90deg (x' = -z). Wheels on
-    // the warehouse floor with a 2 cm lift against z-fighting. COUPLING: the
-    // trailer nose rides over the tractor's bare rear frame like a real semi -
-    // the rear wheels stay just AHEAD of the platform's front edge (their
-    // front edge, model z=-1.58, lands 5 cm before -tLen/2) while the frame
-    // tail slides ~1.4 m underneath it. The frame top (y=-0.42 model, world
-    // about 25 cm below the platform underside) clears the deck, so nothing
-    // intersects.
-    const volvoY = floorY - VOLVO_M.wheelBottom + 0.02;
-    const volvoX = (-tLen / 2 + 0.55) - 1.58; // rear wheels tuck ~0.5 m under the deck
-    // Hub positions measured from the hidden original wheels (model space):
-    // front axle z=1.69 singles at x=±1.01, rear axle z=-2.11 DUALS centred at
-    // x=±0.885 (twin offset ±0.147). Axle height y=-0.49, so the 0.53 m radius
-    // puts the tread exactly on the ground line the chassis was aligned to.
-    // Right-side wheels are turned 180° about Y (not mirrored via negative
-    // scale) so the rim's outer face points outboard with valid winding.
-    const WHEEL_HUBS = [
-        [1.01, -0.49, 1.69, 1], [-1.01, -0.49, 1.69, -1],
-        [1.032, -0.49, -2.11, 1], [0.738, -0.49, -2.11, 1],
-        [-1.032, -0.49, -2.11, -1], [-0.738, -0.49, -2.11, -1],
-    ];
+    const s = MAN_M.realTyre / MAN_M.tyreDia;              // 0.1341
+    const floorY = -tHei / 2 - 0.85;                       // warehouse floor
+    const y = floorY - MAN_M.wheelBottom * s;              // tread ON the floor
+    // Rotated -90° about Y, model +Z (nose) maps to scene -X and the chassis
+    // tail (model minZ) lands at +|rearZ|·s ahead of the group origin. Put that
+    // tail 0.55 m under the trailer's front edge.
+    const x = (-tLen / 2 + 0.55) - (-MAN_M.rearZ * s);
     return (
-        <group position={[volvoX, volvoY, 0]} rotation={[0, -Math.PI / 2, 0]}>
+        <group position={[x, y, 0]} rotation={[0, -Math.PI / 2, 0]} scale={[s, s, s]}>
             <primitive object={model} />
-            {WHEEL_HUBS.map(([x, y, z, side], i) => (
-                <group key={i} position={[x, y, z]} rotation={[0, side < 0 ? Math.PI : 0, 0]} scale={[tire.s, tire.s, tire.s]}>
-                    <group position={[-tire.c.x, -tire.c.y, -tire.c.z]}>
-                        <primitive object={i === 0 ? tire.w : tire.w.clone(true)} />
-                    </group>
-                </group>
-            ))}
         </group>
     );
 };
@@ -1418,7 +1330,7 @@ const TruckContent = ({ truckType, packedItems, isolatedId = null, onHover, mode
                 /* Own Suspense so the vehicle GLBs stream in without blocking
                    the cargo and environment from rendering first. */
                 <Suspense fallback={null}>
-                    <VolvoTractor tLen={tLen} tHei={tHei} />
+                    <ManTgxTractor tLen={tLen} tHei={tHei} />
                 </Suspense>
             )}
 
@@ -1507,10 +1419,13 @@ const TruckContent = ({ truckType, packedItems, isolatedId = null, onHover, mode
                     <Suspense fallback={null}>
                         <GLBWheelAssembly
                             targets={[
-                                [tLen / 2 - 1.5, -tHei / 2 - 0.9, tWid / 2],
-                                [tLen / 2 - 1.5, -tHei / 2 - 0.9, -tWid / 2],
-                                [tLen / 2 - 3.2, -tHei / 2 - 0.9, tWid / 2],
-                                [tLen / 2 - 3.2, -tHei / 2 - 0.9, -tWid / 2]
+                                // Ground line = the warehouse floor (-tHei/2-0.85).
+                                // It used to be -0.9, sinking every tyre 5 cm
+                                // into the concrete.
+                                [tLen / 2 - 1.5, -tHei / 2 - 0.85, tWid / 2],
+                                [tLen / 2 - 1.5, -tHei / 2 - 0.85, -tWid / 2],
+                                [tLen / 2 - 3.2, -tHei / 2 - 0.85, tWid / 2],
+                                [tLen / 2 - 3.2, -tHei / 2 - 0.85, -tWid / 2]
                             ]}
                             glbPath="/src/rear-wheel.glb"
                         />
