@@ -960,9 +960,14 @@ const TrailerBox = ({ tLen, tWid, tHei }) => {
                 a.set(pos.getX(t + 1), pos.getY(t + 1), pos.getZ(t + 1)).sub(v);
                 b.set(pos.getX(t + 2), pos.getY(t + 2), pos.getZ(t + 2)).sub(v);
                 nrm.copy(a).cross(b).normalize();
+                const cz = (pos.getZ(t) + pos.getZ(t + 1) + pos.getZ(t + 2)) / 3;
                 const isRoof = nrm.y > 0.5 && cy > BOX_M.boxMaxY - 45;
-                const isFront = cx > BOX_M.maxX - 45;        // model +X faces the tractor
-                (isRoof || isFront ? kG : kS).push(t);
+                // ONE long SIDE is the window (not the front wall, which just
+                // faces the tractor and shows nothing). The body is yawed 180°,
+                // so the model's -Z flank becomes the scene's +Z flank — the one
+                // the default isometric camera looks at.
+                const isSide = cz < -(BOX_M.halfW - 45);
+                (isRoof || isSide ? kG : kS).push(t);
             }
             const mat0 = Array.isArray(o.material) ? o.material[0] : o.material;
             const build = (keep) => {
