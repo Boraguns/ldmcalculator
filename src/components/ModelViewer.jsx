@@ -158,7 +158,7 @@ const Loader = () => {
     );
 };
 
-const CameraController = ({ viewMode, onUserInteraction }) => {
+const CameraController = ({ viewMode, onUserInteraction, floorY = -2.225 }) => {
     const { camera } = useThree();
     const controlsRef = useRef();
     const [isAnimating, setIsAnimating] = useState(false);
@@ -212,19 +212,37 @@ const CameraController = ({ viewMode, onUserInteraction }) => {
             // controls.maxDistance. OrbitControls clamps its own radius from
             // that, so hitting a wall smoothly slides the camera along it —
             // near the truck the full 360° stays free, exactly as before.
+            // The depot is a closed BOX, so the camera has to be bounded on
+            // all six sides — clamping only three of them left the +Z and +Y
+            // faces wide open, and zooming far out simply sailed through the
+            // front wall / ceiling and showed the room from outside.
+            //   back wall   z = -20 (inner face -19.6)
+            //   front wall  z = +40 (inner face +39.6)
+            //   end/side    x = +-60 (inner face +-59.4)
+            //   ceiling     y = floorY + 29.5, floor y = floorY
+            // Y is measured from floorY because WarehouseEnvironment is
+            // translated by it — a hardcoded world y sat ABOVE the ceiling for
+            // a full-height trailer. maxY stays clear of the roof trusses
+            // (floorY + 29) yet above the "Ust Bakis" preset at world y = 25.
+            const MIN_X = -57, MAX_X = 57;
+            const MIN_Z = -17.5, MAX_Z = 37.5;
+            const MIN_Y = floorY + 0.5, MAX_Y = floorY + 28.6;
+
             const t = controls.target;
             t.x = Math.max(-45, Math.min(45, t.x));
             t.z = Math.max(-16, Math.min(20, t.z));
-            t.y = Math.max(-2, Math.min(14, t.y));
+            t.y = Math.max(MIN_Y, Math.min(MIN_Y + 16, t.y));
 
             const dir = camera.position.clone().sub(t);
             const len = dir.length() || 1;
             dir.divideScalar(len);
             let allowed = 70;
-            if (dir.z < -1e-6) allowed = Math.min(allowed, (-17.5 - t.z) / dir.z);
-            if (dir.x < -1e-6) allowed = Math.min(allowed, (-57 - t.x) / dir.x);
-            if (dir.x > 1e-6) allowed = Math.min(allowed, (57 - t.x) / dir.x);
-            if (dir.y > 1e-6) allowed = Math.min(allowed, (29 - t.y) / dir.y);
+            if (dir.z < -1e-6) allowed = Math.min(allowed, (MIN_Z - t.z) / dir.z);
+            if (dir.z > 1e-6) allowed = Math.min(allowed, (MAX_Z - t.z) / dir.z);
+            if (dir.x < -1e-6) allowed = Math.min(allowed, (MIN_X - t.x) / dir.x);
+            if (dir.x > 1e-6) allowed = Math.min(allowed, (MAX_X - t.x) / dir.x);
+            if (dir.y < -1e-6) allowed = Math.min(allowed, (MIN_Y - t.y) / dir.y);
+            if (dir.y > 1e-6) allowed = Math.min(allowed, (MAX_Y - t.y) / dir.y);
             controls.maxDistance = Math.max(4, allowed);
 
             controls.update();
@@ -237,10 +255,12 @@ const CameraController = ({ viewMode, onUserInteraction }) => {
             // state from camera.position at the start of the next update, so
             // the clamp sticks and the camera simply slides along the wall.
             const p = camera.position;
-            if (p.z < -17.5) p.z = -17.5;
-            if (p.x < -57) p.x = -57;
-            if (p.x > 57) p.x = 57;
-            if (p.y > 29) p.y = 29;
+            if (p.z < MIN_Z) p.z = MIN_Z;
+            if (p.z > MAX_Z) p.z = MAX_Z;
+            if (p.x < MIN_X) p.x = MIN_X;
+            if (p.x > MAX_X) p.x = MAX_X;
+            if (p.y < MIN_Y) p.y = MIN_Y;
+            if (p.y > MAX_Y) p.y = MAX_Y;
         }
     });
 
@@ -1971,7 +1991,11 @@ const ModelViewer = ({
                     />
                 </Suspense>
 
-                <CameraController viewMode={viewMode} onUserInteraction={onUserInteraction} />
+                <CameraController
+                    viewMode={viewMode}
+                    onUserInteraction={onUserInteraction}
+                    floorY={(-((truckType?.height || 275) * 0.01) / 2) - 0.85}
+                />
             </Canvas>
 
             {/* UI Overlay Modal for Country Cargo Locations */}
