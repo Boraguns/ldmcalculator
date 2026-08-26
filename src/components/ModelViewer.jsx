@@ -931,32 +931,34 @@ const ManTrailerWheels = ({ tLen, tWid, tHei }) => {
 const TRAILER_PAINT = '#efe4cf';
 
 const BOX_M = {
-    // Measured from truck_trailer_free.glb (3-view render + up-facing-surface
-    // scan): model Z = length (-43.12..-2.44), Y = up, X = width (+-3.53).
-    // Deck (the big up-facing surface the load stands on) y = 4.25, roof
-    // y = 13.00, side walls x = +-3.5, tyre contact y = 0.17.
-    // The bogie sits at min Z, so that end is the REAR.
-    zRear: -43.12, zFront: -2.44, halfW: 3.5,
-    deckY: 4.25, roofY: 13.0, groundY: 0.17,
+    // Measured from semi_trailer.glb (3-view render + up-facing-surface scan):
+    // model Z = length, Y = up, X = width. The reefer unit sits at z=-1.04 so
+    // that end is the FRONT; the tail lights are at z=+1.89 (REAR); the deck
+    // the load stands on is the big up-facing plane at y=0.28, the roof at
+    // y=0.84 and the tyres touch down at y=0.01.
+    zFront: -1.04, zRear: 1.89, halfW: 0.27,
+    deckY: 0.28, roofY: 0.84, groundY: 0.01,
 };
-// One uniform scale ties every dimension together: the interior width becomes
-// the cargo width, which also lands the deck 1.43 m over the ground and keeps
-// the tyres perfectly round — no axis is ever stretched.
-const boxScale = (tWid) => tWid / (BOX_M.halfW * 2);
-// How far the load sits above the trailer's own floor line, in the same terms
-// the cargo meshes use (y = -tHei/2 + lift). Derived from the model so the
-// boxes rest exactly on the deck.
-export const cargoLiftFor = (tWid) => -0.85 + (BOX_M.deckY - BOX_M.groundY) * boxScale(tWid);
+// Width sets the master scale; the running gear keeps it so the tyres stay
+// perfectly round, while the BODY is given a slightly taller Y so its interior
+// clears the full load height (flat panels, so the stretch is invisible).
+const boxScale = (tWid) => (tWid + 0.12) / (BOX_M.halfW * 2);
+const bodyScaleY = (tHei) => (tHei + 0.12) / (BOX_M.roofY - BOX_M.deckY);
+// The load stands on the real deck, so its lift follows the model.
+export const cargoLiftFor = (tWid, tHei) =>
+    -0.85 + (BOX_M.deckY - BOX_M.groundY) * boxScale(tWid);
 
 const TrailerBox = ({ tLen, tWid, tHei }) => {
-    const { scene } = useGLTF('/src/trailer-hc.glb');
+    const { scene } = useGLTF('/src/trailer-3ax.glb');
 
-    // Split every mesh per triangle, in MODEL space, into a see-through set
-    // (ROOF + the one long flank the camera faces) and a solid set (floor,
-    // far flank, front wall, rear doors, chassis, wheels). The body shares
-    // its materials across panels, so they are told apart by position/normal.
+    // Per-triangle split in MODEL space:
+    //   gear  – at/below the deck: closed floor, chassis, bogie, tyres. Keeps
+    //           its own materials and a uniform scale (round tyres).
+    //   glass – roof + the one long flank the default camera faces.
+    //   body  – the remaining panels: front wall, rear doors, far flank.
+    // glass and body are repainted cream; gear is left as the model made it.
     const parts = useMemo(() => {
-        const solid = new THREE.Group(), glass = new THREE.Group();
+        const gear = new THREE.Group(), body = new THREE.Group(), glass = new THREE.Group();
         const src = scene.clone(true);
         src.updateMatrixWorld(true);
         src.traverse((o) => {
@@ -964,18 +966,15 @@ const TrailerBox = ({ tLen, tWid, tHei }) => {
             const g = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
             g.applyMatrix4(o.matrixWorld);
             const pos = g.attributes.position;
-            const kS = [], kG = [], kR = [];
+            const kR = [], kB = [], kG = [];
             for (let t = 0; t + 2 < pos.count; t += 3) {
                 const cx = (pos.getX(t) + pos.getX(t + 1) + pos.getX(t + 2)) / 3;
                 const cy = (pos.getY(t) + pos.getY(t + 1) + pos.getY(t + 2)) / 3;
-                // Everything at or below the deck stays SOLID and keeps its own
-                // dark material — that is the closed floor the pallets sit on,
-                // plus the chassis, bogie and tyres.
-                if (cy <= BOX_M.deckY + 0.2) { kR.push(t); continue; }
-                const isRoof = cy > BOX_M.roofY - 0.6;
-                // model +X flank -> scene +Z flank (the default camera side)
-                const isSide = cx > BOX_M.halfW - 0.6;
-                (isRoof || isSide ? kG : kS).push(t);
+                if (cy <= BOX_M.deckY + 0.01) { kR.push(t); continue; }
+                const isRoof = cy > BOX_M.roofY - 0.04;
+                // model -X flank -> scene +Z flank (the side the camera faces)
+                const isSide = cx < -(BOX_M.halfW - 0.05);
+                (isRoof || isSide ? kG : kB).push(t);
             }
             const mat0 = Array.isArray(o.material) ? o.material[0] : o.material;
             const build = (keep) => {
@@ -994,41 +993,44 @@ const TrailerBox = ({ tLen, tWid, tHei }) => {
                 if (g.attributes.uv) out.setAttribute('uv', pick(g.attributes.uv, 2));
                 return out;
             };
-            // The body panels ship as flat dark greys (Metal 0.11,
-            // "Trailer_White" 0.26, both fairly metallic) with NO texture, so a
-            // cream repaint lands exactly: tint the colour and dial the finish
-            // down to painted sheet metal instead of polished steel.
-            const paint = (src, opts = {}) => {
-                const m = src.clone();
+            const paint = (extra = {}) => {
+                const m = mat0.clone();
                 if (m.color) m.color.set(TRAILER_PAINT);
                 if ('metalness' in m) m.metalness = 0.08;
                 if ('roughness' in m) m.roughness = 0.55;
-                Object.assign(m, opts);
+                if ('map' in m) m.map = null;      // flat cream, no baked tint
+                Object.assign(m, extra);
                 return m;
             };
-            const gr = build(kR); if (gr) solid.add(new THREE.Mesh(gr, mat0));
-            const gs = build(kS); if (gs) solid.add(new THREE.Mesh(gs, paint(mat0)));
+            const gr = build(kR); if (gr) gear.add(new THREE.Mesh(gr, mat0));
+            const gb = build(kB); if (gb) body.add(new THREE.Mesh(gb, paint()));
             const gg = build(kG);
-            if (gg) {
-                glass.add(new THREE.Mesh(gg, paint(mat0, {
-                    transparent: true, opacity: 0.14,
-                    depthWrite: false, side: THREE.DoubleSide,
-                })));
-            }
+            if (gg) glass.add(new THREE.Mesh(gg, paint({
+                transparent: true, opacity: 0.14, depthWrite: false, side: THREE.DoubleSide,
+            })));
         });
-        return { solid, glass };
+        return { gear, body, glass };
     }, [scene]);
 
     const s = boxScale(tWid);
-    const cargoFloor = -tHei / 2 + cargoLiftFor(tWid);
-    // yaw -90°: model +Z -> scene -X, so the bogie end (min Z) lands at the
-    // scene rear (+X); model +X (a flank) becomes scene +Z.
-    const y = cargoFloor - BOX_M.deckY * s;              // deck under the load
-    const x = ((BOX_M.zRear + BOX_M.zFront) / 2) * s;    // centre it on the deck
+    const sy = bodyScaleY(tHei);
+    const floorY = -tHei / 2 - 0.85;
+    // Deck height comes from the running gear, so body and gear meet exactly
+    // at the deck line and the tyres land on the warehouse floor.
+    const deckScene = floorY + (BOX_M.deckY - BOX_M.groundY) * s;
+    // yaw +90°: model +Z (tail) -> scene +X (rear), model +X -> scene -Z.
+    const xCentre = -((BOX_M.zFront + BOX_M.zRear) / 2) * s;
     return (
-        <group position={[x, y, 0]} rotation={[0, -Math.PI / 2, 0]} scale={[s, s, s]}>
-            <primitive object={parts.solid} />
-            <primitive object={parts.glass} />
+        <group rotation={[0, Math.PI / 2, 0]}>
+            {/* running gear: uniform scale, tyres on the floor */}
+            <group position={[0, floorY - BOX_M.groundY * s, xCentre]} scale={[s, s, s]}>
+                <primitive object={parts.gear} />
+            </group>
+            {/* body: same footprint, taller interior so the load clears the roof */}
+            <group position={[0, deckScene - BOX_M.deckY * sy, xCentre]} scale={[s, sy, s]}>
+                <primitive object={parts.body} />
+                <primitive object={parts.glass} />
+            </group>
         </group>
     );
 };
@@ -1545,7 +1547,7 @@ const TruckContent = ({ truckType, packedItems, isolatedId = null, onHover, mode
     const isTruck = !isTrain && !isPlane && !isShip;
     // Truck mode stands the load on the real trailer's deck (1.43 m over the
     // ground); the other modes keep the old flat-bed lift.
-    const cargoLift = isTruck ? cargoLiftFor(tWid) : 0.3;
+    const cargoLift = isTruck ? cargoLiftFor(tWid, tHei) : 0.3;
 
     return (
         <group>
