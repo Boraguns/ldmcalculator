@@ -796,7 +796,7 @@ const MAN_M = {
     // fixed clearance behind the cab and the bare frame simply slides under
     // the deck, exactly like a real semi.
     cabBackZ: 3.95,
-    cabGap: 0.35,       // metres of daylight between cab and trailer face
+    cabGap: 0.28,       // metres of daylight between cab and the trailer's nose
 };
 
 const ManTgxTractor = ({ tLen, tHei }) => {
@@ -811,7 +811,10 @@ const ManTgxTractor = ({ tLen, tHei }) => {
     // of the trailer's front face; the frame behind it then tucks ~2.4 m under
     // the deck and the rear axle lands ~1.8 m behind the trailer face — the
     // kingpin zone of a real tractor-semitrailer coupling.
-    const x = (-tLen / 2 - MAN_M.cabGap) + MAN_M.cabBackZ * s;
+    // Park the cab clear of the trailer's FOREMOST point (the reefer that
+    // overhangs its nose), not of the deck edge — otherwise the unit clips the
+    // cab. scene_x = groupX - model_z·s, so solve for the cab's back wall.
+    const x = (trailerNoseX(tLen) - MAN_M.cabGap) + MAN_M.cabBackZ * s;
     return (
         <group position={[x, y, 0]} rotation={[0, -Math.PI / 2, 0]} scale={[s, s, s]}>
             <primitive object={model} />
@@ -931,19 +934,28 @@ const ManTrailerWheels = ({ tLen, tWid, tHei }) => {
 const TRAILER_PAINT = '#efe4cf';
 
 const BOX_M = {
-    // Measured from semi_trailer.glb (3-view render + up-facing-surface scan):
-    // model Z = length, Y = up, X = width. The reefer unit sits at z=-1.04 so
-    // that end is the FRONT; the tail lights are at z=+1.89 (REAR); the deck
-    // the load stands on is the big up-facing plane at y=0.28, the roof at
-    // y=0.84 and the tyres touch down at y=0.01.
-    zFront: -1.04, zRear: 1.89, halfW: 0.27,
+    // Measured from semi_trailer.glb (3-view render, up-facing-surface scan and
+    // a wall-plane scan): model Z = length, Y = up, X = width.
+    // IMPORTANT: a Thermo King reefer overhangs the nose (z -1.041..-0.946), so
+    // the model's bbox is LONGER than the load bay. The cargo bay is bounded by
+    // the wall planes, not by the bbox — measuring from the bbox pushed the
+    // whole load forward, out through the front wall.
+    zNose: -1.041,        // reefer face: the trailer's foremost point
+    zFrontWall: -0.935,   // inner face of the front wall -> the load starts here
+    zRearWall: 1.875,     // inner face of the rear doors -> and ends here
+    halfW: 0.27,
     deckY: 0.28, roofY: 0.84, groundY: 0.01,
 };
-// Width sets the master scale; the running gear keeps it so the tyres stay
-// perfectly round, while the BODY is given a slightly taller Y so its interior
-// clears the full load height (flat panels, so the stretch is invisible).
+// Width sets the master scale (round tyres); the BODY additionally gets a
+// slightly taller Y and a slightly longer Z so the BAY — not the bbox — holds
+// the load exactly. Both are a couple of per cent on flat panels, so nothing
+// visibly stretches.
 const boxScale = (tWid) => (tWid + 0.12) / (BOX_M.halfW * 2);
 const bodyScaleY = (tHei) => (tHei + 0.12) / (BOX_M.roofY - BOX_M.deckY);
+const bayScaleZ = (tLen) => (tLen + 0.10) / (BOX_M.zRearWall - BOX_M.zFrontWall);
+const BAY_MID = (BOX_M.zFrontWall + BOX_M.zRearWall) / 2;
+// Foremost point of the trailer in scene X — the tractor parks clear of it.
+export const trailerNoseX = (tLen) => (BOX_M.zNose - BAY_MID) * bayScaleZ(tLen);
 // The load stands on the real deck, so its lift follows the model.
 export const cargoLiftFor = (tWid, tHei) =>
     -0.85 + (BOX_M.deckY - BOX_M.groundY) * boxScale(tWid);
@@ -1014,20 +1026,22 @@ const TrailerBox = ({ tLen, tWid, tHei }) => {
 
     const s = boxScale(tWid);
     const sy = bodyScaleY(tHei);
+    const sz = bayScaleZ(tLen);
     const floorY = -tHei / 2 - 0.85;
     // Deck height comes from the running gear, so body and gear meet exactly
     // at the deck line and the tyres land on the warehouse floor.
     const deckScene = floorY + (BOX_M.deckY - BOX_M.groundY) * s;
-    // yaw +90°: model +Z (tail) -> scene +X (rear), model +X -> scene -Z.
-    const xCentre = -((BOX_M.zFront + BOX_M.zRear) / 2) * s;
+    // yaw +90°: a model vertex at z maps to scene x = z·sz + zOff, so putting
+    // the BAY's midpoint at x=0 centres the load bay (not the bbox) on the deck.
+    const zOff = -BAY_MID * sz;
     return (
         <group rotation={[0, Math.PI / 2, 0]}>
-            {/* running gear: uniform scale, tyres on the floor */}
-            <group position={[0, floorY - BOX_M.groundY * s, xCentre]} scale={[s, s, s]}>
+            {/* running gear: round tyres (X/Y share the master scale) */}
+            <group position={[0, floorY - BOX_M.groundY * s, zOff]} scale={[s, s, sz]}>
                 <primitive object={parts.gear} />
             </group>
-            {/* body: same footprint, taller interior so the load clears the roof */}
-            <group position={[0, deckScene - BOX_M.deckY * sy, xCentre]} scale={[s, sy, s]}>
+            {/* body: bay stretched to hold the load exactly */}
+            <group position={[0, deckScene - BOX_M.deckY * sy, zOff]} scale={[s, sy, sz]}>
                 <primitive object={parts.body} />
                 <primitive object={parts.glass} />
             </group>
