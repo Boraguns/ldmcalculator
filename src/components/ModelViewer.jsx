@@ -913,6 +913,113 @@ const ManTrailerWheels = ({ tLen, tWid, tHei }) => {
     );
 };
 
+/* ============================================================
+   Closed-box semi-trailer (client GLB "truck_trailer", 20.8 MB -> 376 KB).
+   Measured with scripts/_panels + a 3-view render:
+     model X = length (-493..493), Y = up, Z = width (+-118);
+     box exterior y -311..+3, wheels/legs down to y=-399;
+     the WHEELS sit at model -X, so -X is the REAR (the doors are at the
+     opposite end) and the model is yawed 180 deg to face the tractor.
+   The owner wants to see the load: the ROOF and the FRONT wall are made
+   see-through, every other panel stays a solid trailer skin. Panels are
+   classified per-triangle by face normal + position, so this works even
+   though the whole body shares one material.
+   The model's own wheels are dropped - the trailer rolls on the MAN
+   wheels (ManTrailerWheels) so tractor and trailer match.
+   ============================================================ */
+const BOX_M = {
+    minX: -493, maxX: 493, halfW: 118,
+    boxMinY: -311, boxMaxY: 3, groundY: -399,
+};
+
+const TrailerBox = ({ tLen, tWid, tHei }) => {
+    const { scene } = useGLTF('/src/trailer-box.glb');
+
+    // Split every mesh three ways, per triangle, in MODEL space:
+    //   • running gear  (y <= boxMinY): chassis, legs, tyres
+    //   • glass         (roof + front wall of the box)
+    //   • solid         (sides, rear doors, floor)
+    // The body shares one material, so the panels are told apart by face
+    // normal + position rather than by name.
+    const parts = useMemo(() => {
+        const solid = new THREE.Group(), glass = new THREE.Group(), gear = new THREE.Group();
+        const src = scene.clone(true);
+        src.updateMatrixWorld(true);
+        src.traverse((o) => {
+            if (!o.isMesh || !o.geometry) return;
+            const g = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
+            g.applyMatrix4(o.matrixWorld);
+            const pos = g.attributes.position;
+            const kS = [], kG = [], kR = [];
+            const v = new THREE.Vector3(), a = new THREE.Vector3(), b = new THREE.Vector3(), nrm = new THREE.Vector3();
+            for (let t = 0; t + 2 < pos.count; t += 3) {
+                const cx = (pos.getX(t) + pos.getX(t + 1) + pos.getX(t + 2)) / 3;
+                const cy = (pos.getY(t) + pos.getY(t + 1) + pos.getY(t + 2)) / 3;
+                if (cy <= BOX_M.boxMinY) { kR.push(t); continue; }
+                v.set(pos.getX(t), pos.getY(t), pos.getZ(t));
+                a.set(pos.getX(t + 1), pos.getY(t + 1), pos.getZ(t + 1)).sub(v);
+                b.set(pos.getX(t + 2), pos.getY(t + 2), pos.getZ(t + 2)).sub(v);
+                nrm.copy(a).cross(b).normalize();
+                const isRoof = nrm.y > 0.5 && cy > BOX_M.boxMaxY - 45;
+                const isFront = cx > BOX_M.maxX - 45;        // model +X faces the tractor
+                (isRoof || isFront ? kG : kS).push(t);
+            }
+            const mat0 = Array.isArray(o.material) ? o.material[0] : o.material;
+            const build = (keep) => {
+                if (!keep.length) return null;
+                const out = new THREE.BufferGeometry();
+                const pick = (attr, size) => {
+                    if (!attr) return null;
+                    const arr = new Float32Array(keep.length * 3 * size);
+                    let w = 0;
+                    for (const t of keep) for (let k = 0; k < 3; k++)
+                        for (let c = 0; c < size; c++) arr[w++] = attr.array[(t + k) * size + c];
+                    return new THREE.BufferAttribute(arr, size);
+                };
+                out.setAttribute('position', pick(pos, 3));
+                if (g.attributes.normal) out.setAttribute('normal', pick(g.attributes.normal, 3));
+                if (g.attributes.uv) out.setAttribute('uv', pick(g.attributes.uv, 2));
+                return out;
+            };
+            const gs = build(kS); if (gs) solid.add(new THREE.Mesh(gs, mat0));
+            const gr = build(kR); if (gr) gear.add(new THREE.Mesh(gr, mat0));
+            const gg = build(kG);
+            if (gg) {
+                const m = mat0.clone();
+                m.transparent = true; m.opacity = 0.15;
+                m.depthWrite = false; m.side = THREE.DoubleSide;
+                glass.add(new THREE.Mesh(gg, m));
+            }
+        });
+        return { solid, glass, gear };
+    }, [scene]);
+
+    const cargoFloor = -tHei / 2 + 0.3;
+    const floorY = -tHei / 2 - 0.85;
+    // BOX: stretched to wrap the cargo exactly (flat panels, so a non-uniform
+    // scale is invisible here).
+    const sz = (tWid + 0.12) / (BOX_M.halfW * 2);
+    const sx = (tLen + 0.20) / (BOX_M.maxX - BOX_M.minX);
+    const sy = (tHei + 0.30) / (BOX_M.boxMaxY - BOX_M.boxMinY);
+    const boxY = (cargoFloor - 0.12) - BOX_M.boxMinY * sy;
+    // RUNNING GEAR: kept UNIFORM (sz) so the tyres stay perfectly round, sat on
+    // the warehouse floor and slid back so the bogie ends at the trailer's tail.
+    const gs = sz;
+    const gearY = floorY - BOX_M.groundY * gs;
+    const gearShift = (tLen / 2 + 0.10) - (-BOX_M.minX * gs);
+    return (
+        <group rotation={[0, Math.PI, 0]}>
+            <group position={[0, boxY, 0]} scale={[sx, sy, sz]}>
+                <primitive object={parts.solid} />
+                <primitive object={parts.glass} />
+            </group>
+            <group position={[-gearShift, gearY, 0]} scale={[gs, gs, gs]}>
+                <primitive object={parts.gear} />
+            </group>
+        </group>
+    );
+};
+
 const TruckCabinModel = ({ position, wheelGroundY = null }) => {
     const { scene } = useGLTF('/src/truck.glb');
 
@@ -1434,21 +1541,26 @@ const TruckContent = ({ truckType, packedItems, isolatedId = null, onHover, mode
                    the cargo and environment from rendering first. */
                 <Suspense fallback={null}>
                     <ManTgxTractor tLen={tLen} tHei={tHei} />
+                    <TrailerBox tLen={tLen} tWid={tWid} tHei={tHei} />
                 </Suspense>
             )}
 
-            {/* Main Chassis Frame / ULD Platform */}
-            {/* Raised Y by +0.3 to lift trailer higher */}
+            {/* Main Chassis Frame / ULD Platform — only for the non-truck
+                modes; truck mode uses the real trailer GLB instead. */}
+            {!isTruck && (
             <mesh position={[0, -tHei / 2 + 0.15, 0]}>
                 <boxGeometry args={[tLen + (isPlane ? 0.1 : 0), isPlane ? 0.1 : 0.3, isPlane ? tWid + 0.1 : tWid * 0.7]} />
                 <meshStandardMaterial color={(isPlane || isShip) ? "#cbd5e1" : "#0f172a"} metalness={(isPlane || isShip) ? 1 : 0.8} roughness={0.2} />
             </mesh>
+            )}
 
             {/* Truck Bed / ULD Surface */}
+            {!isTruck && (
             <mesh position={[0, -tHei / 2 + 0.36, 0]} receiveShadow>
                 <boxGeometry args={[tLen - 0.02, 0.1, tWid - 0.02]} />
                 <meshStandardMaterial color={isPlane ? "#94a3b8" : "#1e293b"} />
             </mesh>
+            )}
 
             {/* Solid trailer frame (kept for the non-truck modes). In truck
                 mode the real semi-transparent trailer body from the GLB is the
@@ -1456,6 +1568,7 @@ const TruckContent = ({ truckType, packedItems, isolatedId = null, onHover, mode
                 Lifted by the same +0.3 the cargo gets, so the cage floor/ceiling
                 line up with the boxes — otherwise a load stacked to the full deck
                 height appears to poke out the top of the frame. */}
+            {!isTruck && (
             <group position={[0, 0.3, 0]}>
             {(() => {
                 const t = 0.06; // strut thickness
@@ -1487,6 +1600,7 @@ const TruckContent = ({ truckType, packedItems, isolatedId = null, onHover, mode
                 ));
             })()}
             </group>
+            )}
 
             {/* Old GLB cabin + wheels are fully replaced by the STL base in
                 truck mode; the cylinder wheels below remain for train mode. */}
@@ -1519,9 +1633,8 @@ const TruckContent = ({ truckType, packedItems, isolatedId = null, onHover, mode
                     // so it looks consistent with the (already good-looking) front wheels.
                     // Own Suspense boundary (null fallback) so the 14 MB wheel GLB
                     // does not hold back the rest of the scene from rendering.
-                    <Suspense fallback={null}>
-                        <ManTrailerWheels tLen={tLen} tWid={tWid} tHei={tHei} />
-                    </Suspense>
+                    /* the trailer GLB carries its own bogie */
+                    null
                 )
             )}
 
