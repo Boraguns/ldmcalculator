@@ -928,21 +928,32 @@ const ManTrailerWheels = ({ tLen, tWid, tHei }) => {
    wheels (ManTrailerWheels) so tractor and trailer match.
    ============================================================ */
 const BOX_M = {
-    minX: -493, maxX: 493, halfW: 118,
-    boxMinY: -311, boxMaxY: 3, groundY: -399,
+    // Measured from truck_trailer_free.glb (3-view render + up-facing-surface
+    // scan): model Z = length (-43.12..-2.44), Y = up, X = width (+-3.53).
+    // Deck (the big up-facing surface the load stands on) y = 4.25, roof
+    // y = 13.00, side walls x = +-3.5, tyre contact y = 0.17.
+    // The bogie sits at min Z, so that end is the REAR.
+    zRear: -43.12, zFront: -2.44, halfW: 3.5,
+    deckY: 4.25, roofY: 13.0, groundY: 0.17,
 };
+// One uniform scale ties every dimension together: the interior width becomes
+// the cargo width, which also lands the deck 1.43 m over the ground and keeps
+// the tyres perfectly round — no axis is ever stretched.
+const boxScale = (tWid) => tWid / (BOX_M.halfW * 2);
+// How far the load sits above the trailer's own floor line, in the same terms
+// the cargo meshes use (y = -tHei/2 + lift). Derived from the model so the
+// boxes rest exactly on the deck.
+export const cargoLiftFor = (tWid) => -0.85 + (BOX_M.deckY - BOX_M.groundY) * boxScale(tWid);
 
 const TrailerBox = ({ tLen, tWid, tHei }) => {
-    const { scene } = useGLTF('/src/trailer-box.glb');
+    const { scene } = useGLTF('/src/trailer-hc.glb');
 
-    // Split every mesh three ways, per triangle, in MODEL space:
-    //   • running gear  (y <= boxMinY): chassis, legs, tyres
-    //   • glass         (roof + front wall of the box)
-    //   • solid         (sides, rear doors, floor)
-    // The body shares one material, so the panels are told apart by face
-    // normal + position rather than by name.
+    // Split every mesh per triangle, in MODEL space, into a see-through set
+    // (ROOF + the one long flank the camera faces) and a solid set (floor,
+    // far flank, front wall, rear doors, chassis, wheels). The body shares
+    // its materials across panels, so they are told apart by position/normal.
     const parts = useMemo(() => {
-        const solid = new THREE.Group(), glass = new THREE.Group(), gear = new THREE.Group();
+        const solid = new THREE.Group(), glass = new THREE.Group();
         const src = scene.clone(true);
         src.updateMatrixWorld(true);
         src.traverse((o) => {
@@ -950,23 +961,15 @@ const TrailerBox = ({ tLen, tWid, tHei }) => {
             const g = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
             g.applyMatrix4(o.matrixWorld);
             const pos = g.attributes.position;
-            const kS = [], kG = [], kR = [];
-            const v = new THREE.Vector3(), a = new THREE.Vector3(), b = new THREE.Vector3(), nrm = new THREE.Vector3();
+            const kS = [], kG = [];
             for (let t = 0; t + 2 < pos.count; t += 3) {
                 const cx = (pos.getX(t) + pos.getX(t + 1) + pos.getX(t + 2)) / 3;
                 const cy = (pos.getY(t) + pos.getY(t + 1) + pos.getY(t + 2)) / 3;
-                if (cy <= BOX_M.boxMinY) { kR.push(t); continue; }
-                v.set(pos.getX(t), pos.getY(t), pos.getZ(t));
-                a.set(pos.getX(t + 1), pos.getY(t + 1), pos.getZ(t + 1)).sub(v);
-                b.set(pos.getX(t + 2), pos.getY(t + 2), pos.getZ(t + 2)).sub(v);
-                nrm.copy(a).cross(b).normalize();
-                const cz = (pos.getZ(t) + pos.getZ(t + 1) + pos.getZ(t + 2)) / 3;
-                const isRoof = nrm.y > 0.5 && cy > BOX_M.boxMaxY - 45;
-                // ONE long SIDE is the window (not the front wall, which just
-                // faces the tractor and shows nothing). The body is yawed 180°,
-                // so the model's -Z flank becomes the scene's +Z flank — the one
-                // the default isometric camera looks at.
-                const isSide = cz < -(BOX_M.halfW - 45);
+                // Everything at or below the deck stays SOLID — that keeps the
+                // floor closed, which is what you stand the pallets on.
+                const isRoof = cy > BOX_M.roofY - 0.6;
+                // model +X flank -> scene +Z flank (the default camera side)
+                const isSide = cy > BOX_M.deckY + 0.2 && cx > BOX_M.halfW - 0.6;
                 (isRoof || isSide ? kG : kS).push(t);
             }
             const mat0 = Array.isArray(o.material) ? o.material[0] : o.material;
@@ -987,40 +990,27 @@ const TrailerBox = ({ tLen, tWid, tHei }) => {
                 return out;
             };
             const gs = build(kS); if (gs) solid.add(new THREE.Mesh(gs, mat0));
-            const gr = build(kR); if (gr) gear.add(new THREE.Mesh(gr, mat0));
             const gg = build(kG);
             if (gg) {
                 const m = mat0.clone();
-                m.transparent = true; m.opacity = 0.15;
+                m.transparent = true; m.opacity = 0.14;
                 m.depthWrite = false; m.side = THREE.DoubleSide;
                 glass.add(new THREE.Mesh(gg, m));
             }
         });
-        return { solid, glass, gear };
+        return { solid, glass };
     }, [scene]);
 
-    const cargoFloor = -tHei / 2 + 0.3;
-    const floorY = -tHei / 2 - 0.85;
-    // BOX: stretched to wrap the cargo exactly (flat panels, so a non-uniform
-    // scale is invisible here).
-    const sz = (tWid + 0.12) / (BOX_M.halfW * 2);
-    const sx = (tLen + 0.20) / (BOX_M.maxX - BOX_M.minX);
-    const sy = (tHei + 0.30) / (BOX_M.boxMaxY - BOX_M.boxMinY);
-    const boxY = (cargoFloor - 0.12) - BOX_M.boxMinY * sy;
-    // RUNNING GEAR: kept UNIFORM (sz) so the tyres stay perfectly round, sat on
-    // the warehouse floor and slid back so the bogie ends at the trailer's tail.
-    const gs = sz;
-    const gearY = floorY - BOX_M.groundY * gs;
-    const gearShift = (tLen / 2 + 0.10) - (-BOX_M.minX * gs);
+    const s = boxScale(tWid);
+    const cargoFloor = -tHei / 2 + cargoLiftFor(tWid);
+    // yaw -90°: model +Z -> scene -X, so the bogie end (min Z) lands at the
+    // scene rear (+X); model +X (a flank) becomes scene +Z.
+    const y = cargoFloor - BOX_M.deckY * s;              // deck under the load
+    const x = ((BOX_M.zRear + BOX_M.zFront) / 2) * s;    // centre it on the deck
     return (
-        <group rotation={[0, Math.PI, 0]}>
-            <group position={[0, boxY, 0]} scale={[sx, sy, sz]}>
-                <primitive object={parts.solid} />
-                <primitive object={parts.glass} />
-            </group>
-            <group position={[-gearShift, gearY, 0]} scale={[gs, gs, gs]}>
-                <primitive object={parts.gear} />
-            </group>
+        <group position={[x, y, 0]} rotation={[0, -Math.PI / 2, 0]} scale={[s, s, s]}>
+            <primitive object={parts.solid} />
+            <primitive object={parts.glass} />
         </group>
     );
 };
@@ -1535,6 +1525,9 @@ const TruckContent = ({ truckType, packedItems, isolatedId = null, onHover, mode
     const tHei = (truckType?.height || 275) * scaleFactor;
 
     const isTruck = !isTrain && !isPlane && !isShip;
+    // Truck mode stands the load on the real trailer's deck (1.43 m over the
+    // ground); the other modes keep the old flat-bed lift.
+    const cargoLift = isTruck ? cargoLiftFor(tWid) : 0.3;
 
     return (
         <group>
@@ -1659,7 +1652,7 @@ const TruckContent = ({ truckType, packedItems, isolatedId = null, onHover, mode
                 const h = item.dimensions.height * scaleFactor;
 
                 const x = (item.position.x * scaleFactor) - (tLen / 2) + (w / 2);
-                const y = (item.position.z * scaleFactor) - (tHei / 2) + (h / 2) + 0.3;
+                const y = (item.position.z * scaleFactor) - (tHei / 2) + (h / 2) + cargoLift;
                 const z = (item.position.y * scaleFactor) - (tWid / 2) + (d / 2);
 
                 const colors = ['#3b82f6', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
@@ -1728,7 +1721,7 @@ const TruckContent = ({ truckType, packedItems, isolatedId = null, onHover, mode
                 const h = item.dimensions.height * scaleFactor;
                 const d = item.dimensions.width * scaleFactor;
                 const ix = (item.position.x * scaleFactor) - (tLen / 2) + (w / 2);
-                const iy = (item.position.z * scaleFactor) - (tHei / 2) + (h / 2) + 0.3;
+                const iy = (item.position.z * scaleFactor) - (tHei / 2) + (h / 2) + cargoLift;
                 const iz = (item.position.y * scaleFactor) - (tWid / 2) + (d / 2);
                 const strapW = 0.16; // visual band width
                 const overhang = 0.12; // hangs over each side
@@ -1768,7 +1761,7 @@ const TruckContent = ({ truckType, packedItems, isolatedId = null, onHover, mode
                 const d = item.dimensions.width * scaleFactor;
                 // Item center in scene coords:
                 const ix = (item.position.x * scaleFactor) - (tLen / 2) + (w / 2);
-                const iy = (item.position.z * scaleFactor) - (tHei / 2) + (h / 2) + 0.3;
+                const iy = (item.position.z * scaleFactor) - (tHei / 2) + (h / 2) + cargoLift;
                 const iz = (item.position.y * scaleFactor) - (tWid / 2) + (d / 2);
                 // Bar length spans trailer width (slightly inset).
                 const barLen = (truckType?.width || 245) * scaleFactor * 0.95;
@@ -1844,7 +1837,7 @@ const TruckContent = ({ truckType, packedItems, isolatedId = null, onHover, mode
                     const x = (b.xCm * scaleFactor) - (tLen / 2);
                     const z = (b.yCm * scaleFactor) - (tWid / 2);
                     const barLen = (b.z1cm - b.z0cm) * scaleFactor;
-                    const yMid = ((b.z0cm + b.z1cm) / 2 * scaleFactor) - (tHei / 2) + 0.3;
+                    const yMid = ((b.z0cm + b.z1cm) / 2 * scaleFactor) - (tHei / 2) + cargoLift;
                     return (
                         <group key={b.key} position={[x, yMid, z]}>
                             <mesh castShadow>
