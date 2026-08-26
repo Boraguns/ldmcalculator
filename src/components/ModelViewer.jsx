@@ -790,6 +790,13 @@ const MAN_M = {
     wheelBottom: -0.42, // lowest tread point
     rearZ: -16.85,      // chassis tail (couples under the trailer)
     realTyre: 1.05,     // metres — sets the model scale
+    // Rear-most point of the tractor that is ABOVE the cargo floor, i.e. the
+    // cab's back wall (measured: model z=3.95, y 8.2..25.7). The coupling is
+    // driven by THIS, not by the chassis tail: the trailer nose is parked a
+    // fixed clearance behind the cab and the bare frame simply slides under
+    // the deck, exactly like a real semi.
+    cabBackZ: 3.95,
+    cabGap: 0.35,       // metres of daylight between cab and trailer face
 };
 
 const ManTgxTractor = ({ tLen, tHei }) => {
@@ -799,13 +806,109 @@ const ManTgxTractor = ({ tLen, tHei }) => {
     const s = MAN_M.realTyre / MAN_M.tyreDia;              // 0.1341
     const floorY = -tHei / 2 - 0.85;                       // warehouse floor
     const y = floorY - MAN_M.wheelBottom * s;              // tread ON the floor
-    // Rotated -90° about Y, model +Z (nose) maps to scene -X and the chassis
-    // tail (model minZ) lands at +|rearZ|·s ahead of the group origin. Put that
-    // tail 0.55 m under the trailer's front edge.
-    const x = (-tLen / 2 + 0.55) - (-MAN_M.rearZ * s);
+    // Rotated -90° about Y, model +Z (nose) maps to scene -X (scene_x =
+    // groupX - model_z·s). Park the cab's back wall MAN_M.cabGap metres ahead
+    // of the trailer's front face; the frame behind it then tucks ~2.4 m under
+    // the deck and the rear axle lands ~1.8 m behind the trailer face — the
+    // kingpin zone of a real tractor-semitrailer coupling.
+    const x = (-tLen / 2 - MAN_M.cabGap) + MAN_M.cabBackZ * s;
     return (
         <group position={[x, y, 0]} rotation={[0, -Math.PI / 2, 0]} scale={[s, s, s]}>
             <primitive object={model} />
+        </group>
+    );
+};
+
+/* ============================================================
+   Trailer wheels cut from the SAME MAN TGX asset, so tractor and
+   trailer roll on identical rubber. The GLB has no node names (all
+   GUIDs) but its MATERIALS are clean, so one rear DUAL wheel is
+   isolated by material + the measured bounding box of the rear-left
+   assembly, re-centred on its hub and instanced under the trailer.
+   ============================================================ */
+const MAN_WHEEL = {
+    mats: ['Rims', 'Hubs', 'Tyre_sidewalls', 'Tyre_tread'],
+    // measured rear-LEFT dual assembly (model units)
+    min: [4.06, -0.40, -15.52],
+    max: [8.39, 6.65, -8.46],
+};
+
+const useManWheelProto = () => {
+    const { scene } = useGLTF('/src/man-tgx.glb');
+    return useMemo(() => {
+        const root = new THREE.Group();
+        scene.updateMatrixWorld(true);
+        const cx0 = (MAN_WHEEL.min[0] + MAN_WHEEL.max[0]) / 2;
+        const cy0 = (MAN_WHEEL.min[1] + MAN_WHEEL.max[1]) / 2;
+        const cz0 = (MAN_WHEEL.min[2] + MAN_WHEEL.max[2]) / 2;
+        scene.traverse((o) => {
+            if (!o.isMesh || !o.geometry) return;
+            const mats = Array.isArray(o.material) ? o.material : [o.material];
+            if (!mats.some((m) => MAN_WHEEL.mats.includes(m?.name))) return;
+            const g = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
+            g.applyMatrix4(o.matrixWorld);
+            const pos = g.attributes.position;
+            const keep = [];
+            for (let t = 0; t + 2 < pos.count; t += 3) {
+                const ax = (pos.getX(t) + pos.getX(t + 1) + pos.getX(t + 2)) / 3;
+                const ay = (pos.getY(t) + pos.getY(t + 1) + pos.getY(t + 2)) / 3;
+                const az = (pos.getZ(t) + pos.getZ(t + 1) + pos.getZ(t + 2)) / 3;
+                if (ax >= MAN_WHEEL.min[0] && ax <= MAN_WHEEL.max[0] &&
+                    ay >= MAN_WHEEL.min[1] && ay <= MAN_WHEEL.max[1] &&
+                    az >= MAN_WHEEL.min[2] && az <= MAN_WHEEL.max[2]) keep.push(t);
+            }
+            if (!keep.length) return;
+            const out = new THREE.BufferGeometry();
+            const pick = (attr, size) => {
+                if (!attr) return null;
+                const arr = new Float32Array(keep.length * 3 * size);
+                let w = 0;
+                for (const t of keep) {
+                    for (let k = 0; k < 3; k++) {
+                        for (let c = 0; c < size; c++) arr[w++] = attr.array[(t + k) * size + c];
+                    }
+                }
+                return new THREE.BufferAttribute(arr, size);
+            };
+            out.setAttribute('position', pick(pos, 3));
+            if (g.attributes.normal) out.setAttribute('normal', pick(g.attributes.normal, 3));
+            if (g.attributes.uv) out.setAttribute('uv', pick(g.attributes.uv, 2));
+            out.translate(-cx0, -cy0, -cz0);   // hub at the origin
+            root.add(new THREE.Mesh(out, mats[0]));
+        });
+        return root;
+    }, [scene]);
+};
+
+const ManTrailerWheels = ({ tLen, tWid, tHei }) => {
+    const proto = useManWheelProto();
+    const s = MAN_M.realTyre / MAN_M.tyreDia;
+    const floorY = -tHei / 2 - 0.85;
+    // Model X is the axle, so after the same -90° yaw the assembly's width
+    // runs along the scene Z (trailer width) and its rolling plane along X.
+    const halfWidth = ((MAN_WHEEL.max[0] - MAN_WHEEL.min[0]) / 2) * s;
+    const hubY = floorY + (((MAN_WHEEL.min[1] + MAN_WHEEL.max[1]) / 2) - MAN_WHEEL.min[1]) * s;
+    const sideZ = tWid / 2 - halfWidth;          // tyres flush with the body sides
+    const axles = [tLen / 2 - 1.5, tLen / 2 - 3.2];
+    const wheels = useMemo(() => (
+        axles.flatMap((ax, i) => [1, -1].map((sd) => ({
+            key: `${i}:${sd}`, ax, sd, obj: proto.clone(true),
+        })))
+    ), [proto, tLen]);
+    return (
+        <group>
+            {wheels.map(({ key, ax, sd, obj }) => (
+                <group
+                    key={key}
+                    position={[ax, hubY, sd * sideZ]}
+                    /* mirrored by a 180° yaw (never a negative scale) so the
+                       rim face points outboard with valid winding */
+                    rotation={[0, sd > 0 ? -Math.PI / 2 : Math.PI / 2, 0]}
+                    scale={[s, s, s]}
+                >
+                    <primitive object={obj} />
+                </group>
+            ))}
         </group>
     );
 };
@@ -1417,18 +1520,7 @@ const TruckContent = ({ truckType, packedItems, isolatedId = null, onHover, mode
                     // Own Suspense boundary (null fallback) so the 14 MB wheel GLB
                     // does not hold back the rest of the scene from rendering.
                     <Suspense fallback={null}>
-                        <GLBWheelAssembly
-                            targets={[
-                                // Ground line = the warehouse floor (-tHei/2-0.85).
-                                // It used to be -0.9, sinking every tyre 5 cm
-                                // into the concrete.
-                                [tLen / 2 - 1.5, -tHei / 2 - 0.85, tWid / 2],
-                                [tLen / 2 - 1.5, -tHei / 2 - 0.85, -tWid / 2],
-                                [tLen / 2 - 3.2, -tHei / 2 - 0.85, tWid / 2],
-                                [tLen / 2 - 3.2, -tHei / 2 - 0.85, -tWid / 2]
-                            ]}
-                            glbPath="/src/rear-wheel.glb"
-                        />
+                        <ManTrailerWheels tLen={tLen} tWid={tWid} tHei={tHei} />
                     </Suspense>
                 )
             )}
