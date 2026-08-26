@@ -927,6 +927,9 @@ const ManTrailerWheels = ({ tLen, tWid, tHei }) => {
    The model's own wheels are dropped - the trailer rolls on the MAN
    wheels (ManTrailerWheels) so tractor and trailer match.
    ============================================================ */
+// Cream body paint for the trailer panels.
+const TRAILER_PAINT = '#efe4cf';
+
 const BOX_M = {
     // Measured from truck_trailer_free.glb (3-view render + up-facing-surface
     // scan): model Z = length (-43.12..-2.44), Y = up, X = width (+-3.53).
@@ -961,15 +964,17 @@ const TrailerBox = ({ tLen, tWid, tHei }) => {
             const g = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
             g.applyMatrix4(o.matrixWorld);
             const pos = g.attributes.position;
-            const kS = [], kG = [];
+            const kS = [], kG = [], kR = [];
             for (let t = 0; t + 2 < pos.count; t += 3) {
                 const cx = (pos.getX(t) + pos.getX(t + 1) + pos.getX(t + 2)) / 3;
                 const cy = (pos.getY(t) + pos.getY(t + 1) + pos.getY(t + 2)) / 3;
-                // Everything at or below the deck stays SOLID — that keeps the
-                // floor closed, which is what you stand the pallets on.
+                // Everything at or below the deck stays SOLID and keeps its own
+                // dark material — that is the closed floor the pallets sit on,
+                // plus the chassis, bogie and tyres.
+                if (cy <= BOX_M.deckY + 0.2) { kR.push(t); continue; }
                 const isRoof = cy > BOX_M.roofY - 0.6;
                 // model +X flank -> scene +Z flank (the default camera side)
-                const isSide = cy > BOX_M.deckY + 0.2 && cx > BOX_M.halfW - 0.6;
+                const isSide = cx > BOX_M.halfW - 0.6;
                 (isRoof || isSide ? kG : kS).push(t);
             }
             const mat0 = Array.isArray(o.material) ? o.material[0] : o.material;
@@ -989,13 +994,26 @@ const TrailerBox = ({ tLen, tWid, tHei }) => {
                 if (g.attributes.uv) out.setAttribute('uv', pick(g.attributes.uv, 2));
                 return out;
             };
-            const gs = build(kS); if (gs) solid.add(new THREE.Mesh(gs, mat0));
+            // The body panels ship as flat dark greys (Metal 0.11,
+            // "Trailer_White" 0.26, both fairly metallic) with NO texture, so a
+            // cream repaint lands exactly: tint the colour and dial the finish
+            // down to painted sheet metal instead of polished steel.
+            const paint = (src, opts = {}) => {
+                const m = src.clone();
+                if (m.color) m.color.set(TRAILER_PAINT);
+                if ('metalness' in m) m.metalness = 0.08;
+                if ('roughness' in m) m.roughness = 0.55;
+                Object.assign(m, opts);
+                return m;
+            };
+            const gr = build(kR); if (gr) solid.add(new THREE.Mesh(gr, mat0));
+            const gs = build(kS); if (gs) solid.add(new THREE.Mesh(gs, paint(mat0)));
             const gg = build(kG);
             if (gg) {
-                const m = mat0.clone();
-                m.transparent = true; m.opacity = 0.14;
-                m.depthWrite = false; m.side = THREE.DoubleSide;
-                glass.add(new THREE.Mesh(gg, m));
+                glass.add(new THREE.Mesh(gg, paint(mat0, {
+                    transparent: true, opacity: 0.14,
+                    depthWrite: false, side: THREE.DoubleSide,
+                })));
             }
         });
         return { solid, glass };
