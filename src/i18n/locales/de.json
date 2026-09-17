@@ -356,7 +356,9 @@
       "paytr_token_failed": "Zahlung konnte nicht gestartet werden. Bitte erneut versuchen.",
       "cannot_remove_self": "Sie können sich nicht selbst entfernen.",
       "server_error": "Serverfehler. Bitte später erneut versuchen.",
-      "unauthorized": "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an."
+      "unauthorized": "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.",
+      "phone_required": "Bitte geben Sie Ihre Telefonnummer ein.",
+      "invalid_phone": "Bitte geben Sie eine gültige Telefonnummer ein (mindestens 10 Ziffern)."
     }
   },
   "paywall": {

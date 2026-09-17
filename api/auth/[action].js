@@ -1,6 +1,7 @@
 // End-user auth — one serverless function, routed by /api/auth/<action>.
 //   register · login · verify-email · request-reset · reset-password · me · logout
 import { sql, json, readJsonBody, clientIp } from '../_lib/db.js';
+import { checkPhone } from '../_lib/phone.js';
 import {
     hashPassword, comparePassword, signUserToken, randomToken,
     requireUser, serializeCookie, appendCookie,
@@ -36,11 +37,12 @@ async function register(req, res) {
     const password = String(b.password || '');
     const firstName = String(b.firstName || '').trim().slice(0, 80);
     const lastName = String(b.lastName || '').trim().slice(0, 80);
-    const phone = String(b.phone || '').trim().slice(0, 40);
+    const { phone, error: phoneError } = checkPhone(b.phone);
 
     if (!EMAIL_RE.test(email)) return json(res, 400, { error: 'invalid_email' });
     if (password.length < 8) return json(res, 400, { error: 'weak_password' });
     if (!firstName || !lastName) return json(res, 400, { error: 'name_required' });
+    if (phoneError) return json(res, 400, { error: phoneError });
     if (!b.acceptKvkk || !b.acceptTerms) return json(res, 400, { error: 'consent_required' });
 
     const existing = await sql`SELECT id FROM users WHERE email = ${email} LIMIT 1`;

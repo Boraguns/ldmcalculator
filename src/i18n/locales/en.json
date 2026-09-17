@@ -355,7 +355,9 @@
       "paytr_token_failed": "Could not start the payment. Please try again.",
       "cannot_remove_self": "You cannot remove yourself.",
       "server_error": "Server error. Please try again later.",
-      "unauthorized": "Your session has expired. Please sign in again."
+      "unauthorized": "Your session has expired. Please sign in again.",
+      "phone_required": "Please enter your phone number.",
+      "invalid_phone": "Please enter a valid phone number (at least 10 digits)."
     }
   },
   "paywall": {

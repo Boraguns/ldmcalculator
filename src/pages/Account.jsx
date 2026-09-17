@@ -291,7 +291,7 @@ function Profile({ user, refresh }) {
     const save = async (e) => {
         e.preventDefault(); setMsg('');
         try { await api('/api/account/profile', { method: 'PATCH', body: f }); await refresh(); setMsg(t('account.saved')); }
-        catch { setMsg(t('auth.err.generic')); }
+        catch (e2) { setMsg(t(`auth.err.${e2.message}`) || t('auth.err.generic')); }
     };
     const changePw = async (e) => {
         e.preventDefault(); setPwMsg('');

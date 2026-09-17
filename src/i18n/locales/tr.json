@@ -355,7 +355,9 @@
       "paytr_token_failed": "Ödeme başlatılamadı. Lütfen tekrar deneyin.",
       "cannot_remove_self": "Kendinizi çıkaramazsınız.",
       "server_error": "Sunucu hatası. Lütfen daha sonra tekrar deneyin.",
-      "unauthorized": "Oturum süreniz doldu. Lütfen tekrar giriş yapın."
+      "unauthorized": "Oturum süreniz doldu. Lütfen tekrar giriş yapın.",
+      "phone_required": "Lütfen telefon numaranızı girin.",
+      "invalid_phone": "Geçerli bir telefon numarası girin (en az 10 hane)."
     }
   },
   "paywall": {

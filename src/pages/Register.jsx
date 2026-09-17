@@ -39,6 +39,9 @@ export default function Register() {
     const submit = async (e) => {
         e.preventDefault();
         setErr('');
+        const phoneDigits = f.phone.replace(/\D/g, '').length;
+        if (!f.phone.trim()) { setErr(t('auth.err.phone_required')); return; }
+        if (phoneDigits < 10 || phoneDigits > 15 || /[^\d\s+().-]/.test(f.phone.trim())) { setErr(t('auth.err.invalid_phone')); return; }
         if (!acceptKvkk || !acceptTerms || !acceptExplicit) { setErr(t('auth.err.consent_required')); return; }
         setLoading(true);
         try {
@@ -97,7 +100,7 @@ export default function Register() {
                     <Field label={t('auth.lastName')} value={f.lastName} onChange={set('lastName')} autoComplete="family-name" required />
                 </div>
                 <Field label={t('auth.email')} type="email" value={f.email} onChange={set('email')} autoComplete="email" required />
-                <Field label={t('auth.phone')} value={f.phone} onChange={set('phone')} autoComplete="tel" />
+                <Field label={t('auth.phone')} type="tel" value={f.phone} onChange={set('phone')} autoComplete="tel" placeholder="+90 5XX XXX XX XX" required />
                 <Field label={t('auth.password')} type="password" value={f.password} onChange={set('password')} autoComplete="new-password" required />
 
                 {type === 'corporate' && (

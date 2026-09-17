@@ -355,7 +355,9 @@
       "paytr_token_failed": "Impossible de démarrer le paiement. Veuillez réessayer.",
       "cannot_remove_self": "Vous ne pouvez pas vous retirer vous-même.",
       "server_error": "Erreur serveur. Veuillez réessayer plus tard.",
-      "unauthorized": "Votre session a expiré. Veuillez vous reconnecter."
+      "unauthorized": "Votre session a expiré. Veuillez vous reconnecter.",
+      "phone_required": "Veuillez saisir votre numéro de téléphone.",
+      "invalid_phone": "Veuillez saisir un numéro de téléphone valide (au moins 10 chiffres)."
     }
   },
   "paywall": {

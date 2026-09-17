@@ -5,6 +5,7 @@
 //   accept-invite · POST accept an emailed invite (creates the member user)
 //   change-seats  · POST upgrade seat tier with mid-cycle proration (admin only)
 import { sql, json, readJsonBody, clientIp } from '../_lib/db.js';
+import { checkPhone } from '../_lib/phone.js';
 import {
     hashPassword, signUserToken, randomToken, requireUser,
     serializeCookie, appendCookie,
@@ -39,12 +40,13 @@ async function create(req, res) {
     const password = String(b.password || '');
     const firstName = String(b.firstName || '').trim().slice(0, 80);
     const lastName = String(b.lastName || '').trim().slice(0, 80);
-    const phone = String(b.phone || '').trim().slice(0, 40);
+    const { phone, error: phoneError } = checkPhone(b.phone);
     const companyName = String(b.companyName || '').trim().slice(0, 200);
 
     if (!EMAIL_RE.test(email)) return json(res, 400, { error: 'invalid_email' });
     if (password.length < 8) return json(res, 400, { error: 'weak_password' });
     if (!firstName || !lastName) return json(res, 400, { error: 'name_required' });
+    if (phoneError) return json(res, 400, { error: phoneError });
     if (!companyName) return json(res, 400, { error: 'company_required' });
     if (!b.acceptKvkk || !b.acceptTerms) return json(res, 400, { error: 'consent_required' });
 

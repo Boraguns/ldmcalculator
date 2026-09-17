@@ -6,6 +6,7 @@
 //   history      · GET usage history (stacking runs + tool documents)
 //   documents    · GET saved tool documents · POST save one
 import { sql, json, readJsonBody } from '../_lib/db.js';
+import { checkPhone } from '../_lib/phone.js';
 import { requireUser, hashPassword, comparePassword } from '../_lib/userauth.js';
 
 const publicUser = (u) => ({
@@ -19,7 +20,12 @@ async function profile(req, res, user) {
         const b = await readJsonBody(req);
         const firstName = String(b.firstName ?? user.first_name).trim().slice(0, 80);
         const lastName = String(b.lastName ?? user.last_name).trim().slice(0, 80);
-        const phone = String(b.phone ?? user.phone).trim().slice(0, 40);
+        let phone = String(b.phone ?? user.phone ?? '').trim().slice(0, 40);
+        if (phone || user.phone) {
+            const r = checkPhone(phone);
+            if (r.error) return json(res, 400, { error: r.error });
+            phone = r.phone;
+        }
         const rows = await sql`
             UPDATE users SET first_name = ${firstName}, last_name = ${lastName}, phone = ${phone}, updated_at = NOW()
             WHERE id = ${user.id}
