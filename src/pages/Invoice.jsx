@@ -5,6 +5,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useT } from '../i18n/LanguageContext';
 import usePageMeta from '../hooks/usePageMeta';
+import useFitFields from '../hooks/useFitFields';
 import { useUsage } from '../usage/UsageContext';
 import { useAuth } from '../auth/AuthContext';
 import { api } from '../utils/api';
@@ -217,6 +218,7 @@ const Invoice = () => {
     // ----- Zoom / fit-to-width (shared shell with CMR) -----
     const stageRef = useRef(null);
     const sheetRef = useRef(null);
+    useFitFields(sheetRef, 'input:not([type=file]), textarea', [f, items, currency, discountType]);
     const [nat, setNat] = useState({ w: 0, h: 0 });
     const [zoom, setZoom] = useState(1);
     const [autoFit, setAutoFit] = useState(true);
@@ -298,9 +300,9 @@ const Invoice = () => {
     // align: l = left, c = centre; money: append the active currency symbol;
     // type: 'in' = editable input, 'calc' = auto-computed line total.
     const cols = [
-        { k: 'itemNo', label: 'invoice.table.itemNo', w: '12%', align: 'c', type: 'in' },
-        { k: 'hs', label: 'invoice.table.hs', w: '10%', align: 'c', type: 'in' },
-        { k: 'name', label: 'invoice.table.name', w: '38%', align: 'l', type: 'in' },
+        { k: 'itemNo', label: 'invoice.table.itemNo', w: '13%', align: 'c', type: 'in' },
+        { k: 'hs', label: 'invoice.table.hs', w: '13%', align: 'c', type: 'in' },
+        { k: 'name', label: 'invoice.table.name', w: '34%', align: 'l', type: 'in' },
         { k: 'qty', label: 'invoice.table.qty', w: '10%', align: 'c', type: 'in' },
         { k: 'price', label: 'invoice.table.price', w: '14%', align: 'c', type: 'in', money: true },
         { k: 'total', label: 'invoice.table.total', w: '16%', align: 'c', type: 'calc', money: true },
@@ -509,7 +511,9 @@ const Invoice = () => {
                                         <tr key={i}>
                                             {cols.map(c => (
                                                 <td key={c.k} className={alignCls(c.align)}>
-                                                    {c.type === 'in' ? (
+                                                    {c.type === 'in' && c.k === 'name' ? (
+                                                        <textarea className="fit-grow" rows={1} value={it[c.k] ?? ''} onChange={setItem(i, c.k)} />
+                                                    ) : c.type === 'in' ? (
                                                         <input value={it[c.k] ?? ''} onChange={setItem(i, c.k)} />
                                                     ) : (
                                                         <span className="inv-calc">{lineTotal(it) ? money(lineTotal(it)) : ''}</span>

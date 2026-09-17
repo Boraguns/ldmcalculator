@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useT } from '../i18n/LanguageContext';
 import usePageMeta from '../hooks/usePageMeta';
+import useFitFields from '../hooks/useFitFields';
 import { useUsage } from '../usage/UsageContext';
 import { useAuth } from '../auth/AuthContext';
 import { api } from '../utils/api';
@@ -37,37 +38,15 @@ const CmrDocument = () => {
     // restored when the user returns to this page.
     useEffect(() => { saveDraft('cmr', f); }, [f]);
 
-    // ----- Per-field shrink-to-fit -----
-    // The sheet is a fixed A4 grid (must stay one printed page), so cells
-    // cannot grow. Instead, whenever a field's text overflows its box the
-    // font shrinks in 0.5px steps (down to a 6px floor) until it fits, and
-    // recovers up to the stylesheet size when the text gets shorter again.
-    // Runs on every keystroke via one delegated listener, and once per state
-    // change so restored drafts fit too.
-    const fitField = useCallback((el) => {
-        if (!el || !el.matches?.('.cmr-input, .cmr-textarea, .cmr-goods .cell-input, .cmr-pay .pay-input')) return;
-        if (!el.dataset.maxFs) el.dataset.maxFs = String(parseFloat(getComputedStyle(el).fontSize) || 10);
-        let fs = parseFloat(el.dataset.maxFs);
-        el.style.fontSize = fs + 'px';
-        const overflows = () => el.scrollWidth > el.clientWidth + 0.5 || el.scrollHeight > el.clientHeight + 0.5;
-        while (overflows() && fs > 6) {
-            fs -= 0.5;
-            el.style.fontSize = fs + 'px';
-        }
-    }, []);
-    useEffect(() => {
-        const root = sheetRef.current;
-        if (!root) return;
-        root.querySelectorAll('.cmr-input, .cmr-textarea, .cmr-goods .cell-input, .cmr-pay .pay-input')
-            .forEach(fitField);
-        const onInput = (e) => fitField(e.target);
-        root.addEventListener('input', onInput);
-        return () => root.removeEventListener('input', onInput);
-    }, [f, fitField]);
-
     // ----- Zoom / fit-to-width (mobile-friendly viewing) -----
     const stageRef = useRef(null);
     const sheetRef = useRef(null);
+
+    // ----- Per-field shrink-to-fit -----
+    // The sheet is a fixed A4 grid (must stay one printed page), so cells
+    // cannot grow. Whenever a field's text still overflows its box the font
+    // shrinks (6px floor) until it fits - see useFitFields.
+    useFitFields(sheetRef, '.cmr-input, .cmr-textarea, .cmr-goods .cell-input, .cmr-pay .pay-input', [f]);
     const [nat, setNat] = useState({ w: 0, h: 0 });   // unscaled sheet size (px)
     const [zoom, setZoom] = useState(1);
     const [autoFit, setAutoFit] = useState(true);     // follow viewport width until user zooms manually
@@ -263,11 +242,11 @@ const CmrDocument = () => {
                                 <div className="cmr-col" style={{ flex: '0 0 47%' }}>
                                     <div className="cmr-cell" style={{ minHeight: 78 }}>
                                         {lbl('1', 'cmr.form.f1')}
-                                        {ta('sender', 4)}
+                                        {ta('sender', 5)}
                                     </div>
                                     <div className="cmr-cell" style={{ minHeight: 78 }}>
                                         {lbl('2', 'cmr.form.f2')}
-                                        {ta('consignee', 4)}
+                                        {ta('consignee', 5)}
                                     </div>
                                     <div className="cmr-cell" style={{ minHeight: 52 }}>
                                         {lbl('3', 'cmr.form.f3')}
@@ -307,7 +286,7 @@ const CmrDocument = () => {
 
                                     <div className="cmr-cell" style={{ minHeight: 80 }}>
                                         {lbl('16', 'cmr.form.f16')}
-                                        {ta('carrier', 4)}
+                                        {ta('carrier', 5)}
                                     </div>
                                     <div className="cmr-cell" style={{ minHeight: 60 }}>
                                         {lbl('17', 'cmr.form.f17')}
@@ -315,7 +294,7 @@ const CmrDocument = () => {
                                     </div>
                                     <div className="cmr-cell" style={{ minHeight: 74 }}>
                                         <div className="cmr-label"><span className="num">18</span> {t('cmr.form.f18')} &nbsp;&nbsp; <b>19 – 21 - 22</b></div>
-                                        {ta('reservations', 2)}
+                                        {ta('reservations', 3)}
                                         <div style={{ display: 'flex', gap: 6, marginTop: 2 }}>
                                             <div style={{ flex: 1 }}>
                                                 <div className="cmr-label">{t('cmr.form.carnet')}</div>
@@ -335,13 +314,13 @@ const CmrDocument = () => {
                                 <table className="cmr-goods">
                                     <thead>
                                         <tr>
-                                            <th style={{ width: '15%' }}><span className="num">6</span> {t('cmr.form.goods6')}</th>
-                                            <th style={{ width: '11%' }}><span className="num">7</span> {t('cmr.form.goods7')}</th>
-                                            <th style={{ width: '13%' }}><span className="num">8</span> {t('cmr.form.goods8')}</th>
-                                            <th style={{ width: '24%' }}><span className="num">9</span> {t('cmr.form.goods9')}</th>
-                                            <th style={{ width: '13%' }}><span className="num">10</span> {t('cmr.form.goods10')}</th>
-                                            <th style={{ width: '12%' }}><span className="num">11</span> {t('cmr.form.goods11')}</th>
-                                            <th style={{ width: '12%' }}><span className="num">12</span> {t('cmr.form.goods12')}</th>
+                                            <th style={{ width: '14%' }}><span className="num">6</span> {t('cmr.form.goods6')}</th>
+                                            <th style={{ width: '9%' }}><span className="num">7</span> {t('cmr.form.goods7')}</th>
+                                            <th style={{ width: '12%' }}><span className="num">8</span> {t('cmr.form.goods8')}</th>
+                                            <th style={{ width: '31%' }}><span className="num">9</span> {t('cmr.form.goods9')}</th>
+                                            <th style={{ width: '12%' }}><span className="num">10</span> {t('cmr.form.goods10')}</th>
+                                            <th style={{ width: '11%' }}><span className="num">11</span> {t('cmr.form.goods11')}</th>
+                                            <th style={{ width: '11%' }}><span className="num">12</span> {t('cmr.form.goods12')}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -349,7 +328,7 @@ const CmrDocument = () => {
                                             <tr key={i}>
                                                 {['marks', 'packs', 'packing', 'nature', 'stat', 'gross', 'net'].map(c => (
                                                     <td key={c}>
-                                                        <input className="cell-input" value={val(`g_${c}_${i}`)} onChange={set(`g_${c}_${i}`)} />
+                                                        <textarea className="cell-input" rows={2} value={val(`g_${c}_${i}`)} onChange={set(`g_${c}_${i}`)} />
                                                     </td>
                                                 ))}
                                             </tr>
@@ -381,7 +360,7 @@ const CmrDocument = () => {
                                     <div className="cmr-cell" style={{ minHeight: 70 }}>
                                         {lbl('13', 'cmr.form.f13')}
                                         <div className="cmr-conv">{t('cmr.form.demurrage')}</div>
-                                        {ta('sendersInstr', 2)}
+                                        {ta('sendersInstr', 3)}
                                     </div>
                                     <div className="cmr-cell" style={{ minHeight: 48 }}>
                                         {lbl('14', 'cmr.form.f14')}
@@ -390,7 +369,7 @@ const CmrDocument = () => {
                                     </div>
                                     <div className="cmr-cell" style={{ minHeight: 40 }}>
                                         {lbl('21', 'cmr.form.f21')}
-                                        {ta('establishedIn', 1)}
+                                        {ta('establishedIn', 2)}
                                     </div>
                                     <div className="cmr-cell cmr-heavy" style={{ minHeight: 48 }}>
                                         {lbl('15', 'cmr.form.f15')}
@@ -403,7 +382,7 @@ const CmrDocument = () => {
                                     <div className="cmr-cell" style={{ minHeight: 64 }}>
                                         {lbl('19', 'cmr.form.f19')}
                                         <div className="cmr-conv">{t('cmr.form.demurrage')}</div>
-                                        {ta('specialTerms', 1)}
+                                        {ta('specialTerms', 3)}
                                     </div>
                                     {/* 20 payment table */}
                                     <div className="cmr-cell cmr-heavy" style={{ padding: 0 }}>

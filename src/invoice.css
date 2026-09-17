@@ -32,7 +32,7 @@
 .inv-title-input {
     border: none; outline: none; background: transparent;
     font-family: inherit; font-size: 18px; font-weight: 800; letter-spacing: 1px;
-    color: #111; width: 300px; max-width: 70%; padding: 0;
+    color: #111; flex: 1 1 auto; width: auto; min-width: 0; padding: 0;
 }
 .inv-title-pencil { color: #94a3b8; font-size: 13px; line-height: 1; }
 
@@ -105,8 +105,8 @@
 
 /* ----- meta rows (invoice type / no / dates), left block -----
    Width 60% so the right edge lines up with the goods table's name-column
-   edge (Ürün Kodu 12% + HS 10% + Mal Cinsi 38% = 60%) and the top grid
-   divider. The label column is 22% of the full sheet (= 36.667% of this 60%
+   edge (Ürün Kodu 13% + HS 13% + Mal Cinsi 34% = 60%) and the top grid
+   divider. The label column is 26% of the full sheet (= 43.333% of this 60%
    block) so its divider sits exactly on the HS-code column edge. */
 .inv-meta, .inv-totals {
     display: flex; flex-direction: column; width: 60%; box-sizing: border-box;
@@ -116,10 +116,10 @@
 .inv-row { display: flex; border-bottom: 1px solid var(--inv-line); }
 .inv-row:last-child { border-bottom: none; }
 .inv-row .lbl {
-    flex: 0 0 36.667%; border-right: 1px solid var(--inv-line);
+    flex: 0 0 43.333%; border-right: 1px solid var(--inv-line);
     padding: 3px 6px; font-size: 9px; font-weight: 700;
 }
-.inv-row .val { flex: 1 1 63.333%; }
+.inv-row .val { flex: 1 1 56.667%; min-width: 0; }
 .inv-row .val input {
     width: 100%; border: none; outline: none; background: transparent;
     font-family: inherit; font-size: 10px; color: #111; padding: 3px 6px; box-sizing: border-box;
@@ -128,12 +128,12 @@
 /* ----- packing list overrides (Çeki Listesi) -----
    The packing sheet reuses every invoice class; only three things differ:
    a full-width sender box across the top grid, and a wider meta/totals label
-   column. The packing goods table puts the HS-code edge at 24% of the frame
-   (Ürün Kodu 12% + HS 12%), so the label divider must sit at 24% too — i.e.
-   24 / 60 = 40% of the 60%-wide meta block. */
+   column. The packing goods table puts the HS-code edge at 26% of the frame
+   (Ürün Kodu 13% + HS 13%), so the label divider must sit at 26% too — i.e.
+   26 / 60 = 43.333% of the 60%-wide meta block. */
 .pl-sender { grid-column: 1 / -1; }
-.pl-frame .inv-row .lbl { flex: 0 0 40%; }
-.pl-frame .inv-row .val { flex: 1 1 60%; }
+.pl-frame .inv-row .lbl { flex: 0 0 43.333%; }
+.pl-frame .inv-row .val { flex: 1 1 56.667%; }
 
 /* ----- goods table (grows to fill the page) ----- */
 .inv-table-wrap { flex: 1 1 auto; display: flex; flex-direction: column; border-top: 1px solid var(--inv-line); min-height: 150px; }
@@ -154,6 +154,13 @@
     text-align: center;
 }
 .inv-table td.ta-l input { text-align: left; }
+/* Goods description wraps onto extra lines instead of scrolling out of view;
+   useFitFields grows the box to its content (.fit-grow). */
+.inv-table td textarea {
+    display: block; width: 100%; min-height: 18px; border: none; outline: none; background: transparent;
+    resize: none; overflow: hidden; font-family: inherit; font-size: 10px; line-height: 1.25; color: #111;
+    padding: 2px 4px; box-sizing: border-box; text-align: left;
+}
 .inv-table td.ta-r input { text-align: right; }
 .inv-calc { font-size: 10px; color: #111; }
 

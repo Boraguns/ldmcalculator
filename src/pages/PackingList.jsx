@@ -5,6 +5,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useT } from '../i18n/LanguageContext';
 import usePageMeta from '../hooks/usePageMeta';
+import useFitFields from '../hooks/useFitFields';
 import { useUsage } from '../usage/UsageContext';
 import { useAuth } from '../auth/AuthContext';
 import { api } from '../utils/api';
@@ -191,6 +192,7 @@ const PackingList = () => {
     // ----- Zoom / fit-to-width (shared shell with CMR / invoice) -----
     const stageRef = useRef(null);
     const sheetRef = useRef(null);
+    useFitFields(sheetRef, 'input:not([type=file]), textarea', [f, items]);
     const [nat, setNat] = useState({ w: 0, h: 0 });
     const [zoom, setZoom] = useState(1);
     const [autoFit, setAutoFit] = useState(true);
@@ -272,12 +274,12 @@ const PackingList = () => {
     // the meta/totals right edge and the top grid divider. The product-code
     // column is widened (12%) to hold long codes.
     const cols = [
-        { k: 'itemNo', label: 'packing.table.itemNo', w: '12%', align: 'c' },
-        { k: 'hs', label: 'packing.table.hs', w: '12%', align: 'c' },
-        { k: 'name', label: 'packing.table.name', w: '36%', align: 'l' },
-        { k: 'qty', label: 'packing.table.qty', w: '12%', align: 'c' },
-        { k: 'netKg', label: 'packing.table.netKg', w: '14%', align: 'c' },
-        { k: 'grossKg', label: 'packing.table.grossKg', w: '14%', align: 'c' },
+        { k: 'itemNo', label: 'packing.table.itemNo', w: '13%', align: 'c' },
+        { k: 'hs', label: 'packing.table.hs', w: '13%', align: 'c' },
+        { k: 'name', label: 'packing.table.name', w: '34%', align: 'l' },
+        { k: 'qty', label: 'packing.table.qty', w: '10%', align: 'c' },
+        { k: 'netKg', label: 'packing.table.netKg', w: '15%', align: 'c' },
+        { k: 'grossKg', label: 'packing.table.grossKg', w: '15%', align: 'c' },
     ];
     const alignCls = (a) => (a === 'l' ? 'ta-l' : a === 'r' ? 'ta-r' : 'ta-c');
 
@@ -448,7 +450,9 @@ const PackingList = () => {
                                         <tr key={i}>
                                             {cols.map(c => (
                                                 <td key={c.k} className={alignCls(c.align)}>
-                                                    <input value={it[c.k] ?? ''} onChange={setItem(i, c.k)} />
+                                                    {c.k === 'name'
+                                                        ? <textarea className="fit-grow" rows={1} value={it[c.k] ?? ''} onChange={setItem(i, c.k)} />
+                                                        : <input value={it[c.k] ?? ''} onChange={setItem(i, c.k)} />}
                                                 </td>
                                             ))}
                                             <td className="inv-ctrl-col inv-screen-only">

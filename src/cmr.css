@@ -374,6 +374,9 @@
     padding: 1px 0 0;
 }
 .cmr-textarea { display: block; }
+/* A text box fills its whole cell, so any spare height is writing space. */
+.cmr-cell:has(> .cmr-textarea) { display: flex; flex-direction: column; }
+.cmr-cell > .cmr-textarea { flex: 1 1 auto; }
 .cmr-input::placeholder, .cmr-textarea::placeholder { color: #b9c4de; font-weight: 400; }
 
 /* title block */
@@ -423,10 +426,10 @@
 .cmr-goods-wrap .cmr-goods thead th { height: 1px; }
 .cmr-goods .cell-input { min-height: 15px; }
 .cmr-goods .cell-input {
-    width: 100%; height: 100%;
-    border: none; outline: none; background: transparent;
+    display: block; width: 100%; height: 100%;
+    border: none; outline: none; background: transparent; resize: none; overflow: hidden;
     color: var(--cmr-blue); font-family: inherit; font-size: 9px; font-weight: 600;
-    padding: 0 3px; box-sizing: border-box;
+    line-height: 1.12; padding: 1px 3px 0; box-sizing: border-box;
 }
 
 /* CMR oval watermark */
